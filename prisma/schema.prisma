@@ -6,10 +6,16 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ExpenseType {
+  ENTREE
+  SORTIE
+}
+
 model Expense {
   id          String   @id @default(cuid())
   title       String
   amount      Decimal  @db.Decimal(10, 2)
+  type        ExpenseType
   category    String?
   spentAt     DateTime @default(now())
   createdAt   DateTime @default(now())
