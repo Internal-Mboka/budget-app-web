@@ -8,6 +8,7 @@ import { canEditByRole, clearSessionUser, requireCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+const MAX_TRANSACTIONS = 10;
 
 const transactionSchema = z.object({
   title: z.string().trim().min(2, "Le libelle est requis"),
@@ -21,7 +22,8 @@ const historyTypeSchema = z.enum(["ALL", "ENTREE", "SORTIE"]);
 type BudgetHealth = {
   level: "VERT" | "ORANGE" | "ROUGE";
   badgeClass: string;
-  progressClass: string;
+  ringClass: string;
+  valueClass: string;
   message: string;
 };
 
@@ -67,7 +69,8 @@ function getBudgetHealth(spendRatePercent: number): BudgetHealth {
     return {
       level: "VERT",
       badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      progressClass: "bg-emerald-500",
+      ringClass: "stroke-emerald-500",
+      valueClass: "text-emerald-700",
       message: "Budget sain",
     };
   }
@@ -76,7 +79,8 @@ function getBudgetHealth(spendRatePercent: number): BudgetHealth {
     return {
       level: "ORANGE",
       badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
-      progressClass: "bg-amber-500",
+      ringClass: "stroke-amber-500",
+      valueClass: "text-amber-700",
       message: "Attention budget",
     };
   }
@@ -84,7 +88,8 @@ function getBudgetHealth(spendRatePercent: number): BudgetHealth {
   return {
     level: "ROUGE",
     badgeClass: "border-rose-200 bg-rose-50 text-rose-700",
-    progressClass: "bg-rose-500",
+    ringClass: "stroke-rose-500",
+    valueClass: "text-rose-700",
     message: "Alerte budget",
   };
 }
@@ -96,6 +101,20 @@ async function addIncome(formData: FormData) {
 
   if (!canEditByRole(user.role)) {
     redirect("/dashboard?error=forbidden");
+  }
+
+  const currentCount = await prisma.expense.count({
+    where: {
+      user: {
+        is: {
+          id: user.id,
+        },
+      },
+    },
+  });
+
+  if (currentCount >= MAX_TRANSACTIONS) {
+    redirect("/dashboard?error=limit-reached");
   }
 
   const parsed = transactionSchema.safeParse({
@@ -132,6 +151,20 @@ async function addExpense(formData: FormData) {
 
   if (!canEditByRole(user.role)) {
     redirect("/dashboard?error=forbidden");
+  }
+
+  const currentCount = await prisma.expense.count({
+    where: {
+      user: {
+        is: {
+          id: user.id,
+        },
+      },
+    },
+  });
+
+  if (currentCount >= MAX_TRANSACTIONS) {
+    redirect("/dashboard?error=limit-reached");
   }
 
   const parsed = transactionSchema.safeParse({
@@ -202,6 +235,7 @@ export default async function DashboardPage({
     category?: string;
     type?: string;
     q?: string;
+    error?: string;
   }>;
 }) {
   const user = await requireCurrentUser();
@@ -216,6 +250,7 @@ export default async function DashboardPage({
 
   const parsedType = historyTypeSchema.safeParse(filters.type ?? "ALL");
   const typeFilter = parsedType.success ? parsedType.data : "ALL";
+  const errorCode = filters.error ?? "";
 
   const historyWhere: Prisma.ExpenseWhereInput = {
     user: {
@@ -253,117 +288,151 @@ export default async function DashboardPage({
       mode: "insensitive",
     };
   }
+  let dbError: string | null = null;
+  let monthlyIncome = 0;
+  let monthlyExpense = 0;
+  let totalIncome = 0;
+  let totalExpense = 0;
+  let transactionCount = 0;
+  let historyEntries: Array<{
+    id: string;
+    title: string;
+    type: "ENTREE" | "SORTIE";
+    category: string | null;
+    amount: Prisma.Decimal;
+    spentAt: Date;
+  }> = [];
+  let categoryOptions: string[] = [];
 
-  const [monthlyIncomeAgg, monthlyExpenseAgg, totalIncomeAgg, totalExpenseAgg, historyEntries, categories] = await Promise.all([
-    prisma.expense.aggregate({
-      where: {
-        user: {
-          is: {
-            id: user.id,
+  try {
+    const [monthlyIncomeAgg, monthlyExpenseAgg, totalIncomeAgg, totalExpenseAgg, totalCount, historyRows, categories] = await Promise.all([
+      prisma.expense.aggregate({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
+          },
+          type: "ENTREE",
+          spentAt: {
+            gte: start,
+            lt: end,
           },
         },
-        type: "ENTREE",
-        spentAt: {
-          gte: start,
-          lt: end,
+        _sum: {
+          amount: true,
         },
-      },
-      _sum: {
-        amount: true,
-      },
-    }),
-    prisma.expense.aggregate({
-      where: {
-        user: {
-          is: {
-            id: user.id,
+      }),
+      prisma.expense.aggregate({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
+          },
+          type: "SORTIE",
+          spentAt: {
+            gte: start,
+            lt: end,
           },
         },
-        type: "SORTIE",
-        spentAt: {
-          gte: start,
-          lt: end,
+        _sum: {
+          amount: true,
         },
-      },
-      _sum: {
-        amount: true,
-      },
-    }),
-    prisma.expense.aggregate({
-      where: {
-        user: {
-          is: {
-            id: user.id,
+      }),
+      prisma.expense.aggregate({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
+          },
+          type: "ENTREE",
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.expense.aggregate({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
+          },
+          type: "SORTIE",
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.expense.count({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
           },
         },
-        type: "ENTREE",
-      },
-      _sum: {
-        amount: true,
-      },
-    }),
-    prisma.expense.aggregate({
-      where: {
-        user: {
-          is: {
-            id: user.id,
+      }),
+      prisma.expense.findMany({
+        where: historyWhere,
+        orderBy: [{ spentAt: "desc" }, { createdAt: "desc" }],
+        take: 50,
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          category: true,
+          amount: true,
+          spentAt: true,
+        },
+      }),
+      prisma.expense.findMany({
+        where: {
+          user: {
+            is: {
+              id: user.id,
+            },
+          },
+          category: {
+            not: null,
           },
         },
-        type: "SORTIE",
-      },
-      _sum: {
-        amount: true,
-      },
-    }),
-    prisma.expense.findMany({
-      where: historyWhere,
-      orderBy: [{ spentAt: "desc" }, { createdAt: "desc" }],
-      take: 50,
-      select: {
-        id: true,
-        title: true,
-        type: true,
-        category: true,
-        amount: true,
-        spentAt: true,
-      },
-    }),
-    prisma.expense.findMany({
-      where: {
-        user: {
-          is: {
-            id: user.id,
-          },
+        distinct: ["category"],
+        select: {
+          category: true,
         },
-        category: {
-          not: null,
+        orderBy: {
+          category: "asc",
         },
-      },
-      distinct: ["category"],
-      select: {
-        category: true,
-      },
-      orderBy: {
-        category: "asc",
-      },
-      take: 100,
-    }),
-  ]);
+        take: 100,
+      }),
+    ]);
 
-  const monthlyIncome = decimalToNumber(monthlyIncomeAgg._sum.amount);
-  const monthlyExpense = decimalToNumber(monthlyExpenseAgg._sum.amount);
-
-  const totalIncome = decimalToNumber(totalIncomeAgg._sum.amount);
-  const totalExpense = decimalToNumber(totalExpenseAgg._sum.amount);
+    monthlyIncome = decimalToNumber(monthlyIncomeAgg._sum.amount);
+    monthlyExpense = decimalToNumber(monthlyExpenseAgg._sum.amount);
+    totalIncome = decimalToNumber(totalIncomeAgg._sum.amount);
+    totalExpense = decimalToNumber(totalExpenseAgg._sum.amount);
+    transactionCount = totalCount;
+    historyEntries = historyRows;
+    categoryOptions = categories
+      .map((item) => item.category)
+      .filter((value): value is string => typeof value === "string" && value.length > 0);
+  } catch (error) {
+    dbError = "Connexion a la base indisponible. Reessaie dans quelques secondes.";
+    console.error("Dashboard database error", error);
+  }
 
   const currentBalance = totalIncome - totalExpense;
   const monthlyNet = monthlyIncome - monthlyExpense;
   const spendRatePercent = monthlyIncome > 0 ? (monthlyExpense / monthlyIncome) * 100 : monthlyExpense > 0 ? 100 : 0;
   const boundedRate = Math.min(100, Math.max(0, spendRatePercent));
   const budgetHealth = getBudgetHealth(boundedRate);
-  const categoryOptions = categories
-    .map((item) => item.category)
-    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const limitReached = transactionCount >= MAX_TRANSACTIONS;
+  const circleRadius = 44;
+  const circleCircumference = 2 * Math.PI * circleRadius;
+  const circleOffset = circleCircumference * (1 - boundedRate / 100);
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eff8ff_0%,#f8fbff_48%,#ffffff_100%)] px-4 py-6 text-[#10579F] sm:px-6 lg:px-8">
@@ -399,6 +468,18 @@ export default async function DashboardPage({
         </header>
 
         <main className="flex flex-col gap-8">
+          {dbError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {dbError}
+            </div>
+          ) : null}
+
+          {errorCode === "limit-reached" ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              Limite atteinte: maximum {MAX_TRANSACTIONS} ecritures. Supprime une operation pour continuer.
+            </div>
+          ) : null}
+
           <section className="grid gap-5 rounded-4xl border border-sky-100 bg-white/85 p-5 shadow-[0_20px_60px_rgba(16,87,159,0.08)] sm:p-6">
             <div className="rounded-4xl bg-[#10579F] px-6 py-10 text-white shadow-[0_18px_40px_rgba(16,87,159,0.22)]">
               <p className="text-xs font-medium uppercase tracking-[0.32em] text-sky-100/90">
@@ -407,12 +488,6 @@ export default async function DashboardPage({
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
                 {formatMoney(currentBalance)}
               </h1>
-              <div className="mt-6 grid gap-1 rounded-2xl border border-white/20 bg-white/10 p-3 text-xs sm:text-sm">
-                <p className="font-medium text-sky-50">Formule: Solde = Encaisse cumulee - Depenses cumulees</p>
-                <p className="text-sky-100">Encaisse cumulee: {formatMoney(totalIncome)}</p>
-                <p className="text-sky-100">Depenses cumulees: {formatMoney(totalExpense)}</p>
-                <p className="font-semibold text-white">Net du mois: {formatMoney(monthlyNet)}</p>
-              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -437,13 +512,31 @@ export default async function DashboardPage({
                   {budgetHealth.level} - {budgetHealth.message}
                 </span>
               </div>
-              <div className="mt-3 h-2.5 w-full rounded-full bg-slate-100">
-                <div
-                  className={`h-2.5 rounded-full transition-all ${budgetHealth.progressClass}`}
-                  style={{ width: `${boundedRate}%` }}
-                />
+              <div className="mt-4 flex items-center gap-4">
+                <div className="relative h-28 w-28">
+                  <svg className="h-28 w-28 -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                    <circle cx="50" cy="50" r={circleRadius} strokeWidth="8" className="fill-none stroke-slate-200" />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={circleRadius}
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      className={`fill-none transition-all duration-300 ${budgetHealth.ringClass}`}
+                      strokeDasharray={circleCircumference}
+                      strokeDashoffset={circleOffset}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-base font-bold ${budgetHealth.valueClass}`}>{boundedRate.toFixed(0)}%</span>
+                  </div>
+                </div>
+                <div className="grid gap-1 text-xs text-slate-600 sm:text-sm">
+                  <p className="font-medium text-slate-700">Depenses sur revenus du mois</p>
+                  <p>Net du mois: {formatMoney(monthlyNet)}</p>
+                  <p>Capacite utilisee: {boundedRate.toFixed(1)}%</p>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-slate-600">Depenses sur revenus du mois: {boundedRate.toFixed(1)}%</p>
             </div>
 
             {canEdit ? (
@@ -480,7 +573,10 @@ export default async function DashboardPage({
                     />
                     <button
                       type="submit"
-                      className="w-full rounded-2xl bg-[#10579F] px-4 py-2.5 text-sm font-semibold text-white"
+                      disabled={limitReached}
+                      className={`w-full rounded-2xl px-4 py-2.5 text-sm font-semibold text-white ${
+                        limitReached ? "cursor-not-allowed bg-slate-400" : "bg-[#10579F]"
+                      }`}
                     >
                       Enregistrer revenu
                     </button>
@@ -519,7 +615,10 @@ export default async function DashboardPage({
                     />
                     <button
                       type="submit"
-                      className="w-full rounded-2xl bg-[#10579F] px-4 py-2.5 text-sm font-semibold text-white"
+                      disabled={limitReached}
+                      className={`w-full rounded-2xl px-4 py-2.5 text-sm font-semibold text-white ${
+                        limitReached ? "cursor-not-allowed bg-slate-400" : "bg-[#10579F]"
+                      }`}
                     >
                       Enregistrer depense
                     </button>
@@ -537,12 +636,13 @@ export default async function DashboardPage({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex min-h-36 flex-col justify-center rounded-4xl border border-sky-100 bg-sky-50/80 px-6 py-8">
                 <p className="text-xs font-medium uppercase tracking-[0.28em] text-sky-500">
-                  Ce mois
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#10579F]">
                   Total encaisse
+                </p>
+                <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[#10579F] sm:text-5xl">
+                  {formatMoney(totalIncome)}
                 </h2>
-                <p className="mt-4 text-3xl font-semibold text-[#10579F]">{formatMoney(monthlyIncome)}</p>
+                <p className="mt-3 text-sm text-slate-600">Ce mois: {formatMoney(monthlyIncome)}</p>
+                <p className="text-sm text-slate-600">Formule solde: Encaisse - Depenses</p>
               </div>
 
               <div className="flex min-h-36 flex-col justify-center rounded-4xl border border-sky-100 bg-sky-50/80 px-6 py-8">
