@@ -15,6 +15,13 @@ const ROLE_OPTIONS = [
   "OBSERVATEUR",
 ] as const;
 
+const UNIQUE_LEADERSHIP_ROLES: UserRole[] = [
+  UserRole.PDG,
+  UserRole.COMPTABLE,
+  UserRole.DG,
+  UserRole.DIRECTEUR_TECHNIQUE,
+];
+
 const signupSchema = z.object({
   name: z.string().trim().min(2, "Le nom est requis"),
   email: z.string().trim().email("Adresse mail invalide"),
@@ -56,7 +63,7 @@ async function handleSignup(formData: FormData) {
       redirect("/?error=user-limit");
     }
 
-    if ([UserRole.PDG, UserRole.COMPTABLE, UserRole.DG, UserRole.DIRECTEUR_TECHNIQUE].includes(normalizedRole)) {
+    if (UNIQUE_LEADERSHIP_ROLES.includes(normalizedRole)) {
       const roleOwner = await prisma.user.findFirst({
         where: {
           role: normalizedRole,
