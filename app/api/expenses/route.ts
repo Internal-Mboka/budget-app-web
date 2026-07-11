@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
@@ -97,7 +96,7 @@ export async function POST(request: Request) {
     const expense = await prisma.expense.create({
       data: {
         title,
-        amount: new Prisma.Decimal(amount),
+        amount,
         type,
         categoryName: category,
         spentAt,
