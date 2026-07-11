@@ -210,8 +210,9 @@ export async function GET(request: Request) {
   }
 
   const pdfBytes = await pdf.save();
+  const pdfArrayBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength);
 
-  return new Response(pdfBytes, {
+  return new Response(pdfArrayBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
