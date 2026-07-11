@@ -1,11 +1,8 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not defined.");
-}
+const fallbackDatabaseUrl = "postgresql://user:pass@localhost:5432/db";
+const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 
 const adapter = new PrismaNeon({ connectionString });
 
