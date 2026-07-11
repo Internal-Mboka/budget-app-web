@@ -6,6 +6,13 @@ import { prisma } from "@/lib/prisma";
 
 const SESSION_COOKIE = "session_user_id";
 
+const HISTORY_EXPORT_ROLES: UserRole[] = [
+  UserRole.PDG,
+  UserRole.COMPTABLE,
+  UserRole.DG,
+  UserRole.DIRECTEUR_TECHNIQUE,
+];
+
 export function normalizeRole(rawRole: string): UserRole {
   const cleaned = rawRole.trim().toLowerCase();
 
@@ -17,11 +24,23 @@ export function normalizeRole(rawRole: string): UserRole {
     return UserRole.COMPTABLE;
   }
 
+  if (cleaned === "dg" || cleaned.includes("directeur general")) {
+    return UserRole.DG;
+  }
+
+  if (cleaned.includes("directeur technique") || cleaned === "dt") {
+    return UserRole.DIRECTEUR_TECHNIQUE;
+  }
+
   return UserRole.OBSERVATEUR;
 }
 
 export function canEditByRole(role: UserRole): boolean {
   return role === UserRole.PDG || role === UserRole.COMPTABLE;
+}
+
+export function canAccessHistoryAndExport(role: UserRole): boolean {
+  return HISTORY_EXPORT_ROLES.includes(role);
 }
 
 export async function setSessionUser(userId: string) {

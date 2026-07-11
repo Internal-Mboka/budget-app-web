@@ -99,7 +99,7 @@ export async function POST(request: Request) {
         title,
         amount: new Prisma.Decimal(amount),
         type,
-        category,
+        categoryName: category,
         spentAt,
       },
     });

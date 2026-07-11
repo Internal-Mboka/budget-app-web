@@ -1,15 +1,25 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
 import { normalizeRole, setSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const MAX_PLATFORM_USERS = 8;
+const ROLE_OPTIONS = [
+  "PDG",
+  "COMPTABLE",
+  "DG",
+  "DIRECTEUR TECHNIQUE",
+  "OBSERVATEUR",
+] as const;
+
 const signupSchema = z.object({
   name: z.string().trim().min(2, "Le nom est requis"),
   email: z.string().trim().email("Adresse mail invalide"),
   phone: z.string().trim().min(6, "Numero invalide"),
-  role: z.string().trim().min(2, "Le poste est requis"),
+  role: z.enum(ROLE_OPTIONS),
 });
 
 async function handleSignup(formData: FormData) {
@@ -27,20 +37,46 @@ async function handleSignup(formData: FormData) {
   }
 
   const { name, email, phone, role } = parsed.data;
+  const normalizedRole = normalizeRole(role);
 
   try {
-    const user = await prisma.user.upsert({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
-      update: {
-        name,
-        phone,
-        role: normalizeRole(role),
-      },
-      create: {
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      await setSessionUser(existingUser.id);
+      redirect("/dashboard");
+    }
+
+    const totalUsers = await prisma.user.count();
+
+    if (totalUsers >= MAX_PLATFORM_USERS) {
+      redirect("/?error=user-limit");
+    }
+
+    if ([UserRole.PDG, UserRole.COMPTABLE, UserRole.DG, UserRole.DIRECTEUR_TECHNIQUE].includes(normalizedRole)) {
+      const roleOwner = await prisma.user.findFirst({
+        where: {
+          role: normalizedRole,
+        },
+        select: {
+          email: true,
+        },
+      });
+
+      if (roleOwner && roleOwner.email !== email) {
+        redirect("/?error=role-taken");
+      }
+    }
+
+    const user = await prisma.user.create({
+      data: {
         name,
         email,
         phone,
-        role: normalizeRole(role),
+        role: normalizedRole,
       },
       select: { id: true },
     });
@@ -48,6 +84,11 @@ async function handleSignup(formData: FormData) {
     await setSessionUser(user.id);
   } catch (error) {
     console.error("Signup failed", error);
+
+    if (error instanceof Error && error.message.toLowerCase().includes("userrole")) {
+      redirect("/?error=role-schema");
+    }
+
     redirect("/?error=server");
   }
 
@@ -136,14 +177,19 @@ export default async function Home({
               <label htmlFor="role" className="mb-2 block text-sm font-medium text-[#10579F]">
                 Poste
               </label>
-              <input
+              <select
                 id="role"
                 name="role"
-                type="text"
                 required
-                placeholder="Ex: Comptable, Manager..."
                 className="w-full rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#10579F] focus:bg-white focus:ring-4 focus:ring-sky-100"
-              />
+                defaultValue="OBSERVATEUR"
+              >
+                {ROLE_OPTIONS.map((roleOption) => (
+                  <option key={roleOption} value={roleOption}>
+                    {roleOption}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <button
@@ -163,6 +209,24 @@ export default async function Home({
           {error === "server" ? (
             <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs text-rose-700">
               Impossible d&apos;enregistrer les donnees en base pour le moment.
+            </p>
+          ) : null}
+
+          {error === "user-limit" ? (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs text-amber-700">
+              Limite atteinte: seulement 8 comptes peuvent exister sur la plateforme.
+            </p>
+          ) : null}
+
+          {error === "role-taken" ? (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs text-amber-700">
+              Ce poste est deja attribue a une autre personne (PDG, Comptable, DG ou Directeur technique).
+            </p>
+          ) : null}
+
+          {error === "role-schema" ? (
+            <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs text-rose-700">
+              Les roles ne sont pas encore synchronises en base. Lance la migration avant de continuer.
             </p>
           ) : null}
 
