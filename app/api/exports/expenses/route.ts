@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { z } from "zod";
 
-import { canAccessHistoryAndExport, requireCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const exportQuerySchema = z.object({
   format: z.enum(["csv", "pdf"]).default("csv"),
@@ -32,6 +32,21 @@ function escapeCsv(value: string): string {
 }
 
 export async function GET(request: Request) {
+  if (!process.env.DATABASE_URL) {
+    return Response.json(
+      {
+        ok: false,
+        message: "DATABASE_URL non configuree",
+      },
+      { status: 503 }
+    );
+  }
+
+  const [{ prisma }, { canAccessHistoryAndExport, requireCurrentUser }] = await Promise.all([
+    import("@/lib/prisma"),
+    import("@/lib/auth"),
+  ]);
+
   const user = await requireCurrentUser();
 
   if (!canAccessHistoryAndExport(user.role)) {
