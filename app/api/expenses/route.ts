@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const createExpenseSchema = z.object({
   title: z.string().trim().min(1, "Le titre est requis"),
@@ -16,7 +17,19 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request) {
+  if (!process.env.DATABASE_URL) {
+    return Response.json(
+      {
+        ok: false,
+        message: "DATABASE_URL non configuree",
+      },
+      { status: 503 }
+    );
+  }
+
   try {
+    const { prisma } = await import("@/lib/prisma");
+
     const { searchParams } = new URL(request.url);
 
     const parsedQuery = querySchema.safeParse({
@@ -76,7 +89,19 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!process.env.DATABASE_URL) {
+    return Response.json(
+      {
+        ok: false,
+        message: "DATABASE_URL non configuree",
+      },
+      { status: 503 }
+    );
+  }
+
   try {
+    const { prisma } = await import("@/lib/prisma");
+
     const payload = await request.json();
     const parsedBody = createExpenseSchema.safeParse(payload);
 
