@@ -92,8 +92,21 @@ async function handleSignup(formData: FormData) {
   } catch (error) {
     console.error("Signup failed", error);
 
-    if (error instanceof Error && error.message.toLowerCase().includes("userrole")) {
-      redirect("/?error=role-schema");
+    if (error instanceof Error) {
+      const normalizedMessage = error.message.toLowerCase();
+
+      if (normalizedMessage.includes("userrole")) {
+        redirect("/?error=role-schema");
+      }
+
+      if (
+        normalizedMessage.includes("authentication failed") ||
+        normalizedMessage.includes("password authentication failed") ||
+        normalizedMessage.includes("can't reach database server") ||
+        normalizedMessage.includes("database_url")
+      ) {
+        redirect("/?error=db-connection");
+      }
     }
 
     redirect("/?error=server");
@@ -234,6 +247,12 @@ export default async function Home({
           {error === "role-schema" ? (
             <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs text-rose-700">
               Les roles ne sont pas encore synchronises en base. Lance la migration avant de continuer.
+            </p>
+          ) : null}
+
+          {error === "db-connection" ? (
+            <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs text-rose-700">
+              La connexion a la base a change. Redemarre le serveur puis reessaie avec la nouvelle DATABASE_URL.
             </p>
           ) : null}
 
