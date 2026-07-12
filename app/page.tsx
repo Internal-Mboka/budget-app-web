@@ -22,10 +22,18 @@ const UNIQUE_LEADERSHIP_ROLES: UserRole[] = [
   UserRole.DIRECTEUR_TECHNIQUE,
 ];
 
+function getFormStringValue(value: FormDataEntryValue | null): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 const signupSchema = z.object({
   name: z.string().trim().min(2, "Le nom est requis"),
   email: z.string().trim().email("Adresse mail invalide"),
-  phone: z.string().trim().min(6, "Numero invalide"),
+  phone: z
+    .string()
+    .trim()
+    .transform((value) => value.replaceAll(/[^\d+]/g, ""))
+    .refine((value) => value.length >= 6, "Numero invalide"),
   role: z.enum(ROLE_OPTIONS),
 });
 
@@ -33,10 +41,10 @@ async function handleSignup(formData: FormData) {
   "use server";
 
   const parsed = signupSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    role: formData.get("role"),
+    name: getFormStringValue(formData.get("name")),
+    email: getFormStringValue(formData.get("email")),
+    phone: getFormStringValue(formData.get("phone")),
+    role: getFormStringValue(formData.get("role")),
   });
 
   if (!parsed.success) {
