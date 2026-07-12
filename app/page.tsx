@@ -103,17 +103,47 @@ async function handleSignup(formData: FormData) {
     if (error instanceof Error) {
       const normalizedMessage = error.message.toLowerCase();
 
-      if (normalizedMessage.includes("userrole")) {
-        redirect("/?error=role-schema");
-      }
-
+      // Handle DB connection/authentication issues first.
       if (
         normalizedMessage.includes("authentication failed") ||
         normalizedMessage.includes("password authentication failed") ||
         normalizedMessage.includes("can't reach database server") ||
-        normalizedMessage.includes("database_url")
+        normalizedMessage.includes("database_url") ||
+        normalizedMessage.includes("econnrefused") ||
+        normalizedMessage.includes("p1000") ||
+        normalizedMessage.includes("p1001")
       ) {
         redirect("/?error=db-connection");
+      }
+
+      if (normalizedMessage.includes("userrole")) {
+        redirect("/?error=role-schema");
+      }
+
+      // Handle unique constraints that can happen in race conditions.
+      if (normalizedMessage.includes("unique constraint") || normalizedMessage.includes("p2002")) {
+        if (normalizedMessage.includes("user_single") || normalizedMessage.includes("role")) {
+          redirect("/?error=role-taken");
+        }
+
+        if (normalizedMessage.includes("email")) {
+          const existingByEmail = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true },
+          });
+
+          if (existingByEmail) {
+            await setSessionUser(existingByEmail.id);
+            redirect("/dashboard");
+          }
+        }
+      }
+
+      if (
+        normalizedMessage.includes("value too long") ||
+        normalizedMessage.includes("invalid input")
+      ) {
+        redirect("/?error=signup");
       }
     }
 
