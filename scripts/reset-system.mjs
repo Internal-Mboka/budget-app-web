@@ -1,6 +1,17 @@
+import "dotenv/config";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL missing");
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaNeon({ connectionString }),
+  log: ["error"],
+});
 
 async function main() {
   if (process.env.ALLOW_RESET !== "YES") {
