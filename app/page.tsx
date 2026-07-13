@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
-import { normalizeRole, setSessionUser } from "@/lib/auth";
+import { getCurrentUser, normalizeRole, setSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const MAX_PLATFORM_USERS = 8;
@@ -158,6 +158,12 @@ export default async function Home({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const currentUser = await getCurrentUser();
+
+  if (currentUser) {
+    redirect("/dashboard");
+  }
+
   const { error } = await searchParams;
 
   return (

@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     title: "Mboka Budget",
   },
   icons: {
-    icon: "/photos/mboka.png",
-    apple: "/photos/mboka.png",
+    icon: "/icon",
+    apple: "/apple-icon",
   },
 };
 
