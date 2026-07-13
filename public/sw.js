@@ -1,13 +1,13 @@
-const CACHE_NAME = "mboka-budget-v2";
+const CACHE_NAME = "mboka-budget-v3";
 const OFFLINE_URLS = [
   "/",
   "/dashboard",
   "/historique",
   "/photos/mboka.png",
   "/manifest.webmanifest",
-  "/icon?size=192",
-  "/icon?size=512",
-  "/apple-icon",
+  "/icon?size=192&v=3",
+  "/icon?size=512&v=3",
+  "/apple-icon?v=3",
 ];
 
 self.addEventListener("install", (event) => {

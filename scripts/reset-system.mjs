@@ -19,11 +19,24 @@ async function main() {
     process.exit(1);
   }
 
-  await prisma.$transaction([
-    prisma.expense.deleteMany(),
-    prisma.category.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.expense.deleteMany(),
+      prisma.category.deleteMany(),
+      prisma.user.deleteMany(),
+    ]);
+  } catch (error) {
+    const prismaCode = error && typeof error === "object" ? error.code : undefined;
+
+    if (prismaCode !== "P2028") {
+      throw error;
+    }
+
+    // Fallback: Neon peut refuser l'ouverture d'une transaction longue.
+    await prisma.expense.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.user.deleteMany();
+  }
 
   console.log("Reset termine: users, categories et expenses supprimes.");
 }
