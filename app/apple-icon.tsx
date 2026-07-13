@@ -1,1 +1,1 @@
-export { contentType, default, size } from "./icon";
+export { contentType, default, runtime, size } from "./icon";

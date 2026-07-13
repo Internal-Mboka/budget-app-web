@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 import { ImageResponse } from "next/og";
 
@@ -10,8 +11,8 @@ export const size = {
 };
 
 async function getLogoDataUrl() {
-  const logoFileUrl = new URL("../public/photos/mboka.png", import.meta.url);
-  const logoBuffer = await readFile(logoFileUrl);
+  const logoPath = path.join(process.cwd(), "public", "photos", "mboka.png");
+  const logoBuffer = await readFile(logoPath);
   return `data:image/png;base64,${logoBuffer.toString("base64")}`;
 }
 
