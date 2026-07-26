@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/cash-closing";
 import { computeExpectedClosingBalances, describeGapAmount } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
+import type { SuggestedOpeningFloat } from "@/lib/cash-closing/load-closings";
 import type { CashClosingDaySummary } from "@/lib/cash-closing/theoretical";
 import { formatMoney } from "@/lib/currency";
 import {
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 type CashClosingFormProps = {
   summary: CashClosingDaySummary;
   defaultClosingDate: string;
+  suggestedOpening?: SuggestedOpeningFloat | null;
 };
 
 function sanitizePhysicalAmount(value: string): string {
@@ -77,11 +79,23 @@ function FormulaLine({
   );
 }
 
-export function CashClosingForm({ summary, defaultClosingDate }: CashClosingFormProps) {
+function formatOpeningInput(value: number): string {
+  return value === 0 ? "0" : String(value);
+}
+
+export function CashClosingForm({
+  summary,
+  defaultClosingDate,
+  suggestedOpening,
+}: CashClosingFormProps) {
   const handledStateRef = useRef<CashClosingFormState>(null);
   const [state, formAction] = useActionState(createCashClosingFormAction, null);
-  const [openingCashInput, setOpeningCashInput] = useState("0");
-  const [openingMobileMoneyInput, setOpeningMobileMoneyInput] = useState("0");
+  const [openingCashInput, setOpeningCashInput] = useState(() =>
+    formatOpeningInput(suggestedOpening?.openingCash ?? 0)
+  );
+  const [openingMobileMoneyInput, setOpeningMobileMoneyInput] = useState(() =>
+    formatOpeningInput(suggestedOpening?.openingMobileMoney ?? 0)
+  );
   const [realCashInput, setRealCashInput] = useState("");
   const [realMobileMoneyInput, setRealMobileMoneyInput] = useState("");
 
@@ -180,31 +194,9 @@ export function CashClosingForm({ summary, defaultClosingDate }: CashClosingForm
           <div>
             <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Comptage de fin de journée</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              3 étapes : mouvements du jour → fond du matin → comptage du soir.
+              Fond du matin + activité du jour = montant à compter ce soir.
             </p>
           </div>
-        </div>
-
-        <div className="space-y-3" data-testid="cash-closing-theoretical-panel">
-          <StepBadge step={1} label="Mouvements liquides du jour (automatique)" />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 dark:border-slate-800 dark:bg-slate-900/40">
-              <p className={mbokaLabelClassName}>Espèces</p>
-              <p className="mt-1 text-lg font-semibold text-[#10579F] dark:text-sky-50" data-testid="cash-closing-theoretical-cash">
-                {formatSignedMoney(summary.netCash)}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 dark:border-slate-800 dark:bg-slate-900/40">
-              <p className={mbokaLabelClassName}>Mobile Money</p>
-              <p className="mt-1 text-lg font-semibold text-[#10579F] dark:text-sky-50" data-testid="cash-closing-theoretical-mobile">
-                {formatSignedMoney(summary.netMobileMoney)}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {summary.liquidTransactionCount} opération{summary.liquidTransactionCount > 1 ? "s" : ""} en
-            espèces ou mobile money (revenus − dépenses).
-          </p>
         </div>
 
         <form action={formAction} className="space-y-6">
@@ -225,7 +217,17 @@ export function CashClosingForm({ summary, defaultClosingDate }: CashClosingForm
               </Field>
 
               <div className="space-y-4">
-                <StepBadge step={2} label="Fond de caisse ce matin" />
+                <StepBadge step={1} label="Fond de caisse ce matin" />
+                {suggestedOpening ? (
+                  <p
+                    className="text-xs text-slate-500 dark:text-slate-400"
+                    data-testid="cash-closing-suggested-opening-hint"
+                  >
+                    Prérempli depuis la clôture du{" "}
+                    {new Date(suggestedOpening.sourceClosingDate).toLocaleDateString("fr-FR")} (montants
+                    comptés ce soir-là).
+                  </p>
+                ) : null}
                 <div className="grid gap-4 lg:grid-cols-2">
                   <Field className="gap-2">
                     <FieldLabel htmlFor="openingCash" className={mbokaLabelClassName}>
@@ -264,8 +266,40 @@ export function CashClosingForm({ summary, defaultClosingDate }: CashClosingForm
                 </div>
               </div>
 
+              <div className="space-y-3" data-testid="cash-closing-theoretical-panel">
+                <StepBadge step={2} label="Activité du jour (automatique)" />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Revenus − dépenses en espèces ou mobile money. Ce n&apos;est{" "}
+                  <strong>pas</strong> le montant en caisse — c&apos;est la variation du jour.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 dark:border-slate-800 dark:bg-slate-900/40">
+                    <p className={mbokaLabelClassName}>Variation espèces</p>
+                    <p
+                      className="mt-1 text-base font-semibold text-slate-700 dark:text-slate-200"
+                      data-testid="cash-closing-theoretical-cash"
+                    >
+                      {formatSignedMoney(summary.netCash)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 dark:border-slate-800 dark:bg-slate-900/40">
+                    <p className={mbokaLabelClassName}>Variation mobile money</p>
+                    <p
+                      className="mt-1 text-base font-semibold text-slate-700 dark:text-slate-200"
+                      data-testid="cash-closing-theoretical-mobile"
+                    >
+                      {formatSignedMoney(summary.netMobileMoney)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {summary.liquidTransactionCount} opération{summary.liquidTransactionCount > 1 ? "s" : ""}{" "}
+                  enregistrée{summary.liquidTransactionCount > 1 ? "s" : ""} aujourd&apos;hui.
+                </p>
+              </div>
+
               <div className="space-y-3" data-testid="cash-closing-expected-panel">
-                <p className={mbokaLabelClassName}>Solde attendu ce soir</p>
+                <StepBadge step={3} label="Montant à compter ce soir" />
                 <div className="grid gap-3">
                   <FormulaLine
                     label="Espèces"
@@ -280,19 +314,38 @@ export function CashClosingForm({ summary, defaultClosingDate }: CashClosingForm
                     expected={expected.expectedMobileMoney}
                   />
                 </div>
+                <div
+                  className="rounded-2xl border-2 border-[#10579F]/20 bg-[#10579F]/5 px-4 py-4 dark:border-sky-700/40 dark:bg-sky-950/30"
+                  data-testid="cash-closing-expected-total"
+                >
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Total liquide attendu
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-[#10579F] dark:text-sky-50">
+                    {formatMoney(expected.expectedTotal)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Fond du matin{" "}
+                    {formatMoney(
+                      (Number.isFinite(openingCash) ? openingCash : 0) +
+                        (Number.isFinite(openingMobileMoney) ? openingMobileMoney : 0)
+                    )}{" "}
+                    · Activité du jour {formatSignedMoney(summary.netCash + summary.netMobileMoney)}
+                  </p>
+                </div>
                 {(expected.expectedCash < 0 || expected.expectedMobileMoney < 0) && (
                   <p
                     className="text-xs text-amber-700 dark:text-amber-300"
                     data-testid="cash-closing-opening-hint"
                   >
-                    Solde attendu négatif : augmentez le fond du matin (ex. s&apos;il restait 50 $ en caisse,
-                    saisissez 50).
+                    Montant attendu négatif : vérifiez le fond du matin (ex. s&apos;il restait 50 $ en caisse
+                    hier soir, saisissez 50).
                   </p>
                 )}
               </div>
 
               <div className="space-y-4">
-                <StepBadge step={3} label="Comptage physique ce soir" />
+                <StepBadge step={4} label="Comptage physique ce soir" />
                 <div className="grid gap-4 lg:grid-cols-2">
                   <Field className="gap-2">
                     <FieldLabel htmlFor="realCash" className={mbokaLabelClassName}>

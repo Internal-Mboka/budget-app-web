@@ -1,3 +1,4 @@
+import { getClosingDayRange } from "@/lib/cash-closing/day-range";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
 
@@ -42,4 +43,37 @@ export async function loadRecentCashClosings(limit = 20): Promise<CashClosingHis
     createdAt: row.createdAt.toISOString(),
     operator: row.operator,
   }));
+}
+
+export type SuggestedOpeningFloat = {
+  openingCash: number;
+  openingMobileMoney: number;
+  sourceClosingDate: string;
+};
+
+/** Reprend les montants comptés à la dernière clôture avant la date choisie. */
+export async function loadSuggestedOpeningFloat(
+  closingDate: string
+): Promise<SuggestedOpeningFloat | null> {
+  const { start } = getClosingDayRange(closingDate);
+
+  const previous = await prisma.cashClosing.findFirst({
+    where: { date: { lt: start } },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: {
+      date: true,
+      realCash: true,
+      realMobileMoney: true,
+    },
+  });
+
+  if (!previous) {
+    return null;
+  }
+
+  return {
+    openingCash: decimalToNumber(previous.realCash),
+    openingMobileMoney: decimalToNumber(previous.realMobileMoney),
+    sourceClosingDate: previous.date.toISOString(),
+  };
 }
