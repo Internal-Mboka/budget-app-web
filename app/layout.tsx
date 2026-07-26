@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { AppProviders } from "@/components/providers/app-providers";
+
 import "./globals.css";
 import { PwaRegister } from "./pwa-register";
 
@@ -15,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Mboka Budget",
-  description: "Plateforme de suivi des revenus et depenses",
+  description: "Plateforme de gestion financiere et operationnelle Mboka Studio",
   manifest: "/manifest.webmanifest",
   themeColor: "#10579F",
   appleWebApp: {
@@ -37,11 +40,14 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PwaRegister />
-        {children}
+        <AppProviders>
+          <PwaRegister />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

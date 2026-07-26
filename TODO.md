@@ -22,62 +22,65 @@
 - [x] **Étape 2** — Analyse du dossier pilote (`conception.md`, `dependences.md`, `schemas.md`, `specs.md`)
 - [x] Création de ce fichier `TODO.md`
 
-> **Statut :** en attente de votre **GO** pour lancer l'Étape 3.
+> **Statut :** Phase 0 validée — GO reçu.
 
 ---
 
 ## Phase 1 — Grand Nettoyage & Dépendances (Étape 3)
 
+> **Statut :** terminée — en attente de votre validation / commit.
+
 ### 1.1 Nettoyage du code obsolète
 
-- [ ] Supprimer le modèle `Expense` / `Category` et tout le code associé (pages, API, scripts)
-- [ ] Supprimer l'authentification cookie-only sans mot de passe (`app/page.tsx` signup public)
-- [ ] Supprimer les routes API non sécurisées (`/api/expenses`, `/api/db`, `/api/exports/expenses`)
-- [ ] Supprimer les scripts de migration legacy (`fix-leadership-duplicates`, `diagnose-role-migration`, etc.)
-- [ ] Supprimer les pages monolithiques (`app/dashboard/`, `app/historique/`)
-- [ ] Nettoyer les assets / fichiers boilerplate inutiles (`public/vercel.svg`, `build-full.log`, etc.)
-- [ ] Conserver : identité visuelle, `lib/prisma.ts`, base PWA (`manifest.ts`, `pwa-register.tsx`), config Next/Tailwind
+- [x] Supprimer le modèle `Expense` / `Category` et tout le code associé (pages, API, scripts)
+- [x] Supprimer l'authentification cookie-only sans mot de passe (signup public)
+- [x] Supprimer les routes API non sécurisées (`/api/expenses`, `/api/db`, `/api/exports/expenses`)
+- [x] Supprimer les scripts de migration legacy (`fix-leadership-duplicates`, `diagnose-role-migration`, etc.)
+- [x] Supprimer les pages monolithiques (`app/dashboard/`, `app/historique/`)
+- [x] Nettoyer les assets / fichiers boilerplate inutiles (`public/vercel.svg`, `build-full.log`, etc.)
+- [x] Conserver : identité visuelle, `lib/prisma.ts`, base PWA (`manifest.ts`, `pwa-register.tsx`), config Next/Tailwind
+- [ ] *(Reporté Étape 4)* Réécrire `prisma/schema.prisma` — ancien schéma encore présent
 
 ### 1.2 Structure Atomic Design
 
-- [ ] Créer l'arborescence `components/{atoms,molecules,organisms,templates}`
-- [ ] Créer `components/ui/` (shadcn/ui)
-- [ ] Créer `lib/` métier (`auth`, `permissions`, `audit`, `currency`, etc.)
+- [x] Créer l'arborescence `components/{atoms,molecules,organisms,templates}`
+- [x] Créer `components/ui/` (shadcn/ui — `button` initial)
+- [x] Créer `lib/` métier (`auth`, `permissions`, `audit`, `currency`, `utils`)
 
 ### 1.3 Installation des dépendances (`thisproject/dependences.md`)
 
 **Auth & Sécurité**
-- [ ] `next-auth` (v5 / Auth.js)
-- [ ] `bcryptjs` (+ `@types/bcryptjs`)
+- [x] `next-auth` (v5 / Auth.js)
+- [x] `bcryptjs` (+ `@types/bcryptjs`)
 
 **Formulaires & Validation**
-- [ ] `react-hook-form`, `@hookform/resolvers` *(zod déjà présent)*
+- [x] `react-hook-form`, `@hookform/resolvers` *(zod déjà présent)*
 
 **UI / UX**
-- [ ] shadcn/ui (Radix UI)
-- [ ] `lucide-react`
-- [ ] `framer-motion`
-- [ ] `next-themes`
+- [x] shadcn/ui (Radix UI / Base UI)
+- [x] `lucide-react`
+- [x] `framer-motion`
+- [x] `next-themes`
 
 **Dashboard & Dataviz**
-- [ ] `recharts` *(ou `@tremor/react` — à confirmer)*
-- [ ] `@tanstack/react-table`
+- [x] `recharts`
+- [x] `@tanstack/react-table`
 
 **Exports**
-- [ ] `@react-pdf/renderer`
-- [ ] `papaparse` *(ou `exceljs` — à confirmer)*
+- [x] `@react-pdf/renderer`
+- [x] `papaparse`
 
 **PWA & Notifications**
-- [ ] `@ducanh27012/next-pwa`
-- [ ] `sonner`
-- [ ] Brevo *(clé API requise — demander au client)*
+- [x] `@ducanh2912/next-pwa` *(corrigé depuis typo pilote `@ducanh27012`)*
+- [x] `sonner`
+- [ ] Brevo *(SDK + clé API — reporté à US-54)*
 
 **Utilitaires**
-- [ ] `date-fns`
-- [ ] `currency.js` *(ou `numeral`)*
+- [x] `date-fns`
+- [x] `currency.js`
 
 **Tests E2E**
-- [ ] `cypress` (+ config initiale)
+- [x] `cypress` (+ `cypress.config.ts`, spec `home.cy.ts`)
 
 ---
 
@@ -237,4 +240,5 @@
 
 | Date | Étape | Validé par | Commit |
 |------|-------|------------|--------|
-| — | Phase 0 (Analyse) | *En attente* | — |
+| 2026-07-26 | Phase 0 (Analyse) | GO reçu | — |
+| 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | *En attente* | — |
