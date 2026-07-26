@@ -37,7 +37,7 @@ export const mbokaLabelClassName =
 
 /** Bouton pleine largeur — identique à la branche main (login). */
 export const mbokaSubmitButtonClassName =
-  "mt-2 w-full rounded-2xl bg-[#10579F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40";
+  "mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#10579F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40";
 
 export const mbokaButtonPrimaryClassName =
   "inline-flex items-center justify-center gap-2 rounded-2xl bg-[#10579F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40";
