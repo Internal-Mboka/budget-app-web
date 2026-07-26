@@ -1,7 +1,9 @@
 import { CashClosingForm } from "@/components/organisms/cash-closing-form";
+import { CashClosingsHistoryPanel } from "@/components/organisms/cash-closings-history-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { formatClosingDateInput } from "@/lib/cash-closing/day-range";
+import { loadRecentCashClosings } from "@/lib/cash-closing/load-closings";
 import { computeCashClosingDaySummary } from "@/lib/cash-closing/theoretical";
 import { PERMISSIONS } from "@/lib/permissions";
 
@@ -13,7 +15,11 @@ export default async function CashClosingPage({ searchParams }: CashClosingPageP
   await requirePermission(PERMISSIONS.CASH_CLOSE);
   const query = await searchParams;
   const closingDate = query.date ?? formatClosingDateInput();
-  const summary = await computeCashClosingDaySummary(closingDate);
+
+  const [summary, recentClosings] = await Promise.all([
+    computeCashClosingDaySummary(closingDate),
+    loadRecentCashClosings(15),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -24,6 +30,8 @@ export default async function CashClosingPage({ searchParams }: CashClosingPageP
       />
 
       <CashClosingForm summary={summary} defaultClosingDate={closingDate} />
+
+      <CashClosingsHistoryPanel closings={recentClosings} />
     </div>
   );
 }

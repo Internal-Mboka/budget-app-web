@@ -6,6 +6,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { formatMoney } from "@/lib/currency";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
@@ -34,10 +35,6 @@ type CashClosingDetailPanelProps = {
   };
 };
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
-}
-
 export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPanelProps) {
   useEffect(() => {
     if (flash?.created) {
@@ -55,6 +52,16 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
 
   return (
     <div className="space-y-6">
+      <CashClosingOperatorCard
+        operator={closing.operator}
+        emphasized={closing.hasDiscrepancy}
+        subtitle={
+          closing.hasDiscrepancy
+            ? "Responsable identifié — un écart a été constaté sur cette clôture"
+            : "Responsable identifié — clôture conforme"
+        }
+      />
+
       <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="cash-closing-detail-panel">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
@@ -130,30 +137,6 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
             data-testid="cash-closing-detail-gap"
           >
             {formatMoney(closing.gapAmount)}
-          </p>
-        </div>
-      </section>
-
-      <section
-        className={cn(mbokaPanelClassName, "flex items-center gap-4 p-5 sm:p-6")}
-        data-testid="cash-closing-operator-card"
-      >
-        {closing.operator.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={closing.operator.avatarUrl}
-            alt={`${closing.operator.firstName} ${closing.operator.lastName}`}
-            className="size-12 rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#10579F] text-sm font-semibold text-white">
-            {getInitials(closing.operator.firstName, closing.operator.lastName)}
-          </div>
-        )}
-        <div>
-          <p className={mbokaLabelClassName}>Opérateur de clôture</p>
-          <p className="mt-1 text-sm font-semibold text-[#10579F] dark:text-sky-50" data-testid="cash-closing-operator-name">
-            {closing.operator.firstName} {closing.operator.lastName}
           </p>
         </div>
       </section>

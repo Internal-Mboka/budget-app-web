@@ -170,7 +170,7 @@
 | US | Titre | Statut |
 |----|-------|--------|
 | US-32 | Comptages réels fin de journée | `[x]` |
-| US-33 | Responsabilisation visuelle opérateur | `[ ]` |
+| US-33 | Responsabilisation visuelle opérateur | `[x]` |
 | US-34 | Notes de justification d'écart | `[ ]` |
 | US-35 | Historique clôtures passées | `[ ]` |
 | US-36 | Verrouillage transactions après clôture | `[ ]` |
