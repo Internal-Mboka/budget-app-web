@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requirePermission } from "@/lib/auth/session";
+import { requirePermission, requireSession, hasAnyPermission } from "@/lib/auth/session";
+import { parseClientsImportCsv } from "@/lib/clients/import";
 import {
   buildClientSearchWhere,
   CLIENT_SEARCH_LIMIT,
@@ -258,5 +259,133 @@ export async function updateClientAction(formData: FormData): Promise<ClientActi
       address: updated.address,
       notes: updated.notes,
     },
+  };
+}
+
+export type ImportClientsActionResult = {
+  success: boolean;
+  created: number;
+  skipped: number;
+  errors: string[];
+  error?: string;
+};
+
+async function requireClientImportExportPermission() {
+  const session = await requireSession();
+
+  if (
+    !hasAnyPermission(session.user.permissions, [
+      PERMISSIONS.DASHBOARD_FULL,
+      PERMISSIONS.DASHBOARD_FINANCIAL,
+    ])
+  ) {
+    throw new Error("forbidden");
+  }
+
+  return session;
+}
+
+export async function importClientsAction(formData: FormData): Promise<ImportClientsActionResult> {
+  let session;
+
+  try {
+    session = await requireClientImportExportPermission();
+  } catch {
+    return {
+      success: false,
+      created: 0,
+      skipped: 0,
+      errors: [],
+      error: "Vous n'avez pas la permission d'importer des clients.",
+    };
+  }
+
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return {
+      success: false,
+      created: 0,
+      skipped: 0,
+      errors: [],
+      error: "Veuillez sélectionner un fichier CSV.",
+    };
+  }
+
+  const content = await file.text();
+  const { rows, errors } = parseClientsImportCsv(content);
+
+  if (rows.length === 0) {
+    return {
+      success: false,
+      created: 0,
+      skipped: 0,
+      errors,
+      error: errors[0] ?? "Le fichier CSV est invalide ou vide.",
+    };
+  }
+
+  let created = 0;
+  let skipped = 0;
+  const importErrors = [...errors];
+
+  for (const row of rows) {
+    const duplicateByName = await findDuplicateClientByName(row.name);
+
+    if (duplicateByName) {
+      skipped += 1;
+      importErrors.push(`Ignoré « ${row.name} » : un client avec ce nom existe déjà.`);
+      continue;
+    }
+
+    if (row.phone) {
+      const duplicateByPhone = await findDuplicateClientByPhone(row.phone);
+
+      if (duplicateByPhone) {
+        skipped += 1;
+        importErrors.push(`Ignoré « ${row.name} » : téléphone déjà utilisé.`);
+        continue;
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const client = await tx.client.create({
+        data: {
+          name: row.name,
+          category: row.category,
+          phone: row.phone ?? null,
+          email: row.email ?? null,
+          address: row.address ?? null,
+          notes: row.notes ?? null,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action: "CLIENT_IMPORTED",
+          entity: "Client",
+          entityId: client.id,
+          userId: session.user.id,
+          details: {
+            name: client.name,
+            category: client.category,
+            performedBy: session.user.email,
+            source: "csv-import",
+          },
+        },
+      });
+    });
+
+    created += 1;
+  }
+
+  revalidatePath("/clients");
+
+  return {
+    success: created > 0,
+    created,
+    skipped,
+    errors: importErrors,
+    error: created === 0 ? "Aucun client importé." : undefined,
   };
 }

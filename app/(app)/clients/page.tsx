@@ -1,3 +1,4 @@
+import { ClientImportExportPanel } from "@/components/organisms/client-import-export-panel";
 import { ClientsManagement } from "@/components/organisms/clients-management";
 import { ClientSearchPanel } from "@/components/organisms/client-search-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
@@ -13,6 +14,10 @@ export default async function ClientsPage() {
     PERMISSIONS.DASHBOARD_FINANCIAL,
   ]);
   const canEditClient = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
+  const canImportExport = hasAnyPermission(session.user.permissions, [
+    PERMISSIONS.DASHBOARD_FULL,
+    PERMISSIONS.DASHBOARD_FINANCIAL,
+  ]);
 
   const clients = await prisma.client.findMany({
     orderBy: [{ name: "asc" }],
@@ -48,6 +53,8 @@ export default async function ClientsPage() {
       />
 
       <ClientSearchPanel />
+
+      {canImportExport ? <ClientImportExportPanel /> : null}
 
       <ClientsManagement
         initialClients={clientRows}
