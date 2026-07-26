@@ -17,7 +17,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
   const params = await searchParams;
   const paginationParams = parsePagination(params);
 
-  const where = { type: "EXPENSE" as const };
+  const where = { type: "EXPENSE" as const, isRecurring: false };
 
   const [total, expenses] = await Promise.all([
     prisma.transaction.count({ where }),

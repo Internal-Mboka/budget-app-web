@@ -9,7 +9,9 @@ function isExpenseDetailPath(pathname: string): boolean {
     /^\/expenses\/[^/]+$/.test(pathname) &&
     pathname !== "/expenses/new" &&
     pathname !== "/expenses/staff" &&
-    pathname !== "/expenses/approvals"
+    pathname !== "/expenses/approvals" &&
+    pathname !== "/expenses/recurring" &&
+    !pathname.startsWith("/expenses/recurring/")
   );
 }
 
@@ -47,6 +49,13 @@ export function ExpensesSubNav({ showApprovalsNav = false }: ExpensesSubNavProps
       isActive: (path) => path.startsWith("/expenses/approvals"),
     });
   }
+
+  items.push({
+    href: "/expenses/recurring",
+    label: "Récurrentes",
+    testId: "expenses-subnav-recurring",
+    isActive: (path) => path.startsWith("/expenses/recurring"),
+  });
 
   items.push({
     href: "/expenses/new",

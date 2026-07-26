@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { ExpenseRecurringDueSection } from "@/components/organisms/expense-recurring-due-section";
 import { ExpenseApprovalSection } from "@/components/organisms/expense-approval-section";
 import { ExpenseStaffPayrollSection } from "@/components/organisms/expense-staff-payroll-section";
 import { ExpenseAttachmentsSection } from "@/components/organisms/expense-attachments-section";
@@ -20,6 +21,7 @@ import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { cn } from "@/lib/utils";
 import type { ApprovalStatus, ExpenseCategory } from "@prisma/client";
 import { getApprovalStatusLabel, isApprovalPending } from "@/lib/expenses/approval";
+import { parseRecurringDueMetadata } from "@/lib/expenses/recurring";
 
 type ExpenseDetailPanelProps = {
   expense: {
@@ -32,6 +34,7 @@ type ExpenseDetailPanelProps = {
     metadata: ExpenseMetadata | null;
     createdAt: string;
     approvalStatus?: ApprovalStatus;
+    paymentStatus?: string;
     isAdjustment?: boolean;
     parentTransaction?: {
       id: string;
@@ -52,6 +55,7 @@ type ExpenseDetailPanelProps = {
     pendingApproval?: boolean;
     approved?: boolean;
     rejected?: boolean;
+    disbursed?: boolean;
   };
 };
 
@@ -68,6 +72,8 @@ export function ExpenseDetailPanel({
 }: ExpenseDetailPanelProps) {
   const netAmount = getNetTransactionAmount(expense.totalAmount, adjustments);
   const staffPayroll = parseStaffPayrollMetadata(expense.metadata);
+  const recurringDue = parseRecurringDueMetadata(expense.metadata);
+  const isRecurringDueSettled = expense.paymentStatus === "SOLDE";
 
   useEffect(() => {
     if (flash?.created && flash?.pendingApproval) {
@@ -78,6 +84,8 @@ export function ExpenseDetailPanel({
       toast.success("Dépense approuvée.");
     } else if (flash?.rejected) {
       toast.message("Dépense refusée par la direction.");
+    } else if (flash?.disbursed) {
+      toast.success("Décaissement confirmé.");
     } else if (flash?.adjusted) {
       toast.success("Avoir / régularisation enregistré.");
     } else if (flash?.attached) {
@@ -88,6 +96,7 @@ export function ExpenseDetailPanel({
     flash?.pendingApproval,
     flash?.approved,
     flash?.rejected,
+    flash?.disbursed,
     flash?.adjusted,
     flash?.attached,
     expense.code,
@@ -180,6 +189,15 @@ export function ExpenseDetailPanel({
       </section>
 
       {staffPayroll ? <ExpenseStaffPayrollSection staffPayroll={staffPayroll} /> : null}
+
+      {recurringDue ? (
+        <ExpenseRecurringDueSection
+          transactionId={expense.id}
+          recurringDue={recurringDue}
+          totalAmount={expense.totalAmount}
+          isSettled={isRecurringDueSettled}
+        />
+      ) : null}
 
       {!expense.isAdjustment && expense.approvalStatus ? (
         <ExpenseApprovalSection

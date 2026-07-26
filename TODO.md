@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24), `expenses.cy.ts` (US-25), `expense-adjustments.cy.ts` (US-26), `expense-attachments.cy.ts` (US-27), `expense-staff-payroll.cy.ts` (US-28), `expense-approval.cy.ts` (US-29)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24), `expenses.cy.ts` (US-25), `expense-adjustments.cy.ts` (US-26), `expense-attachments.cy.ts` (US-27), `expense-staff-payroll.cy.ts` (US-28), `expense-approval.cy.ts` (US-29), `expense-recurring.cy.ts` (US-30)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -162,7 +162,7 @@
 | US-27 | Pièces justificatives (attachments) | `[x]` |
 | US-28 | Paies & cachets staff | `[x]` |
 | US-29 | Approbation dépenses à seuil élevé | `[x]` |
-| US-30 | Dépenses récurrentes automatisées | `[ ]` |
+| US-30 | Dépenses récurrentes automatisées | `[x]` |
 | US-31 | Avances de caisse / notes de frais | `[ ]` |
 
 ### SPEC 5 — Clôture de Caisse & Rapprochement

@@ -20,6 +20,7 @@ export default async function ExpensesStaffPage({ searchParams }: ExpensesStaffP
     type: "EXPENSE" as const,
     expenseCategory: "PAIES_CACHETS_STAFF" as const,
     isAdjustment: false,
+    isRecurring: false,
   };
 
   const [total, personnelAgg, expenses] = await Promise.all([

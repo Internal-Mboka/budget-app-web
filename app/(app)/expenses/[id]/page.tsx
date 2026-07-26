@@ -21,6 +21,7 @@ type ExpenseDetailPageProps = {
     pendingApproval?: string;
     approved?: string;
     rejected?: string;
+    disbursed?: string;
   }>;
 };
 
@@ -41,6 +42,7 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
       metadata: true,
       createdAt: true,
       isAdjustment: true,
+      status: true,
       approvalStatus: true,
       parentTransactionId: true,
       approvedBy: {
@@ -94,6 +96,7 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
           metadata: expense.metadata as ExpenseMetadata | null,
           createdAt: expense.createdAt.toISOString(),
           approvalStatus: expense.approvalStatus,
+          paymentStatus: expense.status,
           isAdjustment: expense.isAdjustment,
           parentTransaction: expense.parentTransaction,
         }}
@@ -109,6 +112,7 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
           pendingApproval: query.pendingApproval === "1",
           approved: query.approved === "1",
           rejected: query.rejected === "1",
+          disbursed: query.disbursed === "1",
           adjusted: query.adjusted === "1",
           attached: query.attached === "1",
         }}
