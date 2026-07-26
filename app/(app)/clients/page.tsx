@@ -1,15 +1,16 @@
 import { ClientsManagement } from "@/components/organisms/clients-management";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
-import { hasPermission, requirePermission } from "@/lib/auth/session";
+import { hasAnyPermission, requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 
 export default async function ClientsPage() {
   const session = await requirePermission(PERMISSIONS.FINANCE_CREATE_REVENUE);
 
-  const canViewDetail =
-    hasPermission(session.user.permissions, PERMISSIONS.DASHBOARD_FULL) ||
-    hasPermission(session.user.permissions, PERMISSIONS.DASHBOARD_FINANCIAL);
+  const canViewDetail = hasAnyPermission(session.user.permissions, [
+    PERMISSIONS.DASHBOARD_FULL,
+    PERMISSIONS.DASHBOARD_FINANCIAL,
+  ]);
 
   const clients = await prisma.client.findMany({
     orderBy: [{ name: "asc" }],

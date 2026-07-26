@@ -13,6 +13,29 @@ import { parseSessionClientMeta } from "@/lib/sessions/user-agent";
 import { authConfig } from "./auth.config";
 import { credentialsProvider } from "./providers";
 
+async function readSessionClientMeta() {
+  const headerList = await headers();
+
+  return parseSessionClientMeta(
+    headerList.get("user-agent"),
+    headerList.get("x-forwarded-for"),
+    headerList.get("x-real-ip")
+  );
+}
+
+async function attachSessionRecord(userId: string, token: Record<string, unknown>) {
+  try {
+    const meta = await readSessionClientMeta();
+    const dbSession = await createUserSession(userId, meta);
+    token.sessionId = dbSession.id;
+    token.lastActiveBump = Date.now();
+  } catch (error) {
+    console.error("Failed to persist session record", error);
+  }
+
+  return token;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [credentialsProvider],
@@ -22,40 +45,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const nextToken = await authConfig.callbacks.jwt({ token, user, trigger, session });
 
       if (user?.id) {
-        const headerList = await headers();
-        const meta = parseSessionClientMeta(
-          headerList.get("user-agent"),
-          headerList.get("x-forwarded-for"),
-          headerList.get("x-real-ip")
-        );
-        const dbSession = await createUserSession(user.id, meta);
-        nextToken.sessionId = dbSession.id;
-        nextToken.lastActiveBump = Date.now();
-        return nextToken;
+        return attachSessionRecord(user.id, nextToken);
       }
 
       if (!nextToken.sub) {
         return nextToken;
       }
 
-      if (!nextToken.sessionId) {
-        return null;
-      }
-
-      const sessionId = String(nextToken.sessionId);
       const userId = String(nextToken.sub);
-      const isActive = await isUserSessionActive(sessionId, userId);
 
-      if (!isActive) {
-        return null;
+      if (!nextToken.sessionId) {
+        await attachSessionRecord(userId, nextToken);
+
+        if (!nextToken.sessionId) {
+          return nextToken;
+        }
       }
 
-      const lastActiveBump =
-        typeof nextToken.lastActiveBump === "number" ? nextToken.lastActiveBump : undefined;
+      try {
+        const sessionId = String(nextToken.sessionId);
+        const isActive = await isUserSessionActive(sessionId, userId);
 
-      if (shouldTouchSession(lastActiveBump)) {
-        await touchUserSession(sessionId);
-        nextToken.lastActiveBump = Date.now();
+        if (!isActive) {
+          return null;
+        }
+
+        const lastActiveBump =
+          typeof nextToken.lastActiveBump === "number" ? nextToken.lastActiveBump : undefined;
+
+        if (shouldTouchSession(lastActiveBump)) {
+          await touchUserSession(sessionId);
+          nextToken.lastActiveBump = Date.now();
+        }
+      } catch (error) {
+        console.error("Session validation failed, keeping JWT active", error);
       }
 
       return nextToken;

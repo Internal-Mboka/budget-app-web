@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { ClientDetailPanel } from "@/components/organisms/client-detail-panel";
-import { hasPermission, requireSession } from "@/lib/auth/session";
+import { hasAnyPermission, requireSession } from "@/lib/auth/session";
 import { computeClientStats, decimalToNumber } from "@/lib/clients/stats";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -13,9 +13,10 @@ type ClientDetailPageProps = {
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const session = await requireSession();
 
-  const canViewDetail =
-    hasPermission(session.user.permissions, PERMISSIONS.DASHBOARD_FULL) ||
-    hasPermission(session.user.permissions, PERMISSIONS.DASHBOARD_FINANCIAL);
+  const canViewDetail = hasAnyPermission(session.user.permissions, [
+    PERMISSIONS.DASHBOARD_FULL,
+    PERMISSIONS.DASHBOARD_FINANCIAL,
+  ]);
 
   if (!canViewDetail) {
     redirect("/clients");

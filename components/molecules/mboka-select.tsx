@@ -2,6 +2,7 @@
 
 import { Select } from "@base-ui/react/select";
 import { Check, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { mbokaFieldClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -43,10 +44,38 @@ export function MbokaSelect({
   disabled,
   placeholder = "Sélectionner…",
 }: MbokaSelectProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const items = options.map((option) => ({
     value: option.value,
     label: option.label,
   }));
+
+  const selectedLabel =
+    options.find((option) => option.value === (value ?? defaultValue))?.label ?? placeholder;
+
+  const triggerClassName = cn(
+    mbokaFieldClassName,
+    "flex h-auto min-h-12 w-full items-center justify-between gap-2 text-left data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
+  );
+
+  if (!mounted) {
+    return (
+      <div
+        id={id}
+        data-testid={id ? `${id}-trigger` : undefined}
+        className={triggerClassName}
+        aria-hidden
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown className="size-4 shrink-0 text-slate-400" />
+      </div>
+    );
+  }
 
   return (
     <Select.Root
@@ -61,10 +90,7 @@ export function MbokaSelect({
     >
       <Select.Trigger
         data-testid={id ? `${id}-trigger` : undefined}
-        className={cn(
-          mbokaFieldClassName,
-          "flex h-auto min-h-12 w-full items-center justify-between gap-2 text-left data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
-        )}
+        className={triggerClassName}
       >
         <Select.Value placeholder={placeholder} className="truncate" />
         <Select.Icon className="shrink-0 text-slate-400">

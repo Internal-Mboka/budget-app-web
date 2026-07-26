@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ArrowLeft, Receipt } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
@@ -65,6 +65,20 @@ function statusBadgeClass(status: string) {
     default:
       return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
   }
+}
+
+function TransactionDate({ isoDate }: { isoDate: string }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    setLabel(format(new Date(isoDate), "d MMM yyyy", { locale: fr }));
+  }, [isoDate]);
+
+  return (
+    <p className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+      {label || "—"}
+    </p>
+  );
 }
 
 export function ClientDetailPanel({ client, transactions, stats }: ClientDetailPanelProps) {
@@ -184,9 +198,7 @@ export function ClientDetailPanel({ client, transactions, stats }: ClientDetailP
                     <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
                       {transaction.code}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {format(new Date(transaction.createdAt), "d MMM yyyy", { locale: fr })}
-                    </p>
+                    <TransactionDate isoDate={transaction.createdAt} />
                   </div>
                 </div>
 

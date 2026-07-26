@@ -1,4 +1,5 @@
 export { handlers, auth, signIn, signOut } from "./instance";
+export { getSession } from "./get-session";
 export { authConfig } from "./auth.config";
 export {
   canAccessRoute,
@@ -6,4 +7,4 @@ export {
   isPublicPath,
   ROUTE_PERMISSIONS,
 } from "./routes";
-export { hasPermission, requirePermission, requireSession } from "./session";
+export { hasAnyPermission, hasPermission, requirePermission, requireSession } from "./session";
