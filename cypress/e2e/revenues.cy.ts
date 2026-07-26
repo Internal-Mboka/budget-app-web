@@ -36,10 +36,10 @@ describe("Mboka Budget — US-16 Saisie revenus", () => {
 
     cy.get('[data-testid="revenue-create-submit"]').click();
 
-    cy.contains("Revenu TR-", { timeout: 15000 }).should("be.visible");
-    cy.location("pathname").should("eq", "/revenues");
-    cy.location("search").should("include", "created=TR-");
-    cy.get('[data-testid^="revenue-row-TR-"]').should("have.length.at.least", 1);
+    cy.get('[data-testid="revenue-detail-panel"]', { timeout: 15000 }).should("be.visible");
+    cy.location("pathname").should("match", /^\/revenues\/[^/]+$/);
+    cy.location("search").should("include", "created=1");
+    cy.get('[data-testid="revenue-detail-panel"]').contains("TR-").should("be.visible");
     cy.dismissToasts();
   });
 });

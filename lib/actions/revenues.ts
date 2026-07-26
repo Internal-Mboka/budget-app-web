@@ -46,7 +46,7 @@ export async function createRevenueFormAction(
   const result = await createRevenueAction(formData);
 
   if (result.success) {
-    redirect(`/revenues?created=${encodeURIComponent(result.transaction.code)}`);
+    redirect(`/revenues/${result.transaction.id}?created=1`);
   }
 
   return result;

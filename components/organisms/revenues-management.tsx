@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { MbokaPagination } from "@/components/molecules/mboka-pagination";
+import { RevenueStatusBadges } from "@/components/molecules/revenue-status-badges";
 import { formatMoney } from "@/lib/currency";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import type { RevenueMetadata } from "@/lib/revenues/metadata";
@@ -17,7 +18,7 @@ import {
   mbokaButtonPrimaryClassName,
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
-import { getPaymentStatusLabel } from "@/lib/transactions/labels";
+import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { cn } from "@/lib/utils";
 import type { RevenueCategory } from "@prisma/client";
 
@@ -57,19 +58,6 @@ function RevenueDate({ isoDate }: { isoDate: string }) {
   );
 }
 
-function statusBadgeClass(status: string) {
-  switch (status) {
-    case "SOLDE":
-      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
-    case "LITIGE_ANNULE":
-      return "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300";
-    case "EN_COURS_REALISE":
-      return "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300";
-    default:
-      return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
-  }
-}
-
 export function RevenuesManagement({ initialRevenues, pagination }: RevenuesManagementProps) {
   return (
     <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}>
@@ -98,7 +86,10 @@ export function RevenuesManagement({ initialRevenues, pagination }: RevenuesMana
         </p>
       ) : (
         <div className="space-y-3">
-          {initialRevenues.map((revenue) => (
+          {initialRevenues.map((revenue) => {
+            const fulfillment = parseRevenueFulfillment(revenue.metadata);
+
+            return (
             <article
               key={revenue.id}
               data-testid={`revenue-row-${revenue.code}`}
@@ -111,18 +102,20 @@ export function RevenuesManagement({ initialRevenues, pagination }: RevenuesMana
 
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">{revenue.code}</h3>
+                    <Link
+                      href={`/revenues/${revenue.id}`}
+                      className="text-sm font-semibold text-[#10579F] hover:underline dark:text-sky-50"
+                      data-testid={`revenue-link-${revenue.code}`}
+                    >
+                      {revenue.code}
+                    </Link>
                     <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-[#10579F] dark:bg-sky-950/40 dark:text-sky-300">
                       {getRevenueCategoryLabel(revenue.revenueCategory)}
                     </span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                        statusBadgeClass(revenue.status)
-                      )}
-                    >
-                      {getPaymentStatusLabel(revenue.status)}
-                    </span>
+                    <RevenueStatusBadges
+                      financialStatus={revenue.status}
+                      fulfillment={fulfillment}
+                    />
                   </div>
 
                   <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -149,7 +142,8 @@ export function RevenuesManagement({ initialRevenues, pagination }: RevenuesMana
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
 

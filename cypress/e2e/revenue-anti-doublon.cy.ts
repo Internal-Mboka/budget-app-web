@@ -27,7 +27,7 @@ describe("Mboka Budget — US-17 Anti-doublon revenus", () => {
     cy.get('[data-testid="revenue-create-submit"]').should("be.disabled");
     cy.contains("Enregistrement...", { timeout: 10000 }).should("be.visible");
 
-    cy.location("pathname", { timeout: 20000 }).should("eq", "/revenues");
+    cy.location("pathname", { timeout: 20000 }).should("match", /^\/revenues\/[^/]+$/);
     cy.dismissToasts();
   });
 });
