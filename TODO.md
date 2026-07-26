@@ -86,14 +86,14 @@
 
 ## Phase 2 — Prisma, Schéma & Seeding (Étape 4)
 
-> **Statut :** migration appliquée — seed en attente de `SEED_DT_PASSWORD`.
+> **Statut :** terminée — migration + seed appliqués.
 
 - [x] Réécrire `prisma/schema.prisma` selon `thisproject/schemas.md`
 - [x] Appliquer les contraintes d'intégrité (index, `onDelete`, immutabilité via `parentTransactionId`)
 - [x] Corriger les doublons du schéma pilote (`TransactionType` dupliqué, typo enum `USD`)
 - [x] Générer la migration (`20260726042402_init_v2`) — appliquée sur Neon
 - [x] Créer `prisma/seed.ts` (5 rôles, 12 permissions, compte DT Prince Vangu)
-- [ ] Exécuter le seed *(bloqué : variable `SEED_DT_PASSWORD` requise)*
+- [x] Exécuter le seed
 
 ---
 
@@ -242,4 +242,4 @@
 |------|-------|------------|--------|
 | 2026-07-26 | Phase 0 (Analyse) | GO reçu | — |
 | 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | GO reçu | — |
-| 2026-07-26 | Phase 2 (Prisma & Migration) | *En attente* | — |
+| 2026-07-26 | Phase 2 (Prisma & Migration + Seed) | *En attente* | — |
