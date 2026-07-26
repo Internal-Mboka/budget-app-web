@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
-import { mbokaFieldClassName, mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
+import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { formatMoney } from "@/lib/currency";
 import {
   getPaymentStatusLabel,
@@ -164,9 +164,9 @@ export function ClientDetailPanel({ client, transactions, stats }: ClientDetailP
 
         {filteredTransactions.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="client-transactions-empty">
-            {transactions.length === 0
-              ? "Aucune transaction enregistrée pour ce client."
-              : "Aucune transaction ne correspond à ce filtre."}
+            {transactions.length > 0 && statusFilter !== "ALL"
+              ? "Aucune transaction ne correspond à ce filtre."
+              : "Aucune transaction enregistrée pour ce client."}
           </p>
         ) : (
           <div className="space-y-3" data-testid="client-transactions-list">

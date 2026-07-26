@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -132,7 +132,7 @@
 | US | Titre | Statut |
 |----|-------|--------|
 | US-09 | Enregistrement & catégorisation clients | `[x]` |
-| US-10 | Fiche client & historique transactions | `[ ]` |
+| US-10 | Fiche client & historique transactions | `[x]` |
 | US-11 | Recherche & autocomplétion clients | `[ ]` |
 | US-12 | Mise à jour & archivage fiches tiers | `[ ]` |
 | US-13 | Import/Export base Tiers | `[ ]` |
@@ -251,3 +251,4 @@
 | 2026-07-26 | US-07 (Sessions actives) | *En attente* | — |
 | 2026-07-26 | US-08 (Authentification 2FA) | *En attente* | — |
 | 2026-07-26 | US-09 (Répertoire clients) | *En attente* | — |
+| 2026-07-26 | US-10 (Fiche client & transactions) | *En attente* | — |

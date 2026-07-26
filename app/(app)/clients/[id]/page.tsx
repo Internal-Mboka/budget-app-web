@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
 import { ClientDetailPanel } from "@/components/organisms/client-detail-panel";
-import { auth } from "@/lib/auth";
 import { hasPermission, requireSession } from "@/lib/auth/session";
 import { computeClientStats, decimalToNumber } from "@/lib/clients/stats";
 import { prisma } from "@/lib/prisma";

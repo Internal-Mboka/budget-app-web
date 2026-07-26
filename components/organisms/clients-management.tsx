@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, UsersRound } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export type ClientListItem = {
 
 type ClientsManagementProps = {
   initialClients: ClientListItem[];
+  canViewDetail?: boolean;
 };
 
 const categoryOptions = CLIENT_CATEGORY_OPTIONS.map((option) => ({
@@ -40,7 +42,7 @@ function sortClients(clients: ClientListItem[]) {
   return [...clients].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function ClientsManagement({ initialClients }: ClientsManagementProps) {
+export function ClientsManagement({ initialClients, canViewDetail = false }: ClientsManagementProps) {
   const router = useRouter();
   const [clients, setClients] = useState(initialClients);
   const [isCreating, setIsCreating] = useState(false);
@@ -115,7 +117,7 @@ export function ClientsManagement({ initialClients }: ClientsManagementProps) {
         <div>
           <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Nouveau client</h2>
           <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            Nom et catégorie obligatoires. Téléphone et email servent à éviter les doublons.
+            Nom et catégorie obligatoires.
           </p>
         </div>
 
@@ -215,9 +217,19 @@ export function ClientsManagement({ initialClients }: ClientsManagementProps) {
 
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
-                      {client.name}
-                    </h3>
+                    {canViewDetail && !client.id.startsWith("optimistic-") ? (
+                      <Link
+                        href={`/clients/${client.id}`}
+                        data-testid={`client-detail-link-${client.id}`}
+                        className="text-sm font-semibold text-[#10579F] hover:underline dark:text-sky-50"
+                      >
+                        {client.name}
+                      </Link>
+                    ) : (
+                      <h3 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
+                        {client.name}
+                      </h3>
+                    )}
                     <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-[#10579F] dark:bg-sky-950/40 dark:text-sky-300">
                       {getClientCategoryLabel(client.category)}
                     </span>
