@@ -83,6 +83,14 @@ function formatOpeningInput(value: number): string {
   return value === 0 ? "0" : String(value);
 }
 
+function describeGapKindLabel(gap: number): string {
+  if (gap === 0) {
+    return "conforme";
+  }
+
+  return describeGapAmount(gap) === "overage" ? "surplus" : "manque";
+}
+
 export function CashClosingForm({
   summary,
   defaultClosingDate,
@@ -142,7 +150,6 @@ export function CashClosingForm({
 
     return {
       gap,
-      gapKind: describeGapAmount(gap.gapAmount),
     };
   }, [expected, realCash, realMobileMoney]);
 
@@ -293,8 +300,9 @@ export function CashClosingForm({
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {summary.liquidTransactionCount} opération{summary.liquidTransactionCount > 1 ? "s" : ""}{" "}
-                  enregistrée{summary.liquidTransactionCount > 1 ? "s" : ""} aujourd&apos;hui.
+                  {summary.liquidTransactionCount} mouvement liquide
+                  {summary.liquidTransactionCount > 1 ? "s" : ""} enregistré
+                  {summary.liquidTransactionCount > 1 ? "s" : ""} ce jour (encaissements et dépenses).
                 </p>
               </div>
 
@@ -395,15 +403,36 @@ export function CashClosingForm({
                 )}
                 data-testid="cash-closing-gap-preview"
               >
-                Écart (compté − attendu) :{" "}
-                <span className="font-semibold" data-testid="cash-closing-gap-amount">
-                  {formatMoney(preview.gap.gapAmount)}
-                </span>
-                {preview.gapKind === "balanced"
-                  ? " — caisse conforme"
-                  : preview.gapKind === "overage"
-                    ? " — surplus"
-                    : " — manque"}
+                {preview.gap.hasDiscrepancy ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">Écarts par canal (compté − attendu)</p>
+                    <p data-testid="cash-closing-gap-cash">
+                      Espèces :{" "}
+                      <span className="font-semibold">{formatMoney(preview.gap.gapCash)}</span>
+                      {" — "}
+                      {describeGapKindLabel(preview.gap.gapCash)}
+                    </p>
+                    <p data-testid="cash-closing-gap-mobile">
+                      Mobile Money :{" "}
+                      <span className="font-semibold">{formatMoney(preview.gap.gapMobileMoney)}</span>
+                      {" — "}
+                      {describeGapKindLabel(preview.gap.gapMobileMoney)}
+                    </p>
+                    <p className="text-xs opacity-80">
+                      Écart cumulé :{" "}
+                      <span className="font-semibold" data-testid="cash-closing-gap-amount">
+                        {formatMoney(preview.gap.gapAmount)}
+                      </span>
+                    </p>
+                  </div>
+                ) : (
+                  <p>
+                    Espèces et Mobile Money conformes —{" "}
+                    <span className="font-semibold" data-testid="cash-closing-gap-amount">
+                      caisse conforme
+                    </span>
+                  </p>
+                )}
               </div>
             ) : null}
 

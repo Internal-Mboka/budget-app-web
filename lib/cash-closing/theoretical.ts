@@ -1,4 +1,9 @@
 import { getClosingDayRange } from "@/lib/cash-closing/day-range";
+import {
+  accumulateExpenseMovement,
+  accumulateRevenueMovements,
+  createEmptyMovementBuckets,
+} from "@/lib/cash-closing/movements";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -20,68 +25,80 @@ export type TheoreticalCashBalances = CashClosingDaySummary & {
   transactionCount: number;
 };
 
-function signedAmount(type: "REVENUE" | "EXPENSE", paidAmount: number): number {
-  return type === "REVENUE" ? paidAmount : -paidAmount;
-}
-
 export async function computeCashClosingDaySummary(
   closingDate: string
 ): Promise<CashClosingDaySummary> {
   const { start, end } = getClosingDayRange(closingDate);
+  const buckets = createEmptyMovementBuckets();
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      status: "SOLDE",
-      isRecurring: false,
-      approvalStatus: { notIn: ["PENDING", "REJECTED"] },
-      paymentMethod: { not: null },
-      createdAt: { gte: start, lte: end },
-    },
-    select: {
-      type: true,
-      paymentMethod: true,
-      paidAmount: true,
-    },
-  });
+  const [revenues, expenses] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        type: "REVENUE",
+        status: { not: "LITIGE_ANNULE" },
+        isRecurring: false,
+        approvalStatus: { notIn: ["PENDING", "REJECTED"] },
+        OR: [{ createdAt: { gte: start, lte: end } }, { updatedAt: { gte: start, lte: end } }],
+      },
+      select: {
+        metadata: true,
+        paymentMethod: true,
+        paidAmount: true,
+        createdAt: true,
+      },
+    }),
+    prisma.transaction.findMany({
+      where: {
+        type: "EXPENSE",
+        status: "SOLDE",
+        isRecurring: false,
+        approvalStatus: { notIn: ["PENDING", "REJECTED"] },
+        paymentMethod: { not: null },
+        createdAt: { gte: start, lte: end },
+      },
+      select: {
+        paymentMethod: true,
+        paidAmount: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
-  let netCash = 0;
-  let netMobileMoney = 0;
-  let netBankTransfer = 0;
-  let netOther = 0;
-  let liquidTransactionCount = 0;
-  let otherTransactionCount = 0;
+  for (const revenue of revenues) {
+    accumulateRevenueMovements(
+      buckets,
+      {
+        metadata: revenue.metadata,
+        paymentMethod: revenue.paymentMethod,
+        paidAmount: decimalToNumber(revenue.paidAmount),
+        createdAt: revenue.createdAt,
+      },
+      start,
+      end
+    );
+  }
 
-  for (const transaction of transactions) {
-    const amount = signedAmount(transaction.type, decimalToNumber(transaction.paidAmount));
-
-    switch (transaction.paymentMethod) {
-      case "CASH":
-        netCash += amount;
-        liquidTransactionCount += 1;
-        break;
-      case "MOBILE_MONEY":
-        netMobileMoney += amount;
-        liquidTransactionCount += 1;
-        break;
-      case "VIREMENT_BANCAIRE":
-        netBankTransfer += amount;
-        otherTransactionCount += 1;
-        break;
-      case "AUTRE":
-        netOther += amount;
-        otherTransactionCount += 1;
-        break;
-    }
+  for (const expense of expenses) {
+    accumulateExpenseMovement(
+      buckets,
+      {
+        paymentMethod: expense.paymentMethod,
+        paidAmount: decimalToNumber(expense.paidAmount),
+        createdAt: expense.createdAt,
+      },
+      start,
+      end
+    );
   }
 
   return {
     closingDate,
-    netCash: roundMoney(netCash),
-    netMobileMoney: roundMoney(netMobileMoney),
-    netBankTransfer: roundMoney(netBankTransfer),
-    netOther: roundMoney(netOther),
-    liquidTransactionCount,
-    otherTransactionCount,
+    netCash: roundMoney(buckets.netCash),
+    netMobileMoney: roundMoney(buckets.netMobileMoney),
+    netBankTransfer: roundMoney(buckets.netBankTransfer),
+    netOther: roundMoney(buckets.netOther),
+    liquidTransactionCount: buckets.liquidMovementCount,
+    otherTransactionCount: buckets.otherMovementCount,
   };
 }
 

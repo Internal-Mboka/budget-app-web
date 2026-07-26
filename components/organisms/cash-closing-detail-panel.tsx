@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
+import { computeCashClosingGap } from "@/lib/cash-closing/gap";
 import { formatMoney } from "@/lib/currency";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,12 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
     openingMobileMoney: closing.openingMobileMoney,
     netCash: closing.theoreticalCash,
     netMobileMoney: closing.theoreticalMobileMoney,
+  });
+  const gap = computeCashClosingGap({
+    expectedCash: expected.expectedCash,
+    expectedMobileMoney: expected.expectedMobileMoney,
+    realCash: closing.realCash,
+    realMobileMoney: closing.realMobileMoney,
   });
 
   return (
@@ -126,17 +133,41 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-          <p className={mbokaLabelClassName}>Écart total</p>
-          <p
-            className={cn(
-              "mt-1 text-xl font-semibold",
-              closing.hasDiscrepancy
+          <p className={mbokaLabelClassName}>Écarts par canal</p>
+          <div className="mt-2 space-y-1 text-sm">
+            <p>
+              Espèces :{" "}
+              <span
+                className={cn(
+                  "font-semibold",
+                  gap.gapCash !== 0
+                    ? "text-amber-700 dark:text-amber-300"
+                    : "text-emerald-700 dark:text-emerald-300"
+                )}
+              >
+                {formatMoney(gap.gapCash)}
+              </span>
+            </p>
+            <p>
+              Mobile Money :{" "}
+              <span
+                className={cn(
+                  "font-semibold",
+                  gap.gapMobileMoney !== 0
+                    ? "text-amber-700 dark:text-amber-300"
+                    : "text-emerald-700 dark:text-emerald-300"
+                )}
+              >
+                {formatMoney(gap.gapMobileMoney)}
+              </span>
+            </p>
+          </div>
+          <p className={cn("mt-3 text-xl font-semibold", closing.hasDiscrepancy
                 ? "text-amber-700 dark:text-amber-300"
-                : "text-emerald-700 dark:text-emerald-300"
-            )}
+                : "text-emerald-700 dark:text-emerald-300")}
             data-testid="cash-closing-detail-gap"
           >
-            {formatMoney(closing.gapAmount)}
+            Écart cumulé : {formatMoney(closing.gapAmount)}
           </p>
         </div>
       </section>
