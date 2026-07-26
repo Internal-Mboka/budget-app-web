@@ -17,6 +17,7 @@ import {
   createInitialPaymentEntry,
 } from "@/lib/revenues/payment-history";
 import { findRevenueBookingConflict } from "@/lib/revenues/conflicts";
+import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { generateTransactionCode } from "@/lib/transactions/code";
 import { roundMoney } from "@/lib/transactions/decimal";
@@ -95,6 +96,11 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
 
   if (conflict) {
     return { success: false, error: conflict.message };
+  }
+
+  const cashDayLock = await assertTodayCashDayOpen();
+  if (!cashDayLock.ok) {
+    return { success: false, error: cashDayLock.error };
   }
 
   const totalAmount = roundMoney(parsed.totalAmount);

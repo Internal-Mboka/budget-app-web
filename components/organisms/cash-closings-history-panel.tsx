@@ -32,17 +32,26 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
       className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}
       data-testid="cash-closings-history-panel"
     >
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <History className="size-5" />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <History className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Historique des clôtures</h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Opérateur identifié pour chaque clôture — responsabilisation en cas d&apos;écart.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/cash-closing/history"
+            className="text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+            data-testid="cash-closings-history-full-link"
+          >
+            Voir tout l&apos;historique →
+          </Link>
         </div>
-        <div>
-          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Historique des clôtures</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Opérateur identifié pour chaque clôture — responsabilisation en cas d&apos;écart.
-          </p>
-        </div>
-      </div>
 
       {closings.length === 0 ? (
         <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="cash-closings-history-empty">

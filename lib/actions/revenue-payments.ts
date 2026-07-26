@@ -13,6 +13,7 @@ import {
   appendRevenuePaymentHistory,
   createInstallmentPaymentEntry,
 } from "@/lib/revenues/payment-history";
+import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
 import { withRevenueRealized, parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -105,6 +106,11 @@ export async function recordRevenuePaymentAction(
 
   if (transaction.status === "LITIGE_ANNULE") {
     return { success: false, error: "Impossible d'encaisser une transaction annulée." };
+  }
+
+  const cashDayLock = await assertTodayCashDayOpen();
+  if (!cashDayLock.ok) {
+    return { success: false, error: cashDayLock.error };
   }
 
   const totalAmount = decimalToNumber(transaction.totalAmount);

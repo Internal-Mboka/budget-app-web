@@ -172,8 +172,8 @@
 | US-32 | Comptages réels fin de journée | `[x]` |
 | US-33 | Responsabilisation visuelle opérateur | `[x]` |
 | US-34 | Notes de justification d'écart | `[x]` |
-| US-35 | Historique clôtures passées | `[~]` |
-| US-36 | Verrouillage transactions après clôture | `[ ]` |
+| US-35 | Historique clôtures passées | `[x]` |
+| US-36 | Verrouillage transactions après clôture | `[x]` |
 | US-37 | Impression ticket Z de caisse | `[ ]` |
 | US-38 | Approbation clôtures à écart (PDG) | `[ ]` |
 

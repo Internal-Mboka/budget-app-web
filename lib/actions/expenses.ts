@@ -9,6 +9,7 @@ import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import { resolveExpenseApprovalOnCreate, requiresExpenseApproval } from "@/lib/expenses/approval";
+import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import { parseStaffPayrollMetadata } from "@/lib/expenses/staff-payroll";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -77,6 +78,11 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
   const metadata: Prisma.InputJsonValue = parsed.metadata as Prisma.InputJsonValue;
   const creatorCanApprove = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const approval = resolveExpenseApprovalOnCreate(totalAmount, creatorCanApprove, session.user.id);
+
+  const cashDayLock = await assertTodayCashDayOpen();
+  if (!cashDayLock.ok) {
+    return { success: false, error: cashDayLock.error };
+  }
 
   try {
     const created = await prisma.$transaction(async (tx) => {
