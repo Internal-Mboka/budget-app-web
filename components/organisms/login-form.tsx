@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -35,9 +36,17 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type LoginFormProps = {
   callbackUrl?: string;
   initialError?: string;
+  initialMessage?: string;
 };
 
-export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
+const LOGIN_MESSAGES: Record<string, string> = {
+  "password-updated": "Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.",
+  "password-updated-first-login": "Mot de passe défini. Connectez-vous avec vos nouveaux identifiants.",
+  "password-reset-success": "Mot de passe réinitialisé. Vous pouvez vous connecter.",
+  "reset-email-sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
+};
+
+export function LoginForm({ callbackUrl, initialError, initialMessage }: LoginFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -103,6 +112,12 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
             </p>
           ) : null}
 
+          {initialMessage && LOGIN_MESSAGES[initialMessage] ? (
+            <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+              {LOGIN_MESSAGES[initialMessage]}
+            </p>
+          ) : null}
+
           <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <FieldGroup className="gap-5">
               <Field>
@@ -130,6 +145,14 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
                   placeholder="••••••••"
                   {...form.register("password")}
                 />
+                <div className="mt-2 text-right">
+                  <Link
+                    href="/login/forgot-password"
+                    className="text-xs font-medium text-sky-500 hover:text-[#10579F] hover:underline dark:text-sky-400"
+                  >
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
                 <FieldError errors={[form.formState.errors.password]} />
               </Field>
             </FieldGroup>

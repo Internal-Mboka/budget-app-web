@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth/edge";
-import { canAccessRoute, getDefaultDashboardPath, isPublicPath } from "@/lib/auth/routes";
+import {
+  canAccessRoute,
+  getDefaultDashboardPath,
+  isPublicPath,
+  mustForcePasswordChange,
+  PASSWORD_CHANGE_PATH,
+} from "@/lib/auth/routes";
 
 export default auth((request) => {
   const { pathname } = request.nextUrl;
@@ -10,9 +16,11 @@ export default auth((request) => {
 
   if (isPublicPath(pathname)) {
     if (isLoggedIn && pathname === "/login") {
-      return NextResponse.redirect(
-        new URL(getDefaultDashboardPath(session!.user), request.url)
-      );
+      const destination = session!.user.mustChangePassword
+        ? PASSWORD_CHANGE_PATH
+        : getDefaultDashboardPath(session!.user);
+
+      return NextResponse.redirect(new URL(destination, request.url));
     }
 
     return NextResponse.next();
@@ -26,6 +34,10 @@ export default auth((request) => {
     }
 
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (mustForcePasswordChange(pathname, session!.user)) {
+    return NextResponse.redirect(new URL(PASSWORD_CHANGE_PATH, request.url));
   }
 
   if (pathname === "/") {

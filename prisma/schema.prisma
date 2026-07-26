@@ -18,6 +18,7 @@ model User {
   password           String
   avatarUrl          String?
   isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(false)
   twoFactorEnabled   Boolean   @default(false)
   twoFactorSecret    String?
   roleId             Int
@@ -29,6 +30,7 @@ model User {
   cashClosingsReviewed CashClosing[] @relation("CashClosingReviewer")
   clientNotes        ClientNote[]
   auditLogs          AuditLog[] @relation("UserAuditLogs")
+  passwordResetTokens PasswordResetToken[]
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -47,6 +49,18 @@ model Session {
   createdAt    DateTime @default(now())
 
   @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Role {

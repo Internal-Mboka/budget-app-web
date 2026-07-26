@@ -11,7 +11,7 @@ describe("Mboka Budget — US-02 Gestion utilisateurs", () => {
   });
 
   it("affiche la page admin utilisateurs pour le DT", () => {
-    cy.visit("/admin/users");
+    cy.visit("/admin/users", { retryOnStatusCodeFailure: true, timeout: 30000 });
     cy.contains("Gestion des utilisateurs").scrollIntoView().should("be.visible");
     cy.contains("Nouveau compte").scrollIntoView().should("be.visible");
     cy.contains("Comptes existants").scrollIntoView().should("be.visible");

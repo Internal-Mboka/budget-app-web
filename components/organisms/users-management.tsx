@@ -14,6 +14,7 @@ import {
   toggleUserActiveAction,
   updateUserAction,
 } from "@/lib/actions/users";
+import { adminResetPasswordAction } from "@/lib/actions/password";
 import {
   mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
@@ -63,6 +64,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
   const [users, setUsers] = useState(initialUsers);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [resetPasswordId, setResetPasswordId] = useState<string | null>(null);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
 
   const defaultRoleId = String(
@@ -210,7 +212,33 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
 
   function startEditing(user: UserListItem) {
     setEditingId(user.id);
+    setResetPasswordId(null);
     setEditRoleId(String(user.roleId));
+  }
+
+  async function handleAdminReset(event: React.FormEvent<HTMLFormElement>, userId: string) {
+    event.preventDefault();
+    setPendingUserId(userId);
+
+    const formData = new FormData(event.currentTarget);
+    formData.set("userId", userId);
+
+    try {
+      const result = await adminResetPasswordAction(formData);
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Mot de passe réinitialisé. L'utilisateur devra le changer à la prochaine connexion.");
+      setResetPasswordId(null);
+      router.refresh();
+    } catch {
+      toast.error("Erreur serveur. Réessayez dans quelques instants.");
+    } finally {
+      setPendingUserId(null);
+    }
   }
 
   return (
@@ -310,6 +338,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
           ) : (
             users.map((user) => {
               const isEditing = editingId === user.id;
+              const isResettingPassword = resetPasswordId === user.id;
               const isLoading = pendingUserId === user.id;
               const isOptimistic = user.id.startsWith("optimistic-");
 
@@ -349,6 +378,17 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                         onClick={() => (isEditing ? setEditingId(null) : startEditing(user))}
                       >
                         {isEditing ? "Annuler" : "Modifier"}
+                      </button>
+                      <button
+                        type="button"
+                        className={mbokaButtonOutlineClassName}
+                        disabled={isOptimistic || user.id === currentUserId}
+                        onClick={() => {
+                          setEditingId(null);
+                          setResetPasswordId(isResettingPassword ? null : user.id);
+                        }}
+                      >
+                        {isResettingPassword ? "Annuler" : "Réinitialiser MDP"}
                       </button>
                       <button
                         type="button"
@@ -432,6 +472,39 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                           </>
                         ) : (
                           "Enregistrer"
+                        )}
+                      </button>
+                    </form>
+                  ) : null}
+
+                  {isResettingPassword ? (
+                    <form
+                      onSubmit={(event) => handleAdminReset(event, user.id)}
+                      className="mt-5 space-y-4 border-t border-sky-100 pt-5 dark:border-sky-900"
+                    >
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Définissez un mot de passe temporaire. L&apos;utilisateur devra le changer à
+                        sa prochaine connexion.
+                      </p>
+                      <div>
+                        <label htmlFor={`resetPassword-${user.id}`} className={mbokaLabelClassName}>
+                          Nouveau mot de passe temporaire
+                        </label>
+                        <PasswordInput
+                          id={`resetPassword-${user.id}`}
+                          name="newPassword"
+                          required
+                          placeholder="Min. 8 caractères, 1 majuscule, 1 chiffre"
+                        />
+                      </div>
+                      <button type="submit" className={mbokaButtonPrimaryClassName} disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="size-4 animate-spin" />
+                            Réinitialisation...
+                          </>
+                        ) : (
+                          "Confirmer la réinitialisation"
                         )}
                       </button>
                     </form>

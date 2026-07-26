@@ -69,6 +69,7 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
         email: email.toLowerCase(),
         password: passwordHash,
         roleId,
+        mustChangePassword: true,
       },
     });
 

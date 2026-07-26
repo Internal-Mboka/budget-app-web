@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
@@ -52,15 +54,21 @@ export function AppSidebar({
 
   const navItems: NavItem[] = [
     { href: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
+    { href: "/account/password", label: "Mot de passe", icon: KeyRound },
   ];
 
   if (canManageUsers) {
     navItems.push({ href: "/admin/users", label: "Utilisateurs", icon: Users });
+    navItems.push({ href: "/admin/roles", label: "Permissions", icon: ShieldCheck });
   }
 
   function isActive(href: string) {
     if (href === dashboardPath) {
       return pathname === href || pathname.startsWith("/dashboard");
+    }
+
+    if (href === "/account/password") {
+      return pathname === href;
     }
 
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -124,7 +132,13 @@ export function AppSidebar({
             <Link
               key={item.href}
               href={item.href}
-              data-testid={item.href === "/admin/users" ? "nav-utilisateurs" : undefined}
+              data-testid={
+                item.href === "/admin/users"
+                  ? "nav-utilisateurs"
+                  : item.href === "/admin/roles"
+                    ? "nav-permissions"
+                    : undefined
+              }
               onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",

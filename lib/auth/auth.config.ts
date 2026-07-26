@@ -13,11 +13,16 @@ export const authConfig = {
   },
   providers: [],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.roleId = user.roleId;
         token.roleName = user.roleName;
         token.permissions = user.permissions;
+        token.mustChangePassword = user.mustChangePassword ?? false;
+      }
+
+      if (trigger === "update" && session?.mustChangePassword !== undefined) {
+        token.mustChangePassword = Boolean(session.mustChangePassword);
       }
 
       return token;
@@ -28,6 +33,7 @@ export const authConfig = {
         session.user.roleId = typeof token.roleId === "number" ? token.roleId : 0;
         session.user.roleName = (token.roleName as RoleName | undefined) ?? "OBSERVATEUR";
         session.user.permissions = (token.permissions as PermissionSlug[] | undefined) ?? [];
+        session.user.mustChangePassword = Boolean(token.mustChangePassword);
       }
 
       return session;

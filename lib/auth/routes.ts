@@ -1,7 +1,7 @@
 import type { PermissionSlug } from "@/lib/permissions";
 import { PERMISSIONS } from "@/lib/permissions";
 
-export const PUBLIC_PATHS = ["/login", "/offline"] as const;
+export const PUBLIC_PATHS = ["/login", "/login/forgot-password", "/login/reset-password", "/offline"] as const;
 
 export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
   "/dashboard": PERMISSIONS.DASHBOARD_FULL,
@@ -9,6 +9,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
   "/dashboard/operations": PERMISSIONS.DASHBOARD_OPERATIONAL,
   "/dashboard/macro": PERMISSIONS.DASHBOARD_MACRO,
   "/admin/users": PERMISSIONS.USERS_MANAGE,
+  "/admin/roles": PERMISSIONS.USERS_MANAGE,
 };
 
 export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: PermissionSlug }> = [
@@ -60,5 +61,35 @@ export function isPublicPath(pathname: string): boolean {
     return true;
   }
 
+  if (pathname.startsWith("/login/")) {
+    return true;
+  }
+
   return pathname.startsWith("/api/auth");
+}
+
+export const PASSWORD_CHANGE_PATH = "/account/password";
+
+type SessionUserWithPasswordFlag = {
+  permissions: PermissionSlug[];
+  mustChangePassword?: boolean;
+};
+
+export function mustForcePasswordChange(
+  pathname: string,
+  user: SessionUserWithPasswordFlag
+): boolean {
+  if (!user.mustChangePassword) {
+    return false;
+  }
+
+  if (pathname === PASSWORD_CHANGE_PATH) {
+    return false;
+  }
+
+  if (pathname.startsWith("/api/auth")) {
+    return false;
+  }
+
+  return true;
 }

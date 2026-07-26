@@ -63,6 +63,7 @@ export const credentialsProvider = Credentials({
         roleId: user.roleId,
         roleName: user.role.name as RoleName,
         permissions,
+        mustChangePassword: user.mustChangePassword,
       };
     } catch (error) {
       console.error("Credentials authorize failed", error);
