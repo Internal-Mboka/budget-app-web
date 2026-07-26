@@ -73,7 +73,7 @@ export function CashClosingsHistoryFilters({
           </Field>
           <Field>
             <FieldLabel htmlFor="discrepancy" className={mbokaLabelClassName}>
-              Résultat
+              Afficher
             </FieldLabel>
             <MbokaSelect
               id="discrepancy"

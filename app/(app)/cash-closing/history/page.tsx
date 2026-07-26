@@ -35,7 +35,7 @@ export default async function CashClosingHistoryPage({ searchParams }: CashClosi
       <MbokaPageHeader
         eyebrow="Rapprochement"
         title="Historique des clôtures"
-        description="Consultez et filtrez toutes les clôtures de caisse enregistrées."
+        description="Chaque carte correspond à une soirée de caisse clôturée. Cliquez pour voir le détail (comptage, écarts, notes). Utilisez les filtres pour retrouver une date ou n'afficher que les clôtures avec différence."
       />
 
       <CashClosingsHistoryFilters

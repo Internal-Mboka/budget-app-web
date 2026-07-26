@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { formatMoney } from "@/lib/currency";
+import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
+import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
 import type { CashClosingHistoryItem } from "@/lib/cash-closing/load-closings";
-import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
+import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type CashClosingsHistoryTableProps = {
   closings: CashClosingHistoryItem[];
 };
 
-function ClosingDateCell({ isoDate }: { isoDate: string }) {
+function ClosingDateLabel({ isoDate }: { isoDate: string }) {
   const [label, setLabel] = useState("");
 
   useEffect(() => {
@@ -34,62 +35,70 @@ export function CashClosingsHistoryTable({ closings }: CashClosingsHistoryTableP
     );
   }
 
+  const countLabel =
+    closings.length === 1 ? "1 clôture trouvée" : `${closings.length} clôtures trouvées`;
+
   return (
-    <div className={cn(mbokaPanelClassName, "overflow-hidden")} data-testid="cash-closings-history-table">
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50/80 text-left dark:border-slate-800 dark:bg-slate-900/40">
-            <tr>
-              <th className={cn(mbokaLabelClassName, "px-4 py-3")}>Date</th>
-              <th className={cn(mbokaLabelClassName, "px-4 py-3")}>Opérateur</th>
-              <th className={cn(mbokaLabelClassName, "px-4 py-3")}>Résultat</th>
-              <th className={cn(mbokaLabelClassName, "px-4 py-3")}>Écart</th>
-              <th className={cn(mbokaLabelClassName, "px-4 py-3")}>Fiche</th>
-            </tr>
-          </thead>
-          <tbody>
-            {closings.map((closing) => (
-              <tr
-                key={closing.id}
-                className="border-b border-slate-100 last:border-0 dark:border-slate-800"
-                data-testid={`cash-closing-history-row-${closing.id}`}
-              >
-                <td className="px-4 py-3 font-medium text-[#10579F] dark:text-sky-50">
-                  <ClosingDateCell isoDate={closing.date} />
-                </td>
-                <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
-                  {closing.operator.firstName} {closing.operator.lastName}
-                </td>
-                <td className="px-4 py-3">
-                  {closing.hasDiscrepancy ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                      <AlertTriangle className="size-3" />
-                      Différence
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                      <CheckCircle2 className="size-3" />
-                      Conforme
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
-                  {closing.hasDiscrepancy ? formatMoney(closing.gapAmount) : "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/cash-closing/${closing.id}`}
-                    className="font-medium text-[#10579F] hover:underline dark:text-sky-300"
-                    data-testid={`cash-closing-history-table-link-${closing.id}`}
-                  >
-                    Voir →
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section className="space-y-3" data-testid="cash-closings-history-table">
+      <p className="text-sm text-slate-500 dark:text-slate-400">{countLabel}</p>
+
+      <div className="space-y-3" data-testid="cash-closings-history-list">
+        {closings.map((closing) => (
+          <article
+            key={closing.id}
+            data-testid={`cash-closing-history-row-${closing.id}`}
+            className={cn(
+              mbokaPanelClassName,
+              "overflow-hidden",
+              closing.hasDiscrepancy
+                ? "border-amber-200 dark:border-amber-900"
+                : "border-slate-100 dark:border-slate-800"
+            )}
+          >
+            <Link
+              href={`/cash-closing/${closing.id}`}
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/40"
+              data-testid={`cash-closing-history-table-link-${closing.id}`}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
+                  <ClosingDateLabel isoDate={closing.date} />
+                </span>
+                {closing.hasDiscrepancy ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                    <AlertTriangle className="size-3" />
+                    Différence
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="size-3" />
+                    Conforme
+                  </span>
+                )}
+              </div>
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                {closing.hasDiscrepancy
+                  ? formatGapDifference(closing.gapAmount)
+                  : "Tout correspond"}
+                <ChevronRight className="size-4 text-slate-400" />
+              </span>
+            </Link>
+
+            <div className="px-2 py-2">
+              <CashClosingOperatorCard
+                operator={closing.operator}
+                emphasized={closing.hasDiscrepancy}
+                subtitle={
+                  closing.hasDiscrepancy
+                    ? "Responsable identifié — différence constatée ce jour-là"
+                    : "Clôture validée — tout correspondait"
+                }
+                className="border-0 bg-transparent shadow-none"
+              />
+            </div>
+          </article>
+        ))}
       </div>
-    </div>
+    </section>
   );
 }

@@ -8,6 +8,7 @@ import { AlertTriangle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
+import { CashClosingPdfActions } from "@/components/molecules/cash-closing-pdf-actions";
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
 import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
@@ -42,7 +43,7 @@ type CashClosingDetailPanelProps = {
 export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPanelProps) {
   useEffect(() => {
     if (flash?.created) {
-      toast.success("Clôture de caisse enregistrée.");
+      toast.success("Clôture enregistrée — imprimez le ticket Z si besoin.");
     }
   }, [flash?.created]);
 
@@ -80,6 +81,8 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
             : "Responsable identifié — comptages conformes au registre"
         }
       />
+
+      <CashClosingPdfActions closingId={closing.id} />
 
       <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="cash-closing-detail-panel">
         <div className="flex flex-wrap items-center gap-2">

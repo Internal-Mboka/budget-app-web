@@ -174,7 +174,7 @@
 | US-34 | Notes de justification d'écart | `[x]` |
 | US-35 | Historique clôtures passées | `[x]` |
 | US-36 | Verrouillage transactions après clôture | `[x]` |
-| US-37 | Impression ticket Z de caisse | `[ ]` |
+| US-37 | Impression ticket Z de caisse | `[x]` |
 | US-38 | Approbation clôtures à écart (PDG) | `[ ]` |
 
 ### SPEC 6 — Audit Logs & Traçabilité
