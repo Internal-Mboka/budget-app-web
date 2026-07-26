@@ -1,0 +1,53 @@
+import type { PermissionSlug } from "@/lib/permissions";
+import { PERMISSIONS } from "@/lib/permissions";
+
+export const PUBLIC_PATHS = ["/login", "/offline"] as const;
+
+export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
+  "/dashboard": PERMISSIONS.DASHBOARD_FULL,
+  "/dashboard/financier": PERMISSIONS.DASHBOARD_FINANCIAL,
+  "/dashboard/operations": PERMISSIONS.DASHBOARD_OPERATIONAL,
+  "/dashboard/macro": PERMISSIONS.DASHBOARD_MACRO,
+};
+
+type DashboardSessionUser = {
+  permissions: PermissionSlug[];
+};
+
+export function getDefaultDashboardPath(user: DashboardSessionUser): string {
+  if (user.permissions.includes(PERMISSIONS.DASHBOARD_FULL)) {
+    return "/dashboard";
+  }
+
+  if (user.permissions.includes(PERMISSIONS.DASHBOARD_FINANCIAL)) {
+    return "/dashboard/financier";
+  }
+
+  if (user.permissions.includes(PERMISSIONS.DASHBOARD_OPERATIONAL)) {
+    return "/dashboard/operations";
+  }
+
+  if (user.permissions.includes(PERMISSIONS.DASHBOARD_MACRO)) {
+    return "/dashboard/macro";
+  }
+
+  return "/login";
+}
+
+export function canAccessRoute(pathname: string, permissions: PermissionSlug[]): boolean {
+  const requiredPermission = ROUTE_PERMISSIONS[pathname];
+
+  if (!requiredPermission) {
+    return true;
+  }
+
+  return permissions.includes(requiredPermission);
+}
+
+export function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.includes(pathname as (typeof PUBLIC_PATHS)[number])) {
+    return true;
+  }
+
+  return pathname.startsWith("/api/auth");
+}

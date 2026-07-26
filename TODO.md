@@ -99,12 +99,14 @@
 
 ## Phase 3 — Fondations Dev (Étape 5 — Prérequis)
 
-- [ ] Configurer **NextAuth v5** (providers, callbacks `roleId` + `permissions`)
-- [ ] Middleware RBAC Next.js (`middleware.ts`)
-- [ ] Design System : tokens CSS (`#10579F`, dégradé sky/white) + **Dark Mode** (`next-themes`)
-- [ ] Layout principal (Atomic Design : `templates/AppShell`)
-- [ ] Initialiser **Cypress** (`cypress.config.ts`, commandes, fixtures)
-- [ ] Page de login (remplace le signup public)
+> **Statut :** terminée — en attente de validation / commit.
+
+- [x] Configurer **NextAuth v5** (JWT, credentials, `roleId` + `permissions` en session)
+- [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
+- [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
+- [x] Layout principal (`components/templates/app-shell.tsx`)
+- [x] **Cypress** — specs `auth.cy.ts` (US-01, US-05)
+- [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
 
@@ -116,11 +118,11 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-01 | Connexion sécurisée & persistance de session | `[ ]` |
+| US-01 | Connexion sécurisée & persistance de session | `[x]` |
 | US-02 | Management utilisateurs & attribution des rôles | `[ ]` |
-| US-03 | Middleware RBAC (permissions) | `[ ]` |
+| US-03 | Middleware RBAC (permissions) | `[x]` |
 | US-04 | Réinitialisation / gestion mot de passe | `[ ]` |
-| US-05 | Déconnexion sécurisée | `[ ]` |
+| US-05 | Déconnexion sécurisée | `[x]` |
 | US-06 | Gestion dynamique des permissions par rôle | `[ ]` |
 | US-07 | Sessions actives & déconnexion à distance | `[ ]` |
 | US-08 | Authentification 2FA / OTP | `[ ]` |
@@ -242,4 +244,5 @@
 |------|-------|------------|--------|
 | 2026-07-26 | Phase 0 (Analyse) | GO reçu | — |
 | 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | GO reçu | — |
-| 2026-07-26 | Phase 2 (Prisma & Migration + Seed) | *En attente* | — |
+| 2026-07-26 | Phase 2 (Prisma & Migration + Seed) | GO reçu | — |
+| 2026-07-26 | Phase 3 (Auth, RBAC, Login) | *En attente* | — |
