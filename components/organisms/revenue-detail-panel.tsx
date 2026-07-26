@@ -20,6 +20,7 @@ import {
 } from "@/lib/actions/revenue-payments";
 import { RevenueCancellationSection } from "@/components/organisms/revenue-cancellation-section";
 import { RevenuePdfActions } from "@/components/molecules/revenue-pdf-actions";
+import { RevenuePaymentHistory } from "@/components/molecules/revenue-payment-history";
 import { formatMoney } from "@/lib/currency";
 import {
   mbokaButtonOutlineClassName,
@@ -30,6 +31,7 @@ import {
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import type { RevenueFulfillmentMetadata } from "@/lib/revenues/fulfillment";
 import type { RevenueCancellationMetadata } from "@/lib/revenues/cancellation";
+import type { RevenuePaymentEntry } from "@/lib/revenues/payment-history";
 import { getRevenueMetadataSummary, type RevenueMetadata } from "@/lib/revenues/metadata";
 import {
   canCancelRevenue,
@@ -56,6 +58,7 @@ export type RevenueDetailData = {
   metadata: RevenueMetadata | null;
   fulfillment: RevenueFulfillmentMetadata;
   cancellation?: RevenueCancellationMetadata | null;
+  paymentHistory: RevenuePaymentEntry[];
   createdAt: string;
   client: {
     id: string;
@@ -291,6 +294,8 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
           </form>
         </section>
       ) : null}
+
+      <RevenuePaymentHistory entries={revenue.paymentHistory} />
 
       {showRealizedAction ? (
         <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")} data-testid="revenue-realized-section">

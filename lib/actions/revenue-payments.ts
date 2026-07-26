@@ -9,6 +9,10 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
+import {
+  appendRevenuePaymentHistory,
+  createInstallmentPaymentEntry,
+} from "@/lib/revenues/payment-history";
 import { withRevenueRealized, parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -117,6 +121,16 @@ export async function recordRevenuePaymentAction(
   const remainingAmount = roundMoney(Math.max(totalAmount - newPaidAmount, 0));
   const status = resolvePaymentStatus(totalAmount, newPaidAmount);
 
+  const paymentEntry = createInstallmentPaymentEntry({
+    amount: parsed.paymentAmount,
+    paymentMethod: parsed.paymentMethod ?? transaction.paymentMethod,
+    recordedBy: access.session.user.email ?? undefined,
+    paidAfter: newPaidAmount,
+    remainingAfter: remainingAmount,
+  });
+
+  const metadata = appendRevenuePaymentHistory(transaction.metadata, paymentEntry);
+
   try {
     const updated = await prisma.$transaction(async (tx) => {
       const saved = await tx.transaction.update({
@@ -125,6 +139,7 @@ export async function recordRevenuePaymentAction(
           paidAmount: new Prisma.Decimal(newPaidAmount),
           remainingAmount: new Prisma.Decimal(remainingAmount),
           status,
+          metadata: metadata as Prisma.InputJsonValue,
           ...(parsed.paymentMethod ? { paymentMethod: parsed.paymentMethod as PaymentMethod } : {}),
         },
         select: {

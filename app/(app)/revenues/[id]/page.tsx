@@ -5,6 +5,7 @@ import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requireSession } from "@/lib/auth/session";
 import { parseRevenueCancellation } from "@/lib/revenues/cancellation";
 import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
+import { getRevenuePaymentHistoryForDisplay } from "@/lib/revenues/payment-history";
 import type { RevenueMetadata } from "@/lib/revenues/metadata";
 import { PERMISSIONS } from "@/lib/permissions";
 import { decimalToNumber } from "@/lib/transactions/decimal";
@@ -50,6 +51,11 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
 
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CANCEL_ADJUSTMENT);
   const cancellation = parseRevenueCancellation(revenue.metadata);
+  const paymentHistory = getRevenuePaymentHistoryForDisplay(
+    revenue.metadata,
+    decimalToNumber(revenue.paidAmount),
+    revenue.createdAt.toISOString()
+  );
 
   const flash = {
     created: query.created === "1",
@@ -80,6 +86,7 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
           metadata: revenue.metadata as RevenueMetadata | null,
           fulfillment: parseRevenueFulfillment(revenue.metadata),
           cancellation,
+          paymentHistory,
           createdAt: revenue.createdAt.toISOString(),
           client: revenue.client,
           canCancel,

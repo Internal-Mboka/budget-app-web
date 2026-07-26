@@ -12,6 +12,10 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import type { RevenueMetadata } from "@/lib/revenues/metadata";
+import {
+  appendRevenuePaymentHistory,
+  createInitialPaymentEntry,
+} from "@/lib/revenues/payment-history";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { generateTransactionCode } from "@/lib/transactions/code";
 import { roundMoney } from "@/lib/transactions/decimal";
@@ -89,10 +93,22 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
   const remainingAmount = roundMoney(Math.max(totalAmount - paidAmount, 0));
   const status = resolvePaymentStatus(totalAmount, paidAmount);
 
-  const metadata: Prisma.InputJsonValue = {
+  const metadataBase: Prisma.InputJsonValue = {
     ...(parsed.metadata as RevenueMetadata),
     ...(parsed.notes ? { notes: parsed.notes } : {}),
   };
+
+  const initialPaymentEntry = createInitialPaymentEntry({
+    amount: paidAmount,
+    paymentMethod: parsed.paymentMethod ?? null,
+    recordedBy: session.user.email ?? undefined,
+    paidAfter: paidAmount,
+    remainingAfter: remainingAmount,
+  });
+
+  const metadata: Prisma.InputJsonValue = initialPaymentEntry
+    ? (appendRevenuePaymentHistory(metadataBase, initialPaymentEntry) as Prisma.InputJsonValue)
+    : metadataBase;
 
   try {
     const created = await prisma.$transaction(async (tx) => {
