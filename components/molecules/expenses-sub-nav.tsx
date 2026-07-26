@@ -13,7 +13,7 @@ type SubNavItem = {
 };
 
 function isExpenseDetailPath(pathname: string): boolean {
-  return /^\/expenses\/[^/]+$/.test(pathname) && pathname !== "/expenses/new";
+  return /^\/expenses\/[^/]+$/.test(pathname) && pathname !== "/expenses/new" && pathname !== "/expenses/staff";
 }
 
 export function ExpensesSubNav() {
@@ -29,6 +29,12 @@ export function ExpensesSubNav() {
       label: "Registre",
       testId: "expenses-subnav-registre",
       isActive: (path) => path === "/expenses",
+    },
+    {
+      href: "/expenses/staff",
+      label: "Paies & cachets",
+      testId: "expenses-subnav-staff",
+      isActive: (path) => path.startsWith("/expenses/staff"),
     },
   ];
 

@@ -9,6 +9,7 @@ import { MbokaPendingFieldset, MbokaSubmitButton } from "@/components/molecules/
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createExpenseFormAction, type CreateExpenseFormState } from "@/lib/actions/expenses";
+import { ExpenseStaffFields } from "@/components/organisms/expense-staff-fields";
 import {
   mbokaFieldClassName,
   mbokaLabelClassName,
@@ -28,12 +29,20 @@ const currencyOptions = [
   { value: "CDF", label: "CDF (FC)" },
 ];
 
-export function ExpenseCreateForm() {
+type ExpenseCreateFormProps = {
+  defaultCategory?: ExpenseCategory;
+};
+
+export function ExpenseCreateForm({ defaultCategory }: ExpenseCreateFormProps = {}) {
   const handledStateRef = useRef<CreateExpenseFormState>(null);
   const [state, formAction] = useActionState(createExpenseFormAction, null);
-  const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>("MATERIEL_EQUIPEMENT");
+  const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>(
+    defaultCategory ?? "MATERIEL_EQUIPEMENT"
+  );
   const [currency, setCurrency] = useState("USD");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [staffPaymentType, setStaffPaymentType] = useState("CACHET");
+  const isStaffExpense = expenseCategory === "PAIES_CACHETS_STAFF";
 
   useEffect(() => {
     if (!state || state === handledStateRef.current || state.success) {
@@ -69,16 +78,27 @@ export function ExpenseCreateForm() {
 
             <Field>
               <FieldLabel htmlFor="label" className={mbokaLabelClassName}>
-                Libellé *
+                Libellé {isStaffExpense ? "" : "*"}
               </FieldLabel>
               <Input
                 id="label"
                 name="label"
-                required
-                placeholder="Ex. Achat micro Shure, Loyer mensuel…"
+                required={!isStaffExpense}
+                placeholder={
+                  isStaffExpense
+                    ? "Optionnel — généré automatiquement si vide"
+                    : "Ex. Achat micro Shure, Loyer mensuel…"
+                }
                 className={mbokaFieldClassName}
               />
             </Field>
+
+            {isStaffExpense ? (
+              <ExpenseStaffFields
+                paymentType={staffPaymentType}
+                onPaymentTypeChange={setStaffPaymentType}
+              />
+            ) : null}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>

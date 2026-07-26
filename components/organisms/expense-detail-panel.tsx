@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { ExpenseStaffPayrollSection } from "@/components/organisms/expense-staff-payroll-section";
 import { ExpenseAttachmentsSection } from "@/components/organisms/expense-attachments-section";
 import { TransactionAdjustmentsSection } from "@/components/organisms/transaction-adjustments-section";
 import { formatMoney } from "@/lib/currency";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import type { ExpenseAttachment } from "@/lib/expenses/attachments";
+import { parseStaffPayrollMetadata } from "@/lib/expenses/staff-payroll";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import type { TransactionAdjustmentRecord } from "@/lib/transactions/adjustments";
 import { getNetTransactionAmount } from "@/lib/transactions/adjustments";
@@ -53,6 +55,7 @@ export function ExpenseDetailPanel({
   flash,
 }: ExpenseDetailPanelProps) {
   const netAmount = getNetTransactionAmount(expense.totalAmount, adjustments);
+  const staffPayroll = parseStaffPayrollMetadata(expense.metadata);
 
   useEffect(() => {
     if (flash?.created) {
@@ -134,6 +137,8 @@ export function ExpenseDetailPanel({
           </div>
         ) : null}
       </section>
+
+      {staffPayroll ? <ExpenseStaffPayrollSection staffPayroll={staffPayroll} /> : null}
 
       {!expense.isAdjustment ? (
         <ExpenseAttachmentsSection

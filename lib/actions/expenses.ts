@@ -9,6 +9,7 @@ import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
+import { parseStaffPayrollMetadata } from "@/lib/expenses/staff-payroll";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { generateTransactionCode } from "@/lib/transactions/code";
@@ -112,6 +113,7 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
             paymentMethod: parsed.paymentMethod,
             label: parsed.metadata.label,
             metadata: parsed.metadata as ExpenseMetadata,
+            staffPayroll: parseStaffPayrollMetadata(parsed.metadata),
             performedBy: session.user.email,
           },
         },
@@ -121,6 +123,7 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
     });
 
     revalidatePath("/expenses");
+    revalidatePath("/expenses/staff");
     revalidatePath("/dashboard");
 
     return {

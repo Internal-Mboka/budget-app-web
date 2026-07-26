@@ -1,7 +1,4 @@
 import type { CurrencyType, ExpenseCategory, PaymentMethod } from "@prisma/client";
-import { z } from "zod";
-
-import { buildExpenseMetadataFromFormData } from "@/lib/expenses/metadata";
 import { parseMoneyInput } from "@/lib/transactions/decimal";
 
 const expenseCategorySchema = z.enum([
@@ -31,10 +28,11 @@ export const createExpenseFormSchema = z.object({
 export type CreateExpenseFormInput = z.infer<typeof createExpenseFormSchema>;
 
 export function parseCreateExpenseFormData(formData: FormData) {
-  const metadata = buildExpenseMetadataFromFormData(formData);
+  const expenseCategory = String(formData.get("expenseCategory") ?? "") as ExpenseCategory;
+  const metadata = buildExpenseMetadataFromFormData(formData, expenseCategory);
 
   const base = createExpenseFormSchema.parse({
-    expenseCategory: String(formData.get("expenseCategory") ?? ""),
+    expenseCategory,
     totalAmount: formData.get("totalAmount"),
     currency: formData.get("currency") || "USD",
     paymentMethod: String(formData.get("paymentMethod") ?? ""),
