@@ -16,6 +16,7 @@ export function AppShell({ user, children }: AppShellProps) {
   const dashboardPath = getDefaultDashboardPath(user);
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
   const canManageClients = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
+  const canManageExpenses = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_EXPENSE);
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden", mbokaPageClassName)}>
@@ -25,6 +26,7 @@ export function AppShell({ user, children }: AppShellProps) {
         dashboardPath={dashboardPath}
         canManageUsers={canManageUsers}
         canManageClients={canManageClients}
+        canManageExpenses={canManageExpenses}
       />
 
       <div className="flex min-h-0 flex-1 flex-col lg:pl-72">

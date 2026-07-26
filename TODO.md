@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24), `expenses.cy.ts` (US-25)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -157,7 +157,7 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-25 | Atomisation & enregistrement dépenses | `[ ]` |
+| US-25 | Atomisation & enregistrement dépenses | `[x]` |
 | US-26 | Immutabilité & Avoirs / Régularisations | `[ ]` |
 | US-27 | Pièces justificatives (attachments) | `[ ]` |
 | US-28 | Paies & cachets staff | `[ ]` |

@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Users,
   UsersRound,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -41,6 +42,7 @@ type AppSidebarProps = {
   dashboardPath: string;
   canManageUsers: boolean;
   canManageClients: boolean;
+  canManageExpenses: boolean;
 };
 
 function getInitials(name: string): string {
@@ -65,6 +67,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/expenses") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -86,6 +92,7 @@ export function AppSidebar({
   dashboardPath,
   canManageUsers,
   canManageClients,
+  canManageExpenses,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -96,13 +103,20 @@ export function AppSidebar({
     {
       items: [{ href: dashboardPath, label: "Dashboard", icon: LayoutDashboard }],
     },
-    ...(canManageClients
+    ...(canManageClients || canManageExpenses
       ? [
           {
             title: "Opérations",
             items: [
-              { href: "/clients", label: "Clients", icon: UsersRound, testId: "nav-clients" },
-              { href: "/revenues", label: "Revenus", icon: Receipt, testId: "nav-revenues" },
+              ...(canManageClients
+                ? [
+                    { href: "/clients", label: "Clients", icon: UsersRound, testId: "nav-clients" },
+                    { href: "/revenues", label: "Revenus", icon: Receipt, testId: "nav-revenues" },
+                  ]
+                : []),
+              ...(canManageExpenses
+                ? [{ href: "/expenses", label: "Dépenses", icon: Wallet, testId: "nav-expenses" }]
+                : []),
             ],
           } satisfies NavSection,
         ]
