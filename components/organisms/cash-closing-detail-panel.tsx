@@ -6,6 +6,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { formatMoney } from "@/lib/currency";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,8 @@ type CashClosingDetailPanelProps = {
     date: string;
     theoreticalCash: number;
     theoreticalMobileMoney: number;
+    openingCash: number;
+    openingMobileMoney: number;
     realCash: number;
     realMobileMoney: number;
     gapAmount: number;
@@ -43,6 +46,12 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
   }, [flash?.created]);
 
   const closingDateLabel = format(new Date(closing.date), "d MMMM yyyy", { locale: fr });
+  const expected = computeExpectedClosingBalances({
+    openingCash: closing.openingCash,
+    openingMobileMoney: closing.openingMobileMoney,
+    netCash: closing.theoreticalCash,
+    netMobileMoney: closing.theoreticalMobileMoney,
+  });
 
   return (
     <div className="space-y-6">
@@ -72,12 +81,32 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className={mbokaLabelClassName}>Espèces théoriques</p>
+            <p className={mbokaLabelClassName}>Mouvement net espèces (jour)</p>
             <p className="mt-1 text-sm font-medium">{formatMoney(closing.theoreticalCash)}</p>
           </div>
           <div>
-            <p className={mbokaLabelClassName}>Mobile Money théorique</p>
+            <p className={mbokaLabelClassName}>Mouvement net Mobile Money (jour)</p>
             <p className="mt-1 text-sm font-medium">{formatMoney(closing.theoreticalMobileMoney)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Fond espèces (début)</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.openingCash)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Fond Mobile Money (début)</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.openingMobileMoney)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Solde espèces attendu</p>
+            <p className="mt-1 text-sm font-semibold text-[#10579F] dark:text-sky-50">
+              {formatMoney(expected.expectedCash)}
+            </p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Solde Mobile Money attendu</p>
+            <p className="mt-1 text-sm font-semibold text-[#10579F] dark:text-sky-50">
+              {formatMoney(expected.expectedMobileMoney)}
+            </p>
           </div>
           <div>
             <p className={mbokaLabelClassName}>Espèces comptées</p>

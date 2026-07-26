@@ -9,6 +9,7 @@ import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getClosingDayRange } from "@/lib/cash-closing/day-range";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
+import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeTheoreticalCashBalances } from "@/lib/cash-closing/theoretical";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -65,6 +66,8 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
   const { start, end, date } = getClosingDayRange(closingDateInput);
   const realCash = roundMoney(parsed.realCash);
   const realMobileMoney = roundMoney(parsed.realMobileMoney);
+  const openingCash = roundMoney(parsed.openingCash);
+  const openingMobileMoney = roundMoney(parsed.openingMobileMoney);
 
   const existingClosing = await prisma.cashClosing.findFirst({
     where: {
@@ -81,9 +84,15 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
   }
 
   const theoretical = await computeTheoreticalCashBalances(closingDateInput);
+  const expected = computeExpectedClosingBalances({
+    openingCash,
+    openingMobileMoney,
+    netCash: theoretical.theoreticalCash,
+    netMobileMoney: theoretical.theoreticalMobileMoney,
+  });
   const { gapAmount, hasDiscrepancy } = computeCashClosingGap({
-    theoreticalCash: theoretical.theoreticalCash,
-    theoreticalMobileMoney: theoretical.theoreticalMobileMoney,
+    expectedCash: expected.expectedCash,
+    expectedMobileMoney: expected.expectedMobileMoney,
     realCash,
     realMobileMoney,
   });
@@ -95,6 +104,8 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
           date,
           theoreticalCash: new Prisma.Decimal(theoretical.theoreticalCash),
           theoreticalMobileMoney: new Prisma.Decimal(theoretical.theoreticalMobileMoney),
+          openingCash: new Prisma.Decimal(openingCash),
+          openingMobileMoney: new Prisma.Decimal(openingMobileMoney),
           realCash: new Prisma.Decimal(realCash),
           realMobileMoney: new Prisma.Decimal(realMobileMoney),
           gapAmount: new Prisma.Decimal(gapAmount),
@@ -115,6 +126,10 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
             closingDate: closingDateInput,
             theoreticalCash: theoretical.theoreticalCash,
             theoreticalMobileMoney: theoretical.theoreticalMobileMoney,
+            openingCash,
+            openingMobileMoney,
+            expectedCash: expected.expectedCash,
+            expectedMobileMoney: expected.expectedMobileMoney,
             realCash,
             realMobileMoney,
             gapAmount,

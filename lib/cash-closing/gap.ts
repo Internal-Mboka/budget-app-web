@@ -6,15 +6,15 @@ export type CashClosingGapResult = {
 };
 
 export function computeCashClosingGap(input: {
-  theoreticalCash: number;
-  theoreticalMobileMoney: number;
+  expectedCash: number;
+  expectedMobileMoney: number;
   realCash: number;
   realMobileMoney: number;
 }): CashClosingGapResult {
   const gapAmount = roundMoney(
     input.realCash +
       input.realMobileMoney -
-      (input.theoreticalCash + input.theoreticalMobileMoney)
+      (input.expectedCash + input.expectedMobileMoney)
   );
 
   return {

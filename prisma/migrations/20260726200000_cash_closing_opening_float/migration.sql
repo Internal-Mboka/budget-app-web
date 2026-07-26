@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "CashClosing" ADD COLUMN "openingCash" DECIMAL(12,2) NOT NULL DEFAULT 0;
+ALTER TABLE "CashClosing" ADD COLUMN "openingMobileMoney" DECIMAL(12,2) NOT NULL DEFAULT 0;

@@ -18,6 +18,8 @@ describe("Mboka Budget — US-32 Clôture de caisse", () => {
     cy.get('[data-testid="cash-closing-theoretical-panel"]').should("be.visible");
 
     cy.get("#closingDate").clear().type("2099-06-15");
+    cy.get("#openingCash").clear().type("0");
+    cy.get("#openingMobileMoney").clear().type("0");
     cy.get("#realCash").type("0");
     cy.get("#realMobileMoney").type("0");
     cy.get('[data-testid="cash-closing-gap-preview"]').should("contain", "caisse conforme");
