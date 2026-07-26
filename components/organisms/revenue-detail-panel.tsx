@@ -19,6 +19,7 @@ import {
   type RecordRevenuePaymentFormState,
 } from "@/lib/actions/revenue-payments";
 import { RevenueCancellationSection } from "@/components/organisms/revenue-cancellation-section";
+import { RevenuePdfActions } from "@/components/molecules/revenue-pdf-actions";
 import { formatMoney } from "@/lib/currency";
 import {
   mbokaButtonOutlineClassName,
@@ -214,6 +215,12 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
           Mode de paiement : {getPaymentMethodLabel(revenue.paymentMethod)}
         </p>
       </section>
+
+      <RevenuePdfActions
+        revenueId={revenue.id}
+        paidAmount={revenue.paidAmount}
+        isCancelled={revenue.status === "LITIGE_ANNULE"}
+      />
 
       {showPaymentForm ? (
         <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="revenue-payment-form-section">
