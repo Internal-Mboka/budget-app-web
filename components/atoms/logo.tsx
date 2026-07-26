@@ -4,22 +4,38 @@ import { cn } from "@/lib/utils";
 
 type LogoProps = {
   className?: string;
+  variant?: "auth" | "badge";
   size?: "sm" | "md" | "lg";
 };
 
-const sizeMap = {
+const badgeSizeMap = {
   sm: { box: "h-10 w-10", image: 40 },
   md: { box: "h-16 w-16", image: 64 },
-  lg: { box: "h-24 w-24", image: 96 },
+  lg: { box: "h-20 w-20", image: 80 },
 } as const;
 
-export function Logo({ className, size = "md" }: LogoProps) {
-  const dimensions = sizeMap[size];
+export function Logo({ className, variant = "auth", size = "md" }: LogoProps) {
+  if (variant === "auth") {
+    return (
+      <div className={cn("flex w-full justify-center", className)}>
+        <Image
+          src="/photos/mboka.png"
+          alt="Mboka Budget"
+          width={170}
+          height={170}
+          priority
+          className="h-auto w-28 object-contain sm:w-36 [filter:var(--mboka-logo-filter)]"
+        />
+      </div>
+    );
+  }
+
+  const dimensions = badgeSizeMap[size];
 
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-3xl bg-primary/10 ring-1 ring-primary/15",
+        "flex items-center justify-center rounded-3xl bg-[#10579F] ring-1 ring-[#10579F]/20",
         dimensions.box,
         className
       )}
@@ -29,7 +45,7 @@ export function Logo({ className, size = "md" }: LogoProps) {
         alt="Mboka Budget"
         width={dimensions.image}
         height={dimensions.image}
-        className="h-[70%] w-[70%] object-contain dark:brightness-0 dark:invert"
+        className="h-[62%] w-[62%] object-contain brightness-0 invert"
         priority
       />
     </div>
