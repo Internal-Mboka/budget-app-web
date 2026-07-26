@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { ExpenseRecurringDueSection } from "@/components/organisms/expense-recurring-due-section";
+import { ExpenseCashAdvanceSection } from "@/components/organisms/expense-cash-advance-section";
 import { ExpenseApprovalSection } from "@/components/organisms/expense-approval-section";
 import { ExpenseStaffPayrollSection } from "@/components/organisms/expense-staff-payroll-section";
 import { ExpenseAttachmentsSection } from "@/components/organisms/expense-attachments-section";
@@ -21,6 +22,12 @@ import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { cn } from "@/lib/utils";
 import type { ApprovalStatus, ExpenseCategory } from "@prisma/client";
 import { getApprovalStatusLabel, isApprovalPending } from "@/lib/expenses/approval";
+import {
+  canUploadCashAdvanceReceipt,
+  isCashAdvanceCategory,
+  parseCashAdvanceMetadata,
+  resolveCashAdvanceWorkflowStatus,
+} from "@/lib/expenses/cash-advance";
 import { parseRecurringDueMetadata } from "@/lib/expenses/recurring";
 
 type ExpenseDetailPanelProps = {
@@ -46,6 +53,7 @@ type ExpenseDetailPanelProps = {
   canCreateAdjustment?: boolean;
   canUploadAttachment?: boolean;
   canApproveExpense?: boolean;
+  canDisburseCashAdvance?: boolean;
   approverName?: string | null;
   approvalThreshold?: number;
   flash?: {
@@ -66,6 +74,7 @@ export function ExpenseDetailPanel({
   canCreateAdjustment = false,
   canUploadAttachment = false,
   canApproveExpense = false,
+  canDisburseCashAdvance = false,
   approverName,
   approvalThreshold,
   flash,
@@ -73,7 +82,22 @@ export function ExpenseDetailPanel({
   const netAmount = getNetTransactionAmount(expense.totalAmount, adjustments);
   const staffPayroll = parseStaffPayrollMetadata(expense.metadata);
   const recurringDue = parseRecurringDueMetadata(expense.metadata);
+  const cashAdvance = parseCashAdvanceMetadata(expense.metadata);
+  const isCashAdvance = isCashAdvanceCategory(expense.expenseCategory);
+  const cashAdvanceWorkflowStatus =
+    isCashAdvance && expense.approvalStatus && expense.paymentStatus
+      ? resolveCashAdvanceWorkflowStatus({
+          cashAdvance,
+          approvalStatus: expense.approvalStatus,
+          paymentStatus: expense.paymentStatus,
+        })
+      : null;
   const isRecurringDueSettled = expense.paymentStatus === "SOLDE";
+  const canUploadAttachmentForExpense =
+    canUploadAttachment &&
+    (!isCashAdvance ||
+      (cashAdvanceWorkflowStatus !== null &&
+        canUploadCashAdvanceReceipt(cashAdvanceWorkflowStatus)));
 
   useEffect(() => {
     if (flash?.created && flash?.pendingApproval) {
@@ -199,7 +223,20 @@ export function ExpenseDetailPanel({
         />
       ) : null}
 
-      {!expense.isAdjustment && expense.approvalStatus ? (
+      {isCashAdvance && cashAdvance && cashAdvanceWorkflowStatus && expense.approvalStatus ? (
+        <ExpenseCashAdvanceSection
+          transactionId={expense.id}
+          cashAdvance={cashAdvance}
+          workflowStatus={cashAdvanceWorkflowStatus}
+          approvalStatus={expense.approvalStatus}
+          totalAmount={expense.totalAmount}
+          canApprove={canApproveExpense}
+          canDisburse={canDisburseCashAdvance}
+          approverName={approverName}
+        />
+      ) : null}
+
+      {!expense.isAdjustment && expense.approvalStatus && !isCashAdvance ? (
         <ExpenseApprovalSection
           transactionId={expense.id}
           approvalStatus={expense.approvalStatus}
@@ -214,7 +251,7 @@ export function ExpenseDetailPanel({
         <ExpenseAttachmentsSection
           transactionId={expense.id}
           attachments={attachments}
-          canUpload={canUploadAttachment}
+          canUpload={canUploadAttachmentForExpense}
         />
       ) : null}
 

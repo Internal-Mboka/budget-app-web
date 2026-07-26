@@ -163,7 +163,7 @@
 | US-28 | Paies & cachets staff | `[x]` |
 | US-29 | Approbation dépenses à seuil élevé | `[x]` |
 | US-30 | Dépenses récurrentes automatisées | `[x]` |
-| US-31 | Avances de caisse / notes de frais | `[ ]` |
+| US-31 | Avances de caisse / notes de frais | `[x]` |
 
 ### SPEC 5 — Clôture de Caisse & Rapprochement
 

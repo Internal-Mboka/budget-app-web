@@ -5,8 +5,13 @@ import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
+import {
+  isCashAdvanceCategory,
+  mergeCashAdvanceWorkflowStatus,
+} from "@/lib/expenses/cash-advance";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
+import { Prisma } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
@@ -99,18 +104,26 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
       return { success: false, error: "Cette dépense n'est pas en attente d'approbation." };
     }
 
+    const isCashAdvance = isCashAdvanceCategory(expense.expenseCategory);
+    const approvedMetadata = isCashAdvance
+      ? mergeCashAdvanceWorkflowStatus(expense.metadata, "APPROVED")
+      : null;
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
         data: {
           approvalStatus: "APPROVED",
           approvedById: auth.userId,
+          ...(approvedMetadata
+            ? { metadata: approvedMetadata as Prisma.InputJsonValue }
+            : {}),
         },
       });
 
       await tx.auditLog.create({
         data: {
-          action: "EXPENSE_APPROVED",
+          action: isCashAdvance ? "CASH_ADVANCE_APPROVED" : "EXPENSE_APPROVED",
           entity: "Transaction",
           entityId: expense.id,
           userId: auth.userId,
@@ -127,6 +140,7 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
     });
 
     revalidatePath("/expenses");
+    revalidatePath("/expenses/advances");
     revalidatePath("/expenses/approvals");
     revalidatePath(`/expenses/${transactionId}`);
     revalidatePath("/dashboard");
@@ -167,18 +181,26 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
       return { success: false, error: "Cette dépense n'est pas en attente d'approbation." };
     }
 
+    const isCashAdvance = isCashAdvanceCategory(expense.expenseCategory);
+    const rejectedMetadata = isCashAdvance
+      ? mergeCashAdvanceWorkflowStatus(expense.metadata, "REJECTED")
+      : null;
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
         data: {
           approvalStatus: "REJECTED",
           approvedById: auth.userId,
+          ...(rejectedMetadata
+            ? { metadata: rejectedMetadata as Prisma.InputJsonValue }
+            : {}),
         },
       });
 
       await tx.auditLog.create({
         data: {
-          action: "EXPENSE_REJECTED",
+          action: isCashAdvance ? "CASH_ADVANCE_REJECTED" : "EXPENSE_REJECTED",
           entity: "Transaction",
           entityId: expense.id,
           userId: auth.userId,
@@ -195,6 +217,7 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
     });
 
     revalidatePath("/expenses");
+    revalidatePath("/expenses/advances");
     revalidatePath("/expenses/approvals");
     revalidatePath(`/expenses/${transactionId}`);
     revalidatePath("/dashboard");

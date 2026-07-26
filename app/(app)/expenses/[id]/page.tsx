@@ -105,6 +105,7 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
         canCreateAdjustment={canCreateAdjustment}
         canUploadAttachment={canUploadAttachment && !expense.isAdjustment}
         canApproveExpense={canApproveExpense}
+        canDisburseCashAdvance={canUploadAttachment}
         approverName={approverName}
         approvalThreshold={getExpenseApprovalThreshold()}
         flash={{

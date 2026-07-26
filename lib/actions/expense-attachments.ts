@@ -14,6 +14,11 @@ import {
   isAllowedExpenseAttachmentMimeType,
   type ExpenseAttachment,
 } from "@/lib/expenses/attachments";
+import {
+  isCashAdvanceCategory,
+  mergeCashAdvanceWorkflowStatus,
+  parseCashAdvanceMetadata,
+} from "@/lib/expenses/cash-advance";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { saveExpenseAttachmentFile } from "@/lib/storage/expense-attachments";
@@ -80,11 +85,23 @@ export async function uploadExpenseAttachmentAction(
       id: true,
       code: true,
       metadata: true,
+      expenseCategory: true,
     },
   });
 
   if (!expense) {
     return { success: false, error: "Dépense introuvable." };
+  }
+
+  if (isCashAdvanceCategory(expense.expenseCategory)) {
+    const cashAdvance = parseCashAdvanceMetadata(expense.metadata);
+
+    if (cashAdvance?.workflowStatus !== "DISBURSED" && cashAdvance?.workflowStatus !== "JUSTIFIED") {
+      return {
+        success: false,
+        error: "Joignez le reçu uniquement après le décaissement de l'avance.",
+      };
+    }
   }
 
   const attachment = createExpenseAttachmentRecord({
@@ -107,11 +124,16 @@ export async function uploadExpenseAttachmentAction(
       });
 
       const metadata = appendExpenseAttachment(expense.metadata, attachment);
+      const finalMetadata =
+        isCashAdvanceCategory(expense.expenseCategory) &&
+        parseCashAdvanceMetadata(metadata)?.workflowStatus === "DISBURSED"
+          ? mergeCashAdvanceWorkflowStatus(metadata, "JUSTIFIED")
+          : metadata;
 
       await tx.transaction.update({
         where: { id: expense.id },
         data: {
-          metadata: metadata as Prisma.InputJsonValue,
+          metadata: finalMetadata as Prisma.InputJsonValue,
         },
       });
 
@@ -128,6 +150,9 @@ export async function uploadExpenseAttachmentAction(
             mimeType: attachment.mimeType,
             sizeBytes: attachment.sizeBytes,
             url: attachment.url,
+            cashAdvanceJustified:
+              isCashAdvanceCategory(expense.expenseCategory) &&
+              parseCashAdvanceMetadata(finalMetadata)?.workflowStatus === "JUSTIFIED",
             performedBy: session.user.email,
           },
         },
@@ -136,6 +161,7 @@ export async function uploadExpenseAttachmentAction(
 
     revalidatePath(`/expenses/${expense.id}`);
     revalidatePath("/expenses");
+    revalidatePath("/expenses/advances");
 
     return { success: true, attachmentId: attachment.id };
   } catch (error) {
