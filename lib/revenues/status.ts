@@ -1,9 +1,20 @@
-import type { PaymentStatus } from "@prisma/client";
+import type { PaymentStatus, RevenueCategory } from "@prisma/client";
 
 import { roundMoney } from "@/lib/transactions/decimal";
 import { getPaymentStatusLabel } from "@/lib/transactions/labels";
 
 import type { RevenueFulfillmentMetadata } from "@/lib/revenues/fulfillment";
+
+const BOOKABLE_REVENUE_CATEGORIES = new Set<RevenueCategory>([
+  "STUDIO_SESSION",
+  "LOCATION_VEHICULE",
+]);
+
+export function isBookableRevenueCategory(
+  revenueCategory: RevenueCategory | string | null | undefined
+): boolean {
+  return Boolean(revenueCategory && BOOKABLE_REVENUE_CATEGORIES.has(revenueCategory as RevenueCategory));
+}
 
 export function resolvePaymentStatus(totalAmount: number, paidAmount: number): PaymentStatus {
   const remainingAmount = roundMoney(totalAmount - paidAmount);
@@ -107,6 +118,22 @@ export function canMarkRevenueRealized(
   return financialStatus !== "LITIGE_ANNULE" && fulfillment?.fulfillmentStatus !== "REALIZED";
 }
 
-export function canCancelRevenue(financialStatus: PaymentStatus | string): boolean {
-  return financialStatus !== "LITIGE_ANNULE";
+export function canCancelRevenue(
+  financialStatus: PaymentStatus | string,
+  fulfillment?: RevenueFulfillmentMetadata | null,
+  revenueCategory?: RevenueCategory | string | null
+): boolean {
+  if (financialStatus === "LITIGE_ANNULE") {
+    return false;
+  }
+
+  if (financialStatus !== "SOLDE") {
+    return true;
+  }
+
+  if (isBookableRevenueCategory(revenueCategory)) {
+    return fulfillment?.fulfillmentStatus !== "REALIZED";
+  }
+
+  return false;
 }

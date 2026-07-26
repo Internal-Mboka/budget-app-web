@@ -121,7 +121,10 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
 
   const showPaymentForm = canRecordRevenuePayment(revenue.status, revenue.remainingAmount) && !revenue.isAdjustment;
   const showRealizedAction = canMarkRevenueRealized(revenue.status, revenue.fulfillment) && !revenue.isAdjustment;
-  const showCancelAction = Boolean(revenue.canCancel) && canCancelRevenue(revenue.status) && !revenue.isAdjustment;
+  const showCancelAction =
+    Boolean(revenue.canCancel) &&
+    canCancelRevenue(revenue.status, revenue.fulfillment, revenue.revenueCategory) &&
+    !revenue.isAdjustment;
   const adjustments = revenue.adjustments ?? [];
   const netAmount = getNetTransactionAmount(revenue.totalAmount, adjustments);
 

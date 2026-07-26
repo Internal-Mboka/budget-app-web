@@ -13,6 +13,8 @@ import {
   withRevenueCancellation,
   type RevenueCancellationMetadata,
 } from "@/lib/revenues/cancellation";
+import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
+import { canCancelRevenue, isBookableRevenueCategory } from "@/lib/revenues/status";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
@@ -89,6 +91,17 @@ export async function cancelRevenueAction(formData: FormData): Promise<CancelRev
 
   if (transaction.status === "LITIGE_ANNULE") {
     return { success: false, error: "Ce revenu est déjà annulé." };
+  }
+
+  const fulfillment = parseRevenueFulfillment(transaction.metadata);
+
+  if (!canCancelRevenue(transaction.status, fulfillment, transaction.revenueCategory)) {
+    return {
+      success: false,
+      error: isBookableRevenueCategory(transaction.revenueCategory)
+        ? "Impossible d'annuler une prestation soldée et déjà réalisée."
+        : "Impossible d'annuler un revenu déjà soldé. Utilisez un avoir si besoin.",
+    };
   }
 
   const currentTotal = decimalToNumber(transaction.totalAmount);
