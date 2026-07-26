@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 export const EXPENSE_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
@@ -26,26 +25,6 @@ export type ExpenseAttachment = z.infer<typeof expenseAttachmentSchema>;
 
 export function buildExpenseAttachmentUrl(transactionId: string, attachmentId: string): string {
   return `/api/expenses/${transactionId}/attachments/${attachmentId}`;
-}
-
-export function createExpenseAttachmentRecord(input: {
-  transactionId: string;
-  fileName: string;
-  mimeType: string;
-  sizeBytes: number;
-  uploadedBy?: string;
-}): ExpenseAttachment {
-  const id = randomUUID();
-
-  return {
-    id,
-    fileName: input.fileName,
-    mimeType: input.mimeType,
-    url: buildExpenseAttachmentUrl(input.transactionId, id),
-    uploadedAt: new Date().toISOString(),
-    uploadedBy: input.uploadedBy,
-    sizeBytes: input.sizeBytes,
-  };
 }
 
 export function getExpenseAttachments(metadata: unknown): ExpenseAttachment[] {

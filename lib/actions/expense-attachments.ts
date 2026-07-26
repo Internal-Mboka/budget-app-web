@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -7,14 +8,35 @@ import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import {
   appendExpenseAttachment,
-  createExpenseAttachmentRecord,
+  buildExpenseAttachmentUrl,
   EXPENSE_ATTACHMENT_MAX_BYTES,
   getExpenseAttachments,
   isAllowedExpenseAttachmentMimeType,
+  type ExpenseAttachment,
 } from "@/lib/expenses/attachments";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { saveExpenseAttachmentFile } from "@/lib/storage/expense-attachments";
+
+function createExpenseAttachmentRecord(input: {
+  transactionId: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedBy?: string;
+}): ExpenseAttachment {
+  const id = randomUUID();
+
+  return {
+    id,
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+    url: buildExpenseAttachmentUrl(input.transactionId, id),
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: input.uploadedBy,
+    sizeBytes: input.sizeBytes,
+  };
+}
 
 export type UploadExpenseAttachmentResult =
   | { success: true; attachmentId: string }
