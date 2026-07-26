@@ -6,68 +6,243 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ExpenseType {
-  ENTREE
-  SORTIE
-}
-
-enum UserRole {
-  PDG
-  COMPTABLE
-  DG
-  DIRECTEUR_TECHNIQUE
-  OBSERVATEUR
-}
+// ==========================================
+// 1. AUTHENTIFICATION, IAM, SESSIONS & RBAC
+// ==========================================
 
 model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  phone     String
-  role      UserRole  @default(OBSERVATEUR)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  expenses  Expense[]
-  categories Category[]
+  id                 String    @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String    @unique
+  password           String
+  avatarUrl          String?
+  isActive           Boolean   @default(true)
+  twoFactorEnabled   Boolean   @default(false)
+  twoFactorSecret    String?
+  roleId             Int
+  role               Role      @relation(fields: [roleId], references: [id])
+  sessions           Session[]
+  transactionsCreated Transaction[] @relation("TransactionCreator")
+  transactionsApproved Transaction[] @relation("TransactionApprover")
+  cashClosings       CashClosing[] @relation("CashClosingOperator")
+  cashClosingsReviewed CashClosing[] @relation("CashClosingReviewer")
+  clientNotes        ClientNote[]
+  auditLogs          AuditLog[] @relation("UserAuditLogs")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([roleId])
 }
 
-model Category {
-  id            String    @id @default(cuid())
-  userId        String
-  name          String
-  monthlyBudget Decimal   @default(0) @db.Decimal(10, 2)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses      Expense[]
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  deviceType   String?
+  browser      String?
+  ipAddress    String?
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
-  @@unique([userId, name])
-  @@index([userId, name])
+  @@index([userId])
 }
 
-model Expense {
-  id           String      @id @default(cuid())
-  userId       String?
-  // La clé étrangère pour la relation
-  categoryId   String?     
-  
-  title        String
-  amount       Decimal     @db.Decimal(10, 2)
-  type         ExpenseType
-  
-  // Ce champ stocke le nom en dur (pour l'historique)
-  categoryName String?     
-  
-  isRecurring  Boolean     @default(false)
-  expectedDate DateTime?
-  spentAt      DateTime    @default(now())
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  
-  // Relations
-  user         User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  permissions Permission[] @relation("RolePermissions")
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
 
-  @@index([userId, spentAt])
-  @@index([categoryId, spentAt])
+model Permission {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  description String?
+  roles       Role[]   @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+}
+
+// ==========================================
+// 2. CLIENTS, TIERS, TAGS & INTERACTIONS
+// ==========================================
+
+enum ClientCategory {
+  ARTISTE_INDEPENDANT
+  LABEL_MAISON_DE_DISQUE
+  ENTREPRISE_MARQUE
+  PARTICULIER_OCCASIONNEL
+}
+
+model Client {
+  id           String         @id @default(cuid())
+  name         String
+  category     ClientCategory
+  phone        String?
+  email        String?
+  address      String?
+  notes        String?
+  avatarUrl    String?
+  tags         String[]       @default([])
+  transactions Transaction[]
+  interactions ClientNote[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([category])
+}
+
+model ClientNote {
+  id        String   @id @default(cuid())
+  content   String
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+}
+
+// ==========================================
+// 3. TRANSACTIONS FINANCIÈRES (ENTRÉES & SORTIES)
+// ==========================================
+
+enum CurrencyType {
+  USD
+  CDF
+}
+
+enum TransactionType {
+  REVENUE
+  EXPENSE
+}
+
+enum RevenueCategory {
+  STUDIO_SESSION
+  SERVICES_MIX_MASTER
+  LOCATION_VEHICULE
+  VENTE_ANNEXE
+}
+
+enum ExpenseCategory {
+  MATERIEL_EQUIPEMENT
+  LOYER_CHARGES_FIXES
+  PAIES_CACHETS_STAFF
+  INVESTISSEMENT
+  AVANCE_CAISSE_NOTE_FRAIS
+}
+
+enum PaymentStatus {
+  DEVIS_PROFORMA
+  RESERVE_ACOMPTE_REQUIS
+  EN_COURS_REALISE
+  SOLDE
+  LITIGE_ANNULE
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  VIREMENT_BANCAIRE
+  AUTRE
+}
+
+enum ApprovalStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Transaction {
+  id                  String            @id @default(cuid())
+  code                String            @unique
+  type                TransactionType
+  revenueCategory     RevenueCategory?
+  expenseCategory     ExpenseCategory?
+  totalAmount         Decimal           @db.Decimal(12, 2)
+  paidAmount          Decimal           @default(0) @db.Decimal(12, 2)
+  currency            CurrencyType      @default(USD)
+  remainingAmount     Decimal           @db.Decimal(12, 2)
+  status              PaymentStatus     @default(RESERVE_ACOMPTE_REQUIS)
+  paymentMethod       PaymentMethod?
+  approvalStatus      ApprovalStatus    @default(NOT_REQUIRED)
+  approvedById        String?
+  approvedBy          User?             @relation("TransactionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  isRecurring         Boolean           @default(false)
+  recurringPeriod     String?
+  metadata            Json?
+  isAdjustment        Boolean           @default(false)
+  parentTransactionId String?
+  parentTransaction   Transaction?      @relation("TransactionAdjustments", fields: [parentTransactionId], references: [id], onDelete: SetNull)
+  adjustments         Transaction[]     @relation("TransactionAdjustments")
+  clientId            String?
+  client              Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdById         String
+  createdBy           User              @relation("TransactionCreator", fields: [createdById], references: [id])
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([type, status])
+  @@index([createdById])
+  @@index([clientId])
+  @@index([parentTransactionId])
+}
+
+// ==========================================
+// 4. RAPPROCHEMENT & CLÔTURE DE CAISSE
+// ==========================================
+
+enum ClosingReviewStatus {
+  APPROVED
+  PENDING_REVIEW
+  RESOLVED
+}
+
+model CashClosing {
+  id                     String              @id @default(cuid())
+  date                   DateTime            @default(now())
+  theoreticalCash        Decimal             @db.Decimal(12, 2)
+  theoreticalMobileMoney Decimal             @db.Decimal(12, 2)
+  realCash               Decimal             @db.Decimal(12, 2)
+  realMobileMoney        Decimal             @db.Decimal(12, 2)
+  gapAmount              Decimal             @db.Decimal(12, 2)
+  hasDiscrepancy         Boolean             @default(false)
+  notes                  String?
+  reviewStatus           ClosingReviewStatus @default(APPROVED)
+  reviewerInstruction    String?
+  reviewedById           String?
+  reviewedBy             User?               @relation("CashClosingReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  operatorId             String
+  operator               User                @relation("CashClosingOperator", fields: [operatorId], references: [id])
+  createdAt              DateTime            @default(now())
+
+  @@index([operatorId])
+  @@index([date])
+}
+
+// ==========================================
+// 5. AUDIT LOG GLOBAL (TRAÇABILITÉ STRATÉGIQUE)
+// ==========================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation("UserAuditLogs", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }

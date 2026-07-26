@@ -39,7 +39,7 @@
 - [x] Supprimer les pages monolithiques (`app/dashboard/`, `app/historique/`)
 - [x] Nettoyer les assets / fichiers boilerplate inutiles (`public/vercel.svg`, `build-full.log`, etc.)
 - [x] Conserver : identité visuelle, `lib/prisma.ts`, base PWA (`manifest.ts`, `pwa-register.tsx`), config Next/Tailwind
-- [ ] *(Reporté Étape 4)* Réécrire `prisma/schema.prisma` — ancien schéma encore présent
+- [x] *(Étape 4)* Réécrire `prisma/schema.prisma` — migration `init_v2` appliquée
 
 ### 1.2 Structure Atomic Design
 
@@ -86,14 +86,14 @@
 
 ## Phase 2 — Prisma, Schéma & Seeding (Étape 4)
 
-- [ ] Réécrire `prisma/schema.prisma` selon `thisproject/schemas.md`
-- [ ] Appliquer les contraintes d'intégrité (transactions Prisma `$transaction`, index, immutabilité)
-- [ ] Corriger les doublons / erreurs du schéma pilote si nécessaire *(sans modifier `thisproject/`)*
-- [ ] Générer la migration (`npx prisma migrate dev`)
-- [ ] Créer `prisma/seed.ts` :
-  - Rôles & permissions par défaut (PDG, DT, Comptable, Secrétaire, Observateur)
-  - Compte initial **Directeur Technique — Prince Vangu**
-- [ ] Exécuter migration + seed
+> **Statut :** migration appliquée — seed en attente de `SEED_DT_PASSWORD`.
+
+- [x] Réécrire `prisma/schema.prisma` selon `thisproject/schemas.md`
+- [x] Appliquer les contraintes d'intégrité (index, `onDelete`, immutabilité via `parentTransactionId`)
+- [x] Corriger les doublons du schéma pilote (`TransactionType` dupliqué, typo enum `USD`)
+- [x] Générer la migration (`20260726042402_init_v2`) — appliquée sur Neon
+- [x] Créer `prisma/seed.ts` (5 rôles, 12 permissions, compte DT Prince Vangu)
+- [ ] Exécuter le seed *(bloqué : variable `SEED_DT_PASSWORD` requise)*
 
 ---
 
@@ -241,4 +241,5 @@
 | Date | Étape | Validé par | Commit |
 |------|-------|------------|--------|
 | 2026-07-26 | Phase 0 (Analyse) | GO reçu | — |
-| 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | *En attente* | — |
+| 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | GO reçu | — |
+| 2026-07-26 | Phase 2 (Prisma & Migration) | *En attente* | — |
