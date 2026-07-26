@@ -121,10 +121,11 @@ export function AppSidebar({
             const active = isActive(item.href);
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
+            <Link
+              key={item.href}
+              href={item.href}
+              data-testid={item.href === "/admin/users" ? "nav-utilisateurs" : undefined}
+              onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                   active
@@ -154,6 +155,7 @@ export function AppSidebar({
           <form action={logoutAction}>
             <button
               type="submit"
+              data-testid="app-logout"
               className={cn(
                 mbokaButtonOutlineClassName,
                 "w-full justify-start border-transparent bg-transparent px-3 text-slate-600 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"

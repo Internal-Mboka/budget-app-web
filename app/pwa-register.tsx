@@ -30,6 +30,14 @@ function detectIos() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+function isCypressTestRun() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return "Cypress" in window;
+}
+
 export function PwaRegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -45,7 +53,7 @@ export function PwaRegister() {
 
     const dismissed = window.localStorage.getItem(STORAGE_KEY) === "true";
 
-    if (!dismissed && !isStandaloneMode()) {
+    if (!dismissed && !isStandaloneMode() && !isCypressTestRun()) {
       setShowPrompt(true);
     }
 
@@ -59,6 +67,11 @@ export function PwaRegister() {
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
+
+      if (isCypressTestRun()) {
+        return;
+      }
+
       setDeferredPrompt(event as BeforeInstallPromptEvent);
       setShowPrompt(true);
     };
@@ -166,6 +179,7 @@ export function PwaRegister() {
 
           <button
             type="button"
+            data-testid="pwa-dismiss"
             onClick={dismissPrompt}
             className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700"
           >

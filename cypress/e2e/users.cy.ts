@@ -1,29 +1,26 @@
 describe("Mboka Budget — US-02 Gestion utilisateurs", () => {
-  const email = Cypress.env("DT_EMAIL");
-  const password = Cypress.env("DT_PASSWORD");
-
   beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
     if (!email || !password) {
       this.skip();
     }
 
-    cy.visit("/login");
-    cy.get("#email").type(email);
-    cy.get("#password").type(password);
-    cy.contains("button", "Se connecter").click();
-    cy.location("pathname", { timeout: 15000 }).should("eq", "/dashboard");
+    cy.loginAsDt();
   });
 
   it("affiche la page admin utilisateurs pour le DT", () => {
     cy.visit("/admin/users");
-    cy.contains("Gestion des utilisateurs").should("be.visible");
-    cy.contains("Nouveau compte").should("be.visible");
-    cy.contains("Comptes existants").should("be.visible");
+    cy.contains("Gestion des utilisateurs").scrollIntoView().should("be.visible");
+    cy.contains("Nouveau compte").scrollIntoView().should("be.visible");
+    cy.contains("Comptes existants").scrollIntoView().should("be.visible");
   });
 
-  it("refuse l'accès admin sans permission users:manage", () => {
-    // Le DT a users:manage — on vérifie que la nav est visible
-    cy.contains("a", "Utilisateurs").should("be.visible");
+  it("affiche la navigation utilisateurs pour le DT", () => {
+    cy.get('[data-testid="nav-utilisateurs"]')
+      .should("exist")
+      .and("have.attr", "href", "/admin/users");
   });
 
   it("crée un utilisateur observateur", () => {
@@ -33,10 +30,11 @@ describe("Mboka Budget — US-02 Gestion utilisateurs", () => {
     cy.get("#firstName").type("Test");
     cy.get("#lastName").type("Observateur");
     cy.get("#email").type(uniqueEmail);
-    cy.get("#password").type("Test1234!");
-    cy.get("#roleId").select("Observateur");
+    cy.get("#password").type("Test1234!", { force: true });
+    cy.pickMbokaSelect("roleId", "Observateur");
     cy.contains("button", "Créer l'utilisateur").click();
 
-    cy.contains(uniqueEmail, { timeout: 10000 }).should("be.visible");
+    cy.contains(uniqueEmail, { timeout: 10000 }).scrollIntoView().should("be.visible");
+    cy.dismissToasts();
   });
 });

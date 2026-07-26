@@ -51,6 +51,7 @@ export function MbokaSelect({
       disabled={disabled}
     >
       <Select.Trigger
+        data-testid={id ? `${id}-trigger` : undefined}
         className={cn(
           mbokaFieldClassName,
           "flex h-auto min-h-12 w-full items-center justify-between gap-2 text-left data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"

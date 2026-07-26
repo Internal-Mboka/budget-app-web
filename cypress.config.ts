@@ -1,4 +1,7 @@
+import { config as loadEnv } from "dotenv";
 import { defineConfig } from "cypress";
+
+loadEnv();
 
 export default defineConfig({
   e2e: {
