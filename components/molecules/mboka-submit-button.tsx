@@ -11,6 +11,7 @@ type MbokaSubmitButtonProps = {
   pendingLabel?: string;
   className?: string;
   testId?: string;
+  disabled?: boolean;
 };
 
 export function MbokaSubmitButton({
@@ -18,6 +19,7 @@ export function MbokaSubmitButton({
   pendingLabel = "Enregistrement...",
   className,
   testId,
+  disabled = false,
 }: MbokaSubmitButtonProps) {
   const { pending } = useFormStatus();
 
@@ -25,7 +27,7 @@ export function MbokaSubmitButton({
     <button
       type="submit"
       className={cn(mbokaButtonPrimaryClassName, className)}
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       data-testid={testId}
       data-pending={pending ? "true" : "false"}

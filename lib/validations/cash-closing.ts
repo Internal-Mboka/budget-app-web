@@ -19,6 +19,12 @@ export const createCashClosingSchema = z.object({
   openingMobileMoney: moneySchema,
   realCash: moneySchema,
   realMobileMoney: moneySchema,
+  notes: z
+    .string()
+    .trim()
+    .max(2000, "La note ne peut pas dépasser 2000 caractères.")
+    .optional()
+    .transform((value) => value || undefined),
 });
 
 export type CreateCashClosingInput = z.infer<typeof createCashClosingSchema>;
@@ -30,5 +36,6 @@ export function parseCreateCashClosingFormData(formData: FormData) {
     openingMobileMoney: formData.get("openingMobileMoney") ?? "0",
     realCash: formData.get("realCash"),
     realMobileMoney: formData.get("realMobileMoney"),
+    notes: String(formData.get("notes") ?? ""),
   });
 }

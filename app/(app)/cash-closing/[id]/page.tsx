@@ -30,6 +30,7 @@ export default async function CashClosingDetailPage({ params, searchParams }: Ca
       realMobileMoney: true,
       gapAmount: true,
       hasDiscrepancy: true,
+      notes: true,
       operator: {
         select: {
           firstName: true,
@@ -64,6 +65,7 @@ export default async function CashClosingDetailPage({ params, searchParams }: Ca
           realMobileMoney: decimalToNumber(closing.realMobileMoney),
           gapAmount: decimalToNumber(closing.gapAmount),
           hasDiscrepancy: closing.hasDiscrepancy,
+          notes: closing.notes,
           operator: closing.operator,
         }}
         flash={{ created: query.created === "1" }}

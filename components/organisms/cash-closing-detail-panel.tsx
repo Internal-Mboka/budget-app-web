@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
@@ -26,6 +27,7 @@ type CashClosingDetailPanelProps = {
     realMobileMoney: number;
     gapAmount: number;
     hasDiscrepancy: boolean;
+    notes?: string | null;
     operator: {
       firstName: string;
       lastName: string;
@@ -60,6 +62,15 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/cash-closing"
+        className="inline-flex items-center gap-2 text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+        data-testid="cash-closing-back-link"
+      >
+        <ArrowLeft className="size-4" />
+        Retour aux clôtures
+      </Link>
+
       <CashClosingOperatorCard
         operator={closing.operator}
         emphasized={closing.hasDiscrepancy}
@@ -179,6 +190,18 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
             </p>
           )}
         </div>
+
+        {closing.notes ? (
+          <div
+            className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/20"
+            data-testid="cash-closing-detail-notes"
+          >
+            <p className={mbokaLabelClassName}>Explication de l&apos;opérateur</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">
+              {closing.notes}
+            </p>
+          </div>
+        ) : null}
       </section>
     </div>
   );

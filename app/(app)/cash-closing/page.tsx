@@ -3,7 +3,7 @@ import { CashClosingsHistoryPanel } from "@/components/organisms/cash-closings-h
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { formatClosingDateInput } from "@/lib/cash-closing/day-range";
-import { loadRecentCashClosings, loadSuggestedOpeningFloat } from "@/lib/cash-closing/load-closings";
+import { loadClosingForDate, loadRecentCashClosings, loadSuggestedOpeningFloat } from "@/lib/cash-closing/load-closings";
 import { computeCashClosingDaySummary } from "@/lib/cash-closing/theoretical";
 import { PERMISSIONS } from "@/lib/permissions";
 
@@ -16,10 +16,11 @@ export default async function CashClosingPage({ searchParams }: CashClosingPageP
   const query = await searchParams;
   const closingDate = query.date ?? formatClosingDateInput();
 
-  const [summary, recentClosings, suggestedOpening] = await Promise.all([
+  const [summary, recentClosings, suggestedOpening, existingClosing] = await Promise.all([
     computeCashClosingDaySummary(closingDate),
     loadRecentCashClosings(15),
     loadSuggestedOpeningFloat(closingDate),
+    loadClosingForDate(closingDate),
   ]);
 
   return (
@@ -34,6 +35,7 @@ export default async function CashClosingPage({ searchParams }: CashClosingPageP
         summary={summary}
         defaultClosingDate={closingDate}
         suggestedOpening={suggestedOpening}
+        existingClosing={existingClosing}
       />
 
       <CashClosingsHistoryPanel closings={recentClosings} />

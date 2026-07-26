@@ -97,6 +97,13 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
     realMobileMoney,
   });
 
+  if (hasDiscrepancy && !parsed.notes) {
+    return {
+      success: false,
+      error: "Expliquez la différence constatée avant de valider la clôture.",
+    };
+  }
+
   try {
     const closing = await prisma.$transaction(async (tx) => {
       const created = await tx.cashClosing.create({
@@ -110,6 +117,7 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
           realMobileMoney: new Prisma.Decimal(realMobileMoney),
           gapAmount: new Prisma.Decimal(gapAmount),
           hasDiscrepancy,
+          notes: parsed.notes ?? null,
           operatorId: session.user.id,
           reviewStatus: hasDiscrepancy ? "PENDING_REVIEW" : "APPROVED",
         },
@@ -134,6 +142,7 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
             realMobileMoney,
             gapAmount,
             hasDiscrepancy,
+            notes: parsed.notes ?? null,
             transactionCount: theoretical.transactionCount,
             performedBy: session.user.email,
           },

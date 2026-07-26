@@ -15,6 +15,34 @@ export type CashClosingHistoryItem = {
   };
 };
 
+export async function loadClosingForDate(
+  closingDate: string
+): Promise<{ id: string; date: string } | null> {
+  const { start, end } = getClosingDayRange(closingDate);
+
+  const closing = await prisma.cashClosing.findFirst({
+    where: {
+      date: {
+        gte: start,
+        lte: end,
+      },
+    },
+    select: {
+      id: true,
+      date: true,
+    },
+  });
+
+  if (!closing) {
+    return null;
+  }
+
+  return {
+    id: closing.id,
+    date: closing.date.toISOString(),
+  };
+}
+
 export async function loadRecentCashClosings(limit = 20): Promise<CashClosingHistoryItem[]> {
   const rows = await prisma.cashClosing.findMany({
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],

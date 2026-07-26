@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ type CashClosingFormProps = {
   summary: CashClosingDaySummary;
   defaultClosingDate: string;
   suggestedOpening?: SuggestedOpeningFloat | null;
+  existingClosing?: { id: string; date: string } | null;
 };
 
 function sanitizePhysicalAmount(value: string): string {
@@ -89,10 +91,12 @@ export function CashClosingForm({
   summary,
   defaultClosingDate,
   suggestedOpening,
+  existingClosing,
 }: CashClosingFormProps) {
   const router = useRouter();
   const handledStateRef = useRef<CashClosingFormState>(null);
   const [state, formAction] = useActionState(createCashClosingFormAction, null);
+  const [discrepancyNotes, setDiscrepancyNotes] = useState("");
   const [openingCashInput, setOpeningCashInput] = useState(() =>
     formatOpeningInput(suggestedOpening?.openingCash ?? 0)
   );
@@ -152,6 +156,24 @@ export function CashClosingForm({
 
   return (
     <div className="space-y-5">
+      {existingClosing ? (
+        <section
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-3 text-sm dark:border-sky-900 dark:bg-sky-950/20"
+          data-testid="cash-closing-existing-banner"
+        >
+          <p className="text-slate-600 dark:text-slate-300">
+            Une clôture existe déjà pour cette date.
+          </p>
+          <Link
+            href={`/cash-closing/${existingClosing.id}`}
+            className="font-semibold text-[#10579F] hover:underline dark:text-sky-300"
+            data-testid="cash-closing-existing-link"
+          >
+            Voir la fiche →
+          </Link>
+        </section>
+      ) : null}
+
       <section
         className="flex gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 text-sm text-slate-600 dark:border-sky-900 dark:bg-sky-950/20 dark:text-slate-300"
         data-testid="cash-closing-scope-note"
@@ -437,7 +459,29 @@ export function CashClosingForm({
               </div>
             ) : null}
 
-            <MbokaSubmitButton testId="cash-closing-submit" pendingLabel="Clôture...">
+            {preview?.gap.hasDiscrepancy ? (
+              <Field className="gap-2" data-testid="cash-closing-notes-field">
+                <FieldLabel htmlFor="notes" className={mbokaLabelClassName}>
+                  Explication de la différence *
+                </FieldLabel>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  required
+                  rows={3}
+                  value={discrepancyNotes}
+                  onChange={(event) => setDiscrepancyNotes(event.target.value)}
+                  placeholder="Ex. erreur de rendu, billet contrefait remplacé, versement compté dans le mauvais tiroir…"
+                  className={cn(mbokaFieldClassName, "min-h-24 resize-y")}
+                />
+              </Field>
+            ) : null}
+
+            <MbokaSubmitButton
+              testId="cash-closing-submit"
+              pendingLabel="Clôture..."
+              disabled={Boolean(existingClosing)}
+            >
               Valider la clôture de caisse
             </MbokaSubmitButton>
           </MbokaPendingFieldset>

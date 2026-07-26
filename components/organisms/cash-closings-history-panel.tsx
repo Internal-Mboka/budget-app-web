@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CheckCircle2, History } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight, History } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
@@ -61,14 +61,15 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                   : "border-slate-100 dark:border-slate-800"
               )}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+              <Link
+                href={`/cash-closing/${closing.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                data-testid={`cash-closing-history-link-${closing.id}`}
+              >
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/cash-closing/${closing.id}`}
-                    className="text-sm font-semibold text-[#10579F] hover:underline dark:text-sky-50"
-                  >
+                  <span className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
                     <ClosingDateLabel isoDate={closing.date} />
-                  </Link>
+                  </span>
                   {closing.hasDiscrepancy ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
                       <AlertTriangle className="size-3" />
@@ -81,10 +82,11 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                     </span>
                   )}
                 </div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {formatMoney(closing.gapAmount)}
-                </p>
-              </div>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {closing.hasDiscrepancy ? formatMoney(closing.gapAmount) : "OK"}
+                  <ChevronRight className="size-4 text-slate-400" />
+                </span>
+              </Link>
 
               <div className="px-2 py-2">
                 <CashClosingOperatorCard

@@ -42,15 +42,7 @@ export async function computeCashClosingDaySummary(
   }
 
   for (const expense of expensePayments) {
-    accumulateExpenseMovement(
-      buckets,
-      {
-        paymentMethod: expense.paymentMethod,
-        paidAmount: expense.amount,
-        createdAt: new Date(`${closingDate}T12:00:00`),
-      },
-      closingDate
-    );
+    accumulateExpensePayment(buckets, expense);
   }
 
   return {
