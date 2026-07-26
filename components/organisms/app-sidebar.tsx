@@ -32,7 +32,6 @@ type AppSidebarProps = {
   roleName: string;
   dashboardPath: string;
   canManageUsers: boolean;
-  canEnableTwoFactor: boolean;
 };
 
 function getInitials(name: string): string {
@@ -49,7 +48,6 @@ export function AppSidebar({
   roleName,
   dashboardPath,
   canManageUsers,
-  canEnableTwoFactor,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,11 +58,8 @@ export function AppSidebar({
     { href: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
     { href: "/account/password", label: "Mot de passe", icon: KeyRound },
     { href: "/account/sessions", label: "Sessions", icon: MonitorSmartphone },
+    { href: "/account/two-factor", label: "2FA", icon: Fingerprint },
   ];
-
-  if (canEnableTwoFactor) {
-    navItems.push({ href: "/account/two-factor", label: "2FA", icon: Fingerprint });
-  }
 
   if (canManageUsers) {
     navItems.push({ href: "/admin/users", label: "Utilisateurs", icon: Users });

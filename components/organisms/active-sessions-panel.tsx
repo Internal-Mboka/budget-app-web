@@ -19,13 +19,27 @@ import {
 import type { ActiveSessionRow } from "@/lib/sessions/service";
 import { cn } from "@/lib/utils";
 
+function formatRelativeDate(date: Date) {
+  return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+}
+
 type ActiveSessionsPanelProps = {
   initialSessions: ActiveSessionRow[];
   currentSessionId?: string;
 };
 
-function formatRelativeDate(date: Date) {
-  return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+function RelativeTime({ date }: { date: Date }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    setLabel(formatRelativeDate(date));
+  }, [date]);
+
+  return (
+    <span suppressHydrationWarning className="text-xs text-slate-500 dark:text-slate-500">
+      Dernière activité {label || "—"}
+    </span>
+  );
 }
 
 export function ActiveSessionsPanel({
@@ -156,9 +170,7 @@ export function ActiveSessionsPanel({
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     {session.deviceType} · IP {session.ipAddress}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                    Dernière activité {formatRelativeDate(session.lastActiveAt)}
-                  </p>
+                  <RelativeTime date={session.lastActiveAt} />
                 </div>
               </div>
 

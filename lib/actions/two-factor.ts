@@ -9,7 +9,6 @@ import {
   TWO_FACTOR_CHALLENGE_COOKIE,
   verifyTwoFactorChallenge,
 } from "@/lib/two-factor/challenge";
-import { canEnableTwoFactor } from "@/lib/two-factor/eligibility";
 import { createTotpQrDataUrl, createTotpSecret, verifyTotpCode } from "@/lib/two-factor/totp";
 import {
   confirmTwoFactorSchema,
@@ -22,10 +21,6 @@ export type TwoFactorActionResult =
 
 export async function beginTwoFactorSetupAction(): Promise<TwoFactorActionResult> {
   const session = await requireSession();
-
-  if (!canEnableTwoFactor(session.user.roleName)) {
-    return { success: false, error: "La 2FA est réservée aux rôles PDG et Comptable." };
-  }
 
   const secret = createTotpSecret();
 
@@ -48,10 +43,6 @@ export async function confirmTwoFactorSetupAction(
   formData: FormData
 ): Promise<TwoFactorActionResult> {
   const session = await requireSession();
-
-  if (!canEnableTwoFactor(session.user.roleName)) {
-    return { success: false, error: "La 2FA est réservée aux rôles PDG et Comptable." };
-  }
 
   const parsed = confirmTwoFactorSchema.safeParse({
     code: formData.get("code"),
@@ -99,10 +90,6 @@ export async function confirmTwoFactorSetupAction(
 
 export async function disableTwoFactorAction(formData: FormData): Promise<TwoFactorActionResult> {
   const session = await requireSession();
-
-  if (!canEnableTwoFactor(session.user.roleName)) {
-    return { success: false, error: "La 2FA est réservée aux rôles PDG et Comptable." };
-  }
 
   const parsed = disableTwoFactorSchema.safeParse({
     code: formData.get("code"),

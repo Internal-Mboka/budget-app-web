@@ -11,6 +11,15 @@ export type MbokaSelectOption = {
   label: string;
 };
 
+function toOptionTestId(fieldId: string, label: string) {
+  return `${fieldId}-option-${label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+}
+
 type MbokaSelectProps = {
   id?: string;
   name: string;
@@ -82,10 +91,15 @@ export function MbokaSelect({
                     "dark:text-slate-200 dark:data-[highlighted]:bg-slate-800 dark:data-[highlighted]:text-sky-50"
                   )}
                 >
-                  <Select.ItemText>{option.label}</Select.ItemText>
-                  <Select.ItemIndicator className="text-[#10579F] dark:text-sky-400">
-                    <Check className="size-4" />
-                  </Select.ItemIndicator>
+                  <span
+                    data-testid={id ? toOptionTestId(id, option.label) : undefined}
+                    className="flex w-full items-center justify-between gap-2"
+                  >
+                    <Select.ItemText>{option.label}</Select.ItemText>
+                    <Select.ItemIndicator className="text-[#10579F] dark:text-sky-400">
+                      <Check className="size-4" />
+                    </Select.ItemIndicator>
+                  </span>
                 </Select.Item>
               ))}
             </Select.List>

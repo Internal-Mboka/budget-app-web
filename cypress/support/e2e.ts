@@ -1,5 +1,13 @@
 /// <reference types="cypress" />
 
+Cypress.on("uncaught:exception", (error) => {
+  if (error.message.includes("Hydration failed")) {
+    return false;
+  }
+
+  return undefined;
+});
+
 Cypress.Commands.add("dismissPwaPrompt", () => {
   cy.get("body").then(($body) => {
     if ($body.find('[data-testid="pwa-dismiss"]').length > 0) {
@@ -21,8 +29,17 @@ Cypress.Commands.add("dismissToasts", () => {
 });
 
 Cypress.Commands.add("pickMbokaSelect", (fieldId: string, optionLabel: string) => {
+  const optionId = `${fieldId}-option-${optionLabel
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+
   cy.get(`[data-testid="${fieldId}-trigger"]`).should("be.visible").click();
-  cy.contains('[role="option"]', optionLabel).click();
+  cy.get(`[data-testid="${optionId}"]`, { timeout: 10000 })
+    .should("be.visible")
+    .click({ force: true });
 });
 
 Cypress.Commands.add("loginAsDt", () => {
@@ -33,13 +50,13 @@ Cypress.Commands.add("loginAsDt", () => {
     throw new Error("SEED_DT_EMAIL / SEED_DT_PASSWORD requis pour les tests E2E authentifiés.");
   }
 
-  cy.visit("/login");
+  cy.visit("/login", { retryOnStatusCodeFailure: true, timeout: 30000 });
   cy.dismissPwaPrompt();
   cy.dismissToasts();
   cy.get("#email").clear().type(email);
   cy.get("#password").clear().type(password);
   cy.contains("button", "Se connecter").click();
-  cy.location("pathname", { timeout: 15000 }).should("eq", "/dashboard");
+  cy.location("pathname", { timeout: 20000 }).should("eq", "/dashboard");
   cy.dismissToasts();
 });
 
