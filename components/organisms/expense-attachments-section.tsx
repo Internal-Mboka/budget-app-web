@@ -152,9 +152,11 @@ export function ExpenseAttachmentsSection({
               ) : null}
             </div>
 
-            <MbokaSubmitButton testId="expense-attachment-submit" pendingLabel="Téléversement...">
-              Joindre la pièce justificative
-            </MbokaSubmitButton>
+            {selectedFileName ? (
+              <MbokaSubmitButton testId="expense-attachment-submit" pendingLabel="Téléversement...">
+                Joindre la pièce justificative
+              </MbokaSubmitButton>
+            ) : null}
           </MbokaPendingFieldset>
         </form>
       ) : null}
