@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { PasswordInput } from "@/components/atoms/password-input";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,6 +24,8 @@ import {
   mbokaPanelClassName,
   ROLE_LABELS,
 } from "@/lib/design-tokens";
+import type { PaginationMeta } from "@/lib/pagination";
+import { buildUsersListHref } from "@/lib/users/list-url";
 import { cn } from "@/lib/utils";
 
 export type UserListItem = {
@@ -44,6 +47,7 @@ type UsersManagementProps = {
   initialUsers: UserListItem[];
   roles: RoleOption[];
   currentUserId: string;
+  pagination: PaginationMeta;
 };
 
 function sortUsers(users: UserListItem[]) {
@@ -59,7 +63,12 @@ function buildRoleOptions(roles: RoleOption[]) {
   }));
 }
 
-export function UsersManagement({ initialUsers, roles, currentUserId }: UsersManagementProps) {
+export function UsersManagement({
+  initialUsers,
+  roles,
+  currentUserId,
+  pagination,
+}: UsersManagementProps) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
   const [isCreating, setIsCreating] = useState(false);
@@ -328,8 +337,8 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
       <section className={cn(mbokaPanelClassName, "overflow-hidden p-6 sm:p-8")}>
         <h2 className="text-lg font-semibold text-[#10579F] dark:text-sky-50">Comptes existants</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {users.length} utilisateur{users.length > 1 ? "s" : ""} enregistré
-          {users.length > 1 ? "s" : ""}.
+          {pagination.total} utilisateur{pagination.total > 1 ? "s" : ""} enregistré
+          {pagination.total > 1 ? "s" : ""}.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -514,6 +523,12 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
             })
           )}
         </div>
+
+        <MbokaPagination
+          meta={pagination}
+          buildHref={(page, pageSize) => buildUsersListHref({ page, pageSize })}
+          className="mt-6"
+        />
       </section>
     </div>
   );

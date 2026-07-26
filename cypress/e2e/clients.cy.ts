@@ -13,7 +13,7 @@ describe("Mboka Budget — US-09 Répertoire clients", () => {
   it("affiche la page clients pour le DT", () => {
     cy.visit("/clients", { retryOnStatusCodeFailure: true, timeout: 30000 });
     cy.contains("Répertoire clients").scrollIntoView().should("be.visible");
-    cy.get('[data-testid="client-create-form"]').should("be.visible");
+    cy.get('[data-testid="client-create-form"]').scrollIntoView().should("be.visible");
   });
 
   it("affiche la navigation clients", () => {
@@ -26,7 +26,9 @@ describe("Mboka Budget — US-09 Répertoire clients", () => {
     const uniqueName = `Test Artiste ${Date.now()}`;
 
     cy.visit("/clients");
+    cy.get('[data-testid="client-create-form"]').scrollIntoView();
     cy.get("#name").type(uniqueName);
+    cy.get('[data-testid="category-trigger"]').scrollIntoView();
     cy.pickMbokaSelect("category", "Artiste indépendant");
     cy.get("#phone").type("+243900000001");
     cy.get("#email").type(`test.${Date.now()}@mboka.test`);
@@ -41,15 +43,19 @@ describe("Mboka Budget — US-09 Répertoire clients", () => {
     const uniqueName = `Doublon Client ${Date.now()}`;
 
     cy.visit("/clients");
+    cy.get('[data-testid="client-create-form"]').scrollIntoView();
     cy.get("#name").type(uniqueName);
+    cy.get('[data-testid="category-trigger"]').scrollIntoView();
     cy.pickMbokaSelect("category", "Particulier");
     cy.contains("button", "Enregistrer le client").click();
-    cy.contains(uniqueName, { timeout: 15000 }).should("be.visible");
+    cy.contains(uniqueName, { timeout: 15000 }).scrollIntoView().should("be.visible");
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "enregistré");
     cy.dismissToasts();
 
     cy.reload();
+    cy.get('[data-testid="client-create-form"]').scrollIntoView();
     cy.get("#name").type(uniqueName);
+    cy.get('[data-testid="category-trigger"]').scrollIntoView();
     cy.pickMbokaSelect("category", "Particulier");
     cy.contains("button", "Enregistrer le client").click();
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "existe déjà");

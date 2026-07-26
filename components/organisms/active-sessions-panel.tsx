@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import {
   revokeOtherSessionsAction,
   revokeSessionAction,
@@ -16,6 +17,8 @@ import {
   mbokaButtonPrimaryClassName,
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
+import type { PaginationMeta } from "@/lib/pagination";
+import { buildSessionsListHref } from "@/lib/sessions/list-url";
 import type { ActiveSessionRow } from "@/lib/sessions/service";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +29,7 @@ function formatRelativeDate(date: Date) {
 type ActiveSessionsPanelProps = {
   initialSessions: ActiveSessionRow[];
   currentSessionId?: string;
+  pagination: PaginationMeta;
 };
 
 function RelativeTime({ date }: { date: Date }) {
@@ -45,6 +49,7 @@ function RelativeTime({ date }: { date: Date }) {
 export function ActiveSessionsPanel({
   initialSessions,
   currentSessionId,
+  pagination,
 }: ActiveSessionsPanelProps) {
   const router = useRouter();
   const [sessions, setSessions] = useState(initialSessions);
@@ -108,7 +113,7 @@ export function ActiveSessionsPanel({
       <section className={cn(mbokaPanelClassName, "space-y-4")}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            {sessions.length} session{sessions.length > 1 ? "s actives" : " active"}.
+            {pagination.total} session{pagination.total > 1 ? "s actives" : " active"}.
           </p>
 
           <button
@@ -202,6 +207,11 @@ export function ActiveSessionsPanel({
           );
         })}
       </section>
+
+      <MbokaPagination
+        meta={pagination}
+        buildHref={(page, pageSize) => buildSessionsListHref({ page, pageSize })}
+      />
     </div>
   );
 }

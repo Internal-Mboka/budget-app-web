@@ -3,14 +3,16 @@ import { notFound, redirect } from "next/navigation";
 import { ClientDetailPanel } from "@/components/organisms/client-detail-panel";
 import { hasAnyPermission, hasPermission, requireSession } from "@/lib/auth/session";
 import { computeClientStats, decimalToNumber } from "@/lib/clients/stats";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 
 type ClientDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ txPage?: string; txPageSize?: string }>;
 };
 
-export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
+export default async function ClientDetailPage({ params, searchParams }: ClientDetailPageProps) {
   const session = await requireSession();
 
   const canViewDetail = hasAnyPermission(session.user.permissions, [
@@ -24,6 +26,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   }
 
   const { id } = await params;
+  const query = await searchParams;
+  const txPagination = parsePagination({
+    page: query.txPage,
+    pageSize: query.txPageSize,
+  });
 
   const client = await prisma.client.findUnique({
     where: { id },
@@ -37,20 +44,6 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       notes: true,
       tags: true,
       createdAt: true,
-      transactions: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          code: true,
-          type: true,
-          totalAmount: true,
-          paidAmount: true,
-          remainingAmount: true,
-          status: true,
-          currency: true,
-          createdAt: true,
-        },
-      },
     },
   });
 
@@ -58,7 +51,38 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     notFound();
   }
 
-  const transactions = client.transactions.map((transaction) => ({
+  const [txTotal, transactions, statsSource] = await Promise.all([
+    prisma.transaction.count({ where: { clientId: id } }),
+    prisma.transaction.findMany({
+      where: { clientId: id },
+      orderBy: { createdAt: "desc" },
+      skip: txPagination.skip,
+      take: txPagination.take,
+      select: {
+        id: true,
+        code: true,
+        type: true,
+        totalAmount: true,
+        paidAmount: true,
+        remainingAmount: true,
+        status: true,
+        currency: true,
+        createdAt: true,
+      },
+    }),
+    prisma.transaction.findMany({
+      where: { clientId: id },
+      select: {
+        type: true,
+        totalAmount: true,
+        paidAmount: true,
+        remainingAmount: true,
+        status: true,
+      },
+    }),
+  ]);
+
+  const transactionRows = transactions.map((transaction) => ({
     id: transaction.id,
     code: transaction.code,
     type: transaction.type,
@@ -71,11 +95,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   }));
 
   const stats = computeClientStats(
-    transactions.map((transaction) => ({
+    statsSource.map((transaction) => ({
       type: transaction.type as "REVENUE" | "EXPENSE",
-      totalAmount: transaction.totalAmount,
-      paidAmount: transaction.paidAmount,
-      remainingAmount: transaction.remainingAmount,
+      totalAmount: decimalToNumber(transaction.totalAmount),
+      paidAmount: decimalToNumber(transaction.paidAmount),
+      remainingAmount: decimalToNumber(transaction.remainingAmount),
       status: transaction.status as
         | "DEVIS_PROFORMA"
         | "RESERVE_ACOMPTE_REQUIS"
@@ -83,6 +107,12 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         | "SOLDE"
         | "LITIGE_ANNULE",
     }))
+  );
+
+  const transactionsPagination = buildPaginationMeta(
+    txTotal,
+    txPagination.page,
+    txPagination.pageSize
   );
 
   return (
@@ -98,7 +128,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         tags: client.tags,
         createdAt: client.createdAt.toISOString(),
       }}
-      transactions={transactions}
+      transactions={transactionRows}
+      transactionsPagination={transactionsPagination}
       stats={stats}
       canEditClient={canEditClient}
     />

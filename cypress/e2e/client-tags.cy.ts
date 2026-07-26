@@ -13,7 +13,7 @@ describe("Mboka Budget — US-14 Tagging & segmentation clients", () => {
   it("ajoute et retire des tags depuis le répertoire", () => {
     const uniqueName = `Tag List ${Date.now()}`;
 
-    cy.visit("/clients");
+    cy.visit("/clients?pageSize=100");
     cy.get('[data-testid="client-create-form"]').scrollIntoView();
     cy.get("#name").type(uniqueName);
     cy.get('[data-testid="category-trigger"]').scrollIntoView();
@@ -28,20 +28,28 @@ describe("Mboka Budget — US-14 Tagging & segmentation clients", () => {
     });
 
     cy.get('[data-testid="client-tags-dialog"]').should("be.visible");
-    cy.get('[data-testid="client-tag-suggestion-vip"]').click();
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-suggestion-vip"]').click();
+    });
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "Tag ajouté");
     cy.dismissToasts();
-    cy.get('[data-testid="client-tag-vip"]').should("be.visible");
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-vip"]').should("be.visible");
 
-    cy.get('[data-testid="client-tag-suggestion-mauvais-payeur"]').click();
+      cy.get('[data-testid="client-tag-suggestion-mauvais-payeur"]').click();
+    });
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "Tag ajouté");
     cy.dismissToasts();
-    cy.get('[data-testid="client-tag-mauvais-payeur"]').should("be.visible");
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-mauvais-payeur"]').should("be.visible");
 
-    cy.get('[data-testid="client-tag-remove-vip"]').click();
+      cy.get('[data-testid="client-tag-remove-vip"]').click();
+    });
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "Tag retiré");
     cy.dismissToasts();
-    cy.get('[data-testid="client-tag-vip"]').should("not.exist");
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-vip"]').should("not.exist");
+    });
 
     cy.get('[data-testid="client-tags-backdrop"]').click({ force: true });
     cy.contains("article", uniqueName).should("contain.text", "Mauvais payeur");
@@ -51,7 +59,7 @@ describe("Mboka Budget — US-14 Tagging & segmentation clients", () => {
     const firstClient = `Tag Filter A ${Date.now()}`;
     const secondClient = `Tag Filter B ${Date.now()}`;
 
-    cy.visit("/clients");
+    cy.visit("/clients?pageSize=100");
     cy.get('[data-testid="client-create-form"]').scrollIntoView();
 
     cy.get("#name").type(firstClient);
@@ -71,40 +79,47 @@ describe("Mboka Budget — US-14 Tagging & segmentation clients", () => {
     cy.get("[data-sonner-toast]", { timeout: 15000 }).should("contain.text", "enregistré");
     cy.dismissToasts();
 
-    cy.contains("article", firstClient).within(() => {
+    cy.contains("article", firstClient).scrollIntoView().within(() => {
       cy.contains("button", "Tags").click();
     });
-    cy.get('[data-testid="client-tag-suggestion-vip"]').click();
-    cy.dismissToasts();
-    cy.get('[data-testid="client-tag-suggestion-résident"]').click();
-    cy.dismissToasts();
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-suggestion-vip"]').click();
+      cy.dismissToasts();
+      cy.get('[data-testid="client-tag-suggestion-résident"]').click();
+      cy.dismissToasts();
+    });
     cy.get('[data-testid="client-tags-backdrop"]').click({ force: true });
 
-    cy.contains("article", secondClient).within(() => {
+    cy.contains("article", secondClient).scrollIntoView().within(() => {
       cy.contains("button", "Tags").click();
     });
-    cy.get('[data-testid="client-tag-suggestion-vip"]').click();
-    cy.dismissToasts();
+    cy.get('[data-testid="client-tags-dialog"]').within(() => {
+      cy.get('[data-testid="client-tag-suggestion-vip"]').click();
+      cy.dismissToasts();
+    });
     cy.get('[data-testid="client-tags-backdrop"]').click({ force: true });
 
     cy.get('[data-testid="client-tag-filter"]').scrollIntoView().should("be.visible");
     cy.get('[data-testid="client-tag-filter-vip"]').click();
+    cy.location("search", { timeout: 15000 }).should("include", "tags=VIP");
     cy.contains("article", firstClient).scrollIntoView().should("be.visible");
     cy.contains("article", secondClient).scrollIntoView().should("be.visible");
 
     cy.get('[data-testid="client-tag-filter-résident"]').click();
+    cy.location("search", { timeout: 15000 }).should("include", "R");
     cy.contains("article", firstClient).scrollIntoView().should("be.visible");
     cy.contains("article", secondClient).should("not.exist");
 
     cy.get('[data-testid="client-tag-filter-clear"]').click();
-    cy.contains("article", firstClient).should("be.visible");
-    cy.contains("article", secondClient).should("be.visible");
+    cy.location("search", { timeout: 15000 }).should("not.include", "tags=");
+    cy.contains("article", firstClient).scrollIntoView().should("be.visible");
+    cy.contains("article", secondClient).scrollIntoView().should("be.visible");
   });
 
   it("gère les tags depuis la fiche client", () => {
     const uniqueName = `Tag Detail ${Date.now()}`;
 
-    cy.visit("/clients");
+    cy.visit("/clients?pageSize=100");
     cy.get('[data-testid="client-create-form"]').scrollIntoView();
     cy.get("#name").type(uniqueName);
     cy.get('[data-testid="category-trigger"]').scrollIntoView();

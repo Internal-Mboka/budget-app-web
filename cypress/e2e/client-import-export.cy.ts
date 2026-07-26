@@ -34,10 +34,10 @@ describe("Mboka Budget — US-13 Import / export clients", () => {
 
     cy.writeFile(fixturePath, `\uFEFF${csv}`);
 
-    cy.visit("/clients");
+    cy.visit("/clients?pageSize=100");
     cy.get('[data-testid="client-import-export-panel"]').scrollIntoView();
     cy.get('[data-testid="client-import-file"]').selectFile(fixturePath, { force: true });
-    cy.contains("button", "Importer").click();
+    cy.get('[data-testid="client-import-submit"]', { timeout: 10000 }).should("be.visible").click();
     cy.get("[data-sonner-toast]", { timeout: 30000 }).should("contain.text", "importé");
     cy.dismissToasts();
     cy.get('[data-testid="client-create-form"]').scrollIntoView();

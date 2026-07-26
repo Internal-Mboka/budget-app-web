@@ -7,12 +7,15 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { ClientEditForm, type ClientEditData } from "@/components/organisms/client-edit-form";
 import { ClientTagsEditor } from "@/components/organisms/client-tags-editor";
 import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
+import { buildClientDetailHref } from "@/lib/clients/detail-url";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { formatMoney } from "@/lib/currency";
+import type { PaginationMeta } from "@/lib/pagination";
 import {
   getPaymentStatusLabel,
   PAYMENT_STATUS_FILTER_OPTIONS,
@@ -46,6 +49,7 @@ export type ClientTransactionItem = {
 type ClientDetailPanelProps = {
   client: ClientDetailData;
   transactions: ClientTransactionItem[];
+  transactionsPagination: PaginationMeta;
   stats: {
     totalSpent: number;
     balanceDue: number;
@@ -89,6 +93,7 @@ function TransactionDate({ isoDate }: { isoDate: string }) {
 export function ClientDetailPanel({
   client: initialClient,
   transactions,
+  transactionsPagination,
   stats,
   canEditClient = false,
 }: ClientDetailPanelProps) {
@@ -239,8 +244,8 @@ export function ClientDetailPanel({
 
         {filteredTransactions.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="client-transactions-empty">
-            {transactions.length > 0 && statusFilter !== "ALL"
-              ? "Aucune transaction ne correspond à ce filtre."
+            {transactionsPagination.total > 0 && statusFilter !== "ALL"
+              ? "Aucune transaction ne correspond à ce filtre sur cette page."
               : "Aucune transaction enregistrée pour ce client."}
           </p>
         ) : (
@@ -281,6 +286,16 @@ export function ClientDetailPanel({
             ))}
           </div>
         )}
+
+        <MbokaPagination
+          meta={transactionsPagination}
+          buildHref={(page, pageSize) =>
+            buildClientDetailHref(client.id, {
+              txPage: page,
+              txPageSize: pageSize ?? transactionsPagination.pageSize,
+            })
+          }
+        />
       </section>
     </div>
   );

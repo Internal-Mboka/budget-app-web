@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { ClientEditDialog } from "@/components/organisms/client-edit-dialog";
 import type { ClientEditData } from "@/components/organisms/client-edit-form";
@@ -16,7 +17,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClientAction } from "@/lib/actions/clients";
 import { CLIENT_CATEGORY_OPTIONS, getClientCategoryLabel } from "@/lib/clients/categories";
-import { clientMatchesTagFilter, collectDistinctTags } from "@/lib/clients/tags";
+import { buildClientsListHref } from "@/lib/clients/list-url";
+import type { PaginationMeta } from "@/lib/pagination";
 import {
   mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
@@ -40,6 +42,9 @@ export type ClientListItem = {
 
 type ClientsManagementProps = {
   initialClients: ClientListItem[];
+  pagination: PaginationMeta;
+  selectedTags: string[];
+  availableTags: string[];
   canViewDetail?: boolean;
   canEditClient?: boolean;
 };
@@ -55,6 +60,9 @@ function sortClients(clients: ClientListItem[]) {
 
 export function ClientsManagement({
   initialClients,
+  pagination,
+  selectedTags,
+  availableTags,
   canViewDetail = false,
   canEditClient = false,
 }: ClientsManagementProps) {
@@ -66,16 +74,14 @@ export function ClientsManagement({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [taggingClient, setTaggingClient] = useState<ClientListItem | null>(null);
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  const availableTags = collectDistinctTags(clients);
-  const filteredClients = clients.filter((client) =>
-    clientMatchesTagFilter(client.tags, selectedTags)
-  );
 
   useEffect(() => {
     setClients(initialClients);
   }, [initialClients]);
+
+  function handleTagFilterChange(tags: string[]) {
+    router.push(buildClientsListHref({ page: 1, pageSize: pagination.pageSize, tags }));
+  }
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,7 +133,7 @@ export function ClientsManagement({
                 email: result.client.email,
                 address: result.client.address ?? null,
                 notes: result.client.notes ?? null,
-                tags: result.client.tags ?? [],
+                tags: [],
                 createdAt: new Date().toISOString(),
               }
             : client
@@ -277,25 +283,25 @@ export function ClientsManagement({
         <ClientTagFilter
           availableTags={availableTags}
           selectedTags={selectedTags}
-          onChange={setSelectedTags}
+          onChange={handleTagFilterChange}
         />
       ) : null}
 
       <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}>
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-          Clients enregistrés ({filteredClients.length}
-          {selectedTags.length > 0 ? ` / ${clients.length}` : ""})
+          Clients enregistrés ({pagination.total}
+          {selectedTags.length > 0 ? " filtrés" : ""})
         </h2>
 
-        {filteredClients.length === 0 ? (
+        {clients.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {clients.length === 0
+            {pagination.total === 0 && selectedTags.length === 0
               ? "Aucun client pour le moment. Utilisez le formulaire ci-dessus."
-              : "Aucun client ne correspond aux tags sélectionnés."}
+              : "Aucun client ne correspond aux critères sélectionnés."}
           </p>
         ) : (
           <div className="space-y-3">
-            {filteredClients.map((client) => (
+            {clients.map((client) => (
               <article
                 key={client.id}
                 data-testid={`client-row-${client.id}`}
@@ -374,6 +380,13 @@ export function ClientsManagement({
             ))}
           </div>
         )}
+
+        <MbokaPagination
+          meta={pagination}
+          buildHref={(page, pageSize) =>
+            buildClientsListHref({ page, pageSize: pageSize ?? pagination.pageSize, tags: selectedTags })
+          }
+        />
       </section>
 
       <ClientEditDialog
