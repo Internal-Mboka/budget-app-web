@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { ExpenseAttachmentsSection } from "@/components/organisms/expense-attachments-section";
 import { TransactionAdjustmentsSection } from "@/components/organisms/transaction-adjustments-section";
 import { formatMoney } from "@/lib/currency";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
+import type { ExpenseAttachment } from "@/lib/expenses/attachments";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import type { TransactionAdjustmentRecord } from "@/lib/transactions/adjustments";
 import { getNetTransactionAmount } from "@/lib/transactions/adjustments";
@@ -32,17 +34,22 @@ type ExpenseDetailPanelProps = {
     } | null;
   };
   adjustments?: TransactionAdjustmentRecord[];
+  attachments?: ExpenseAttachment[];
   canCreateAdjustment?: boolean;
+  canUploadAttachment?: boolean;
   flash?: {
     created?: boolean;
     adjusted?: boolean;
+    attached?: boolean;
   };
 };
 
 export function ExpenseDetailPanel({
   expense,
   adjustments = [],
+  attachments = [],
   canCreateAdjustment = false,
+  canUploadAttachment = false,
   flash,
 }: ExpenseDetailPanelProps) {
   const netAmount = getNetTransactionAmount(expense.totalAmount, adjustments);
@@ -52,8 +59,10 @@ export function ExpenseDetailPanel({
       toast.success(`Dépense ${expense.code} enregistrée.`);
     } else if (flash?.adjusted) {
       toast.success("Avoir / régularisation enregistré.");
+    } else if (flash?.attached) {
+      toast.success("Pièce justificative téléversée.");
     }
-  }, [flash?.created, flash?.adjusted, expense.code]);
+  }, [flash?.created, flash?.adjusted, flash?.attached, expense.code]);
 
   return (
     <div className="space-y-6">
@@ -125,6 +134,14 @@ export function ExpenseDetailPanel({
           </div>
         ) : null}
       </section>
+
+      {!expense.isAdjustment ? (
+        <ExpenseAttachmentsSection
+          transactionId={expense.id}
+          attachments={attachments}
+          canUpload={canUploadAttachment}
+        />
+      ) : null}
 
       {!expense.isAdjustment ? (
         <TransactionAdjustmentsSection

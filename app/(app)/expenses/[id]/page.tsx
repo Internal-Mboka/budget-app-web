@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ExpenseDetailPanel } from "@/components/organisms/expense-detail-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requireSession } from "@/lib/auth/session";
+import { getExpenseAttachments } from "@/lib/expenses/attachments";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import { PERMISSIONS } from "@/lib/permissions";
 import { loadTransactionAdjustments } from "@/lib/transactions/load-adjustments";
@@ -12,7 +13,7 @@ import type { ExpenseCategory } from "@prisma/client";
 
 type ExpenseDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ created?: string; adjusted?: string }>;
+  searchParams: Promise<{ created?: string; adjusted?: string; attached?: string }>;
 };
 
 export default async function ExpenseDetailPage({ params, searchParams }: ExpenseDetailPageProps) {
@@ -47,7 +48,9 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
   }
 
   const canCreateAdjustment = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CANCEL_ADJUSTMENT);
+  const canUploadAttachment = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CREATE_EXPENSE);
   const adjustments = expense.isAdjustment ? [] : await loadTransactionAdjustments(expense.id);
+  const attachments = getExpenseAttachments(expense.metadata);
 
   return (
     <div className="space-y-6">
@@ -75,8 +78,14 @@ export default async function ExpenseDetailPage({ params, searchParams }: Expens
           parentTransaction: expense.parentTransaction,
         }}
         adjustments={adjustments}
+        attachments={attachments}
         canCreateAdjustment={canCreateAdjustment}
-        flash={{ created: query.created === "1", adjusted: query.adjusted === "1" }}
+        canUploadAttachment={canUploadAttachment && !expense.isAdjustment}
+        flash={{
+          created: query.created === "1",
+          adjusted: query.adjusted === "1",
+          attached: query.attached === "1",
+        }}
       />
     </div>
   );

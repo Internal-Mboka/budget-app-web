@@ -50,7 +50,8 @@ export default auth((request) => {
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/admin") ||
       pathname.startsWith("/clients") ||
-      pathname.startsWith("/revenues")) &&
+      pathname.startsWith("/revenues") ||
+      pathname.startsWith("/expenses")) &&
     !canAccessRoute(pathname, session!.user.permissions)
   ) {
     return NextResponse.redirect(
