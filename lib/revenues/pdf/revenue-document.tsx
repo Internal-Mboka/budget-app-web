@@ -119,10 +119,32 @@ export function RevenuePdfDocument({ data }: { data: RevenuePdfData }) {
         </View>
 
         <View style={styles.grid}>
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Montant total</Text>
-            <Text style={styles.cardValue}>{formatPdfMoney(data.totalAmount, data.currency)}</Text>
-          </View>
+          {data.pricing ? (
+            <>
+              <View style={styles.card}>
+                <Text style={styles.cardLabel}>Prix d&apos;origine</Text>
+                <Text style={styles.cardValue}>{formatPdfMoney(data.pricing.baseAmount, data.currency)}</Text>
+              </View>
+              <View style={styles.card}>
+                <Text style={styles.cardLabel}>Remise</Text>
+                <Text style={styles.cardValue}>
+                  -{formatPdfMoney(data.pricing.discountAmount, data.currency)}
+                  {data.pricing.discountType === "PERCENT"
+                    ? ` (${data.pricing.discountValue} %)`
+                    : ""}
+                </Text>
+              </View>
+              <View style={styles.card}>
+                <Text style={styles.cardLabel}>Total après remise</Text>
+                <Text style={styles.cardValue}>{formatPdfMoney(data.pricing.finalAmount, data.currency)}</Text>
+              </View>
+            </>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Montant total</Text>
+              <Text style={styles.cardValue}>{formatPdfMoney(data.totalAmount, data.currency)}</Text>
+            </View>
+          )}
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Montant versé</Text>
             <Text style={styles.cardValue}>{formatPdfMoney(data.paidAmount, data.currency)}</Text>

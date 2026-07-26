@@ -15,6 +15,7 @@ describe("Mboka Budget — US-20 PDF revenus", () => {
     cy.dismissPwaPrompt();
 
     cy.pickMbokaSelect("metadataStudioRoom", "Salle A");
+    cy.fillStudioSessionDate(49);
     cy.get('[data-testid="client-autocomplete-input"]').type("Doublon");
     cy.get('[data-testid="client-autocomplete-results"]', { timeout: 15000 }).should("be.visible");
     cy.get('[data-testid^="client-autocomplete-option-"]').first().click();

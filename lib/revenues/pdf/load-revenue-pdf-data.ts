@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import { getRevenueMetadataSummary, type RevenueMetadata } from "@/lib/revenues/metadata";
 import type { RevenuePdfData, RevenuePdfDocumentType } from "@/lib/revenues/pdf/types";
+import { parseRevenuePricing } from "@/lib/revenues/pricing";
 import { decimalToNumber } from "@/lib/transactions/decimal";
 import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { getPaymentStatusLabel } from "@/lib/transactions/labels";
@@ -39,6 +40,7 @@ export async function loadRevenuePdfData(
   }
 
   const category = revenue.revenueCategory as RevenueCategory;
+  const pricing = parseRevenuePricing(revenue.metadata);
 
   return {
     id: revenue.id,
@@ -57,5 +59,6 @@ export async function loadRevenuePdfData(
     clientName: revenue.client?.name ?? "Client non renseigné",
     issuedAt: revenue.createdAt.toISOString(),
     isCancelled: revenue.status === "LITIGE_ANNULE",
+    pricing: pricing && pricing.discountType !== "NONE" ? pricing : null,
   };
 }

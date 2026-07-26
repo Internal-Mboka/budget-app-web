@@ -16,6 +16,7 @@ import {
   appendRevenuePaymentHistory,
   createInitialPaymentEntry,
 } from "@/lib/revenues/payment-history";
+import { findRevenueBookingConflict } from "@/lib/revenues/conflicts";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { generateTransactionCode } from "@/lib/transactions/code";
 import { roundMoney } from "@/lib/transactions/decimal";
@@ -67,10 +68,12 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
     return { success: false, error: "Permission insuffisante pour enregistrer un revenu." };
   }
 
+  const allowDiscount = hasPermission(session.user.permissions, PERMISSIONS.DASHBOARD_FULL);
+
   let parsed;
 
   try {
-    parsed = parseCreateRevenueFormData(formData);
+    parsed = parseCreateRevenueFormData(formData, { allowDiscount });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { success: false, error: formatZodError(error) };
@@ -88,13 +91,19 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
     return { success: false, error: "Client introuvable." };
   }
 
+  const conflict = await findRevenueBookingConflict(parsed.revenueCategory, parsed.metadata);
+
+  if (conflict) {
+    return { success: false, error: conflict.message };
+  }
+
   const totalAmount = roundMoney(parsed.totalAmount);
   const paidAmount = roundMoney(parsed.paidAmount);
   const remainingAmount = roundMoney(Math.max(totalAmount - paidAmount, 0));
   const status = resolvePaymentStatus(totalAmount, paidAmount);
 
   const metadataBase: Prisma.InputJsonValue = {
-    ...(parsed.metadata as RevenueMetadata),
+    ...(parsed.metadata as Record<string, unknown>),
     ...(parsed.notes ? { notes: parsed.notes } : {}),
   };
 

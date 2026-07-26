@@ -19,6 +19,13 @@ export type RevenuePdfData = {
   clientName: string;
   issuedAt: string;
   isCancelled: boolean;
+  pricing?: {
+    baseAmount: number;
+    discountType: "NONE" | "PERCENT" | "FIXED";
+    discountValue: number;
+    discountAmount: number;
+    finalAmount: number;
+  } | null;
 };
 
 export const MBOKA_PDF_BRAND = {

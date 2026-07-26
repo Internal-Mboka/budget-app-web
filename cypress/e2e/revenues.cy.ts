@@ -15,6 +15,7 @@ describe("Mboka Budget — US-16 Saisie revenus", () => {
     cy.dismissPwaPrompt();
     cy.get('[data-testid="nav-revenues"]').should("be.visible");
     cy.get('[data-testid="revenues-sub-nav"]').should("be.visible");
+    cy.get('[data-testid="revenues-subnav-planning"]').should("be.visible");
     cy.contains("Registre des revenus").should("be.visible");
   });
 
@@ -24,6 +25,7 @@ describe("Mboka Budget — US-16 Saisie revenus", () => {
 
     cy.get('[data-testid="revenue-create-form"]').should("be.visible");
     cy.pickMbokaSelect("metadataStudioRoom", "Salle A");
+    cy.fillStudioSessionDate(45);
 
     cy.get('[data-testid="client-autocomplete-input"]').type("Doublon");
     cy.get('[data-testid="client-autocomplete-results"]', { timeout: 15000 }).should("be.visible");

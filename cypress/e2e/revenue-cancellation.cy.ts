@@ -15,6 +15,7 @@ describe("Mboka Budget — US-19 Annulations revenus", () => {
     cy.dismissPwaPrompt();
 
     cy.pickMbokaSelect("metadataStudioRoom", "Salle B");
+    cy.fillStudioSessionDate(48);
     cy.get('[data-testid="client-autocomplete-input"]').type("Doublon");
     cy.get('[data-testid="client-autocomplete-results"]', { timeout: 15000 }).should("be.visible");
     cy.get('[data-testid^="client-autocomplete-option-"]').first().click();

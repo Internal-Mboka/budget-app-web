@@ -42,6 +42,14 @@ Cypress.Commands.add("pickMbokaSelect", (fieldId: string, optionLabel: string) =
     .click({ force: true });
 });
 
+Cypress.Commands.add("fillStudioSessionDate", (offsetDays = 30) => {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const iso = date.toISOString().slice(0, 10);
+
+  cy.get("#metadataSessionDate").should("be.visible").clear().type(iso);
+});
+
 Cypress.Commands.add("loginAsDt", () => {
   const email = Cypress.env("DT_EMAIL");
   const password = Cypress.env("DT_PASSWORD");
@@ -66,6 +74,7 @@ declare global {
       dismissPwaPrompt(): Chainable<void>;
       dismissToasts(): Chainable<void>;
       pickMbokaSelect(fieldId: string, optionLabel: string): Chainable<void>;
+      fillStudioSessionDate(offsetDays?: number): Chainable<void>;
       loginAsDt(): Chainable<void>;
     }
   }

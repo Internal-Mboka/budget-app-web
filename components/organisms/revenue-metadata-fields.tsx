@@ -17,6 +17,7 @@ type RevenueMetadataFieldsProps = {
   onServiceTypeChange: (value: string) => void;
   studioRoom: string;
   onStudioRoomChange: (value: string) => void;
+  defaultSessionDate: string;
 };
 
 export function RevenueMetadataFields({
@@ -25,6 +26,7 @@ export function RevenueMetadataFields({
   onServiceTypeChange,
   studioRoom,
   onStudioRoomChange,
+  defaultSessionDate,
 }: RevenueMetadataFieldsProps) {
   switch (category) {
     case "STUDIO_SESSION":
@@ -41,6 +43,33 @@ export function RevenueMetadataFields({
               onValueChange={onStudioRoomChange}
               options={STUDIO_ROOM_OPTIONS}
               required
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="metadataSessionDate" className={mbokaLabelClassName}>
+              Date de session *
+            </FieldLabel>
+            <Input
+              id="metadataSessionDate"
+              name="metadataSessionDate"
+              type="date"
+              required
+              defaultValue={defaultSessionDate}
+              className={mbokaFieldClassName}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="metadataSessionStartTime" className={mbokaLabelClassName}>
+              Heure de début
+            </FieldLabel>
+            <Input
+              id="metadataSessionStartTime"
+              name="metadataSessionStartTime"
+              type="time"
+              defaultValue="09:00"
+              className={mbokaFieldClassName}
             />
           </Field>
 
@@ -144,6 +173,33 @@ export function RevenueMetadataFields({
               id="metadataVehicleModel"
               name="metadataVehicleModel"
               placeholder="Ex. Land Cruiser"
+              className={mbokaFieldClassName}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="metadataRentalStartDate" className={mbokaLabelClassName}>
+              Date de début *
+            </FieldLabel>
+            <Input
+              id="metadataRentalStartDate"
+              name="metadataRentalStartDate"
+              type="date"
+              required
+              defaultValue={defaultSessionDate}
+              className={mbokaFieldClassName}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="metadataRentalStartTime" className={mbokaLabelClassName}>
+              Heure de départ
+            </FieldLabel>
+            <Input
+              id="metadataRentalStartTime"
+              name="metadataRentalStartTime"
+              type="time"
+              defaultValue="08:00"
               className={mbokaFieldClassName}
             />
           </Field>

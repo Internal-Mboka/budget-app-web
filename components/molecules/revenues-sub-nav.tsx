@@ -30,6 +30,12 @@ export function RevenuesSubNav() {
       testId: "revenues-subnav-registre",
       isActive: (path) => path === "/revenues",
     },
+    {
+      href: "/revenues/planning",
+      label: "Planning",
+      testId: "revenues-subnav-planning",
+      isActive: (path) => path.startsWith("/revenues/planning"),
+    },
   ];
 
   if (pathname !== "/revenues/new") {

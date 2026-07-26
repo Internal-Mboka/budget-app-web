@@ -1,7 +1,7 @@
 "use client";
 
 import type { RevenueCategory } from "@prisma/client";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
@@ -18,6 +18,8 @@ import {
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
 import { REVENUE_CATEGORY_OPTIONS, MIX_SERVICE_TYPE_OPTIONS, STUDIO_ROOM_OPTIONS } from "@/lib/revenues/categories";
+import type { DiscountType } from "@/lib/revenues/pricing";
+import { previewDiscountedTotal } from "@/lib/validations/revenue";
 import {
   getPaymentStatusPreviewHint,
   getPaymentStatusPreviewLabel,
@@ -36,7 +38,21 @@ const currencyOptions = [
   { value: "CDF", label: "CDF (FC)" },
 ];
 
-export function RevenueCreateForm() {
+const discountTypeOptions = [
+  { value: "NONE", label: "Aucune remise" },
+  { value: "PERCENT", label: "Pourcentage (%)" },
+  { value: "FIXED", label: "Montant fixe" },
+];
+
+type RevenueCreateFormProps = {
+  canApplyDiscount?: boolean;
+  defaultSessionDate: string;
+};
+
+export function RevenueCreateForm({
+  canApplyDiscount = false,
+  defaultSessionDate,
+}: RevenueCreateFormProps) {
   const handledStateRef = useRef<CreateRevenueFormState>(null);
   const [state, formAction] = useActionState(createRevenueFormAction, null);
   const [revenueCategory, setRevenueCategory] = useState<RevenueCategory>("STUDIO_SESSION");
@@ -47,6 +63,33 @@ export function RevenueCreateForm() {
   const [serviceType, setServiceType] = useState(MIX_SERVICE_TYPE_OPTIONS[0]?.value ?? "MIX");
   const [totalAmountInput, setTotalAmountInput] = useState("");
   const [paidAmountInput, setPaidAmountInput] = useState("0");
+  const [baseAmountInput, setBaseAmountInput] = useState("");
+  const [discountType, setDiscountType] = useState<DiscountType>("NONE");
+  const [discountValueInput, setDiscountValueInput] = useState("");
+
+  const baseAmount = parseMoneyInput(baseAmountInput || totalAmountInput);
+  const discountValue = parseMoneyInput(discountValueInput);
+  const computedTotal = useMemo(() => {
+    if (!canApplyDiscount || discountType === "NONE" || !Number.isFinite(baseAmount) || baseAmount <= 0) {
+      return baseAmount;
+    }
+
+    if (!Number.isFinite(discountValue) || discountValue <= 0) {
+      return baseAmount;
+    }
+
+    return previewDiscountedTotal(baseAmount, discountType, discountValue);
+  }, [baseAmount, canApplyDiscount, discountType, discountValue]);
+
+  useEffect(() => {
+    if (!canApplyDiscount || discountType === "NONE") {
+      return;
+    }
+
+    if (Number.isFinite(computedTotal) && computedTotal >= 0) {
+      setTotalAmountInput(String(computedTotal));
+    }
+  }, [canApplyDiscount, computedTotal, discountType]);
 
   const totalAmount = parseMoneyInput(totalAmountInput);
   const paidAmount = parseMoneyInput(paidAmountInput);
@@ -115,10 +158,75 @@ export function RevenueCreateForm() {
               onServiceTypeChange={setServiceType}
               studioRoom={studioRoom}
               onStudioRoomChange={setStudioRoom}
+              defaultSessionDate={defaultSessionDate}
             />
 
             <input type="hidden" name="metadataStudioRoom" value={studioRoom} />
             <input type="hidden" name="metadataServiceType" value={serviceType} />
+            {canApplyDiscount ? (
+              <>
+                <input type="hidden" name="discountType" value={discountType} />
+                <input type="hidden" name="baseAmount" value={baseAmountInput || totalAmountInput} />
+                <input type="hidden" name="discountValue" value={discountValueInput} />
+              </>
+            ) : null}
+
+            {canApplyDiscount ? (
+              <div
+                className="grid gap-5 rounded-2xl border border-sky-100 bg-sky-50/50 p-4 sm:grid-cols-3 dark:border-sky-900 dark:bg-slate-800/40"
+                data-testid="revenue-discount-section"
+              >
+                <Field className="sm:col-span-3">
+                  <FieldLabel className={mbokaLabelClassName}>Remise commerciale</FieldLabel>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Prix d&apos;origine, remise accordée et total final seront conservés dans les métadonnées et le PDF.
+                  </p>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="baseAmount" className={mbokaLabelClassName}>
+                    Prix d&apos;origine
+                  </FieldLabel>
+                  <Input
+                    id="baseAmount"
+                    name="baseAmountDisplay"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    value={baseAmountInput}
+                    onChange={(event) => setBaseAmountInput(event.target.value)}
+                    className={mbokaFieldClassName}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="discountType" className={mbokaLabelClassName}>
+                    Type de remise
+                  </FieldLabel>
+                  <MbokaSelect
+                    id="discountType"
+                    name="discountTypeDisplay"
+                    value={discountType}
+                    onValueChange={(value) => setDiscountType(value as DiscountType)}
+                    options={discountTypeOptions}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="discountValue" className={mbokaLabelClassName}>
+                    Valeur remise
+                  </FieldLabel>
+                  <Input
+                    id="discountValue"
+                    name="discountValueDisplay"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder={discountType === "PERCENT" ? "10" : "0,00"}
+                    value={discountValueInput}
+                    onChange={(event) => setDiscountValueInput(event.target.value)}
+                    className={mbokaFieldClassName}
+                    disabled={discountType === "NONE"}
+                  />
+                </Field>
+              </div>
+            ) : null}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>

@@ -1,9 +1,13 @@
 import type { RevenueCategory } from "@prisma/client";
 import { z } from "zod";
 
+import { enrichStudioMetadata, enrichVehicleMetadata } from "@/lib/revenues/booking";
+
 const studioMetadataSchema = z.object({
   studioRoom: z.string().trim().min(1, "Salle requise."),
   durationHours: z.coerce.number().positive("Durée invalide."),
+  sessionDate: z.string().trim().min(1, "Date de session requise."),
+  sessionStartTime: z.string().trim().optional(),
   soundEngineer: z.string().trim().optional(),
 });
 
@@ -17,6 +21,8 @@ const vehicleMetadataSchema = z.object({
   vehiclePlate: z.string().trim().min(2, "Plaque requise."),
   vehicleModel: z.string().trim().optional(),
   days: z.coerce.number().int().positive("Nombre de jours invalide."),
+  rentalStartDate: z.string().trim().min(1, "Date de début requise."),
+  rentalStartTime: z.string().trim().optional(),
   driverIncluded: z.coerce.boolean().default(false),
 });
 
@@ -34,7 +40,19 @@ export const revenueMetadataSchemas: Record<RevenueCategory, z.ZodTypeAny> = {
 
 export function parseRevenueMetadata(category: RevenueCategory, raw: unknown) {
   const schema = revenueMetadataSchemas[category];
-  return schema.parse(raw);
+  const parsed = schema.parse(raw);
+
+  if (category === "STUDIO_SESSION") {
+    const data = parsed as StudioRevenueMetadata;
+    return enrichStudioMetadata(data, data.sessionDate, data.sessionStartTime);
+  }
+
+  if (category === "LOCATION_VEHICULE") {
+    const data = parsed as VehicleRevenueMetadata;
+    return enrichVehicleMetadata(data, data.rentalStartDate, data.rentalStartTime);
+  }
+
+  return parsed;
 }
 
 export type StudioRevenueMetadata = z.infer<typeof studioMetadataSchema>;
@@ -54,6 +72,8 @@ export function buildMetadataFromFormData(formData: FormData, category: RevenueC
       return {
         studioRoom: String(formData.get("metadataStudioRoom") ?? ""),
         durationHours: formData.get("metadataDurationHours"),
+        sessionDate: String(formData.get("metadataSessionDate") ?? ""),
+        sessionStartTime: String(formData.get("metadataSessionStartTime") ?? "") || undefined,
         soundEngineer: String(formData.get("metadataSoundEngineer") ?? "") || undefined,
       };
     case "SERVICES_MIX_MASTER":
@@ -67,6 +87,8 @@ export function buildMetadataFromFormData(formData: FormData, category: RevenueC
         vehiclePlate: String(formData.get("metadataVehiclePlate") ?? ""),
         vehicleModel: String(formData.get("metadataVehicleModel") ?? "") || undefined,
         days: formData.get("metadataDays"),
+        rentalStartDate: String(formData.get("metadataRentalStartDate") ?? ""),
+        rentalStartTime: String(formData.get("metadataRentalStartTime") ?? "") || undefined,
         driverIncluded: formData.get("metadataDriverIncluded") === "on",
       };
     case "VENTE_ANNEXE":
@@ -89,16 +111,18 @@ export function getRevenueMetadataSummary(
 
   switch (category) {
     case "STUDIO_SESSION": {
-      const data = metadata as StudioRevenueMetadata;
-      return `Salle ${data.studioRoom} · ${data.durationHours}h`;
+      const data = metadata as StudioRevenueMetadata & { sessionDate?: string; sessionStartTime?: string };
+      const dateLabel = data.sessionDate ? ` · ${data.sessionDate}` : "";
+      return `Salle ${data.studioRoom} · ${data.durationHours}h${dateLabel}`;
     }
     case "SERVICES_MIX_MASTER": {
       const data = metadata as MixRevenueMetadata;
       return `${data.serviceType}${data.trackCount ? ` · ${data.trackCount} pistes` : ""}`;
     }
     case "LOCATION_VEHICULE": {
-      const data = metadata as VehicleRevenueMetadata;
-      return `${data.vehiclePlate} · ${data.days} j`;
+      const data = metadata as VehicleRevenueMetadata & { rentalStartDate?: string };
+      const dateLabel = data.rentalStartDate ? ` · dès ${data.rentalStartDate}` : "";
+      return `${data.vehiclePlate} · ${data.days} j${dateLabel}`;
     }
     case "VENTE_ANNEXE": {
       const data = metadata as AnnexRevenueMetadata;
