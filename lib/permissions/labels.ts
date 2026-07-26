@@ -3,6 +3,7 @@
 export const PERMISSION_LABELS: Record<string, string> = {
   "finance:create-revenue": "Saisie des entrées d'argent",
   "finance:create-expense": "Saisie des sorties d'argent",
+  "finance:approve-expense": "Approbation des dépenses à seuil élevé",
   "finance:validate-payment": "Validation des encaissements",
   "cash:close": "Clôture de caisse",
   "finance:cancel-adjustment": "Annulation et avoirs",
@@ -20,6 +21,8 @@ export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
     "Enregistrer les recettes, prestations studio et autres entrées de trésorerie.",
   "finance:create-expense":
     "Saisir les dépenses, achats et sorties d'argent du studio.",
+  "finance:approve-expense":
+    "Valider ou refuser les dépenses dépassant le seuil de contrôle PDG.",
   "finance:validate-payment":
     "Valider et confirmer les encaissements avant enregistrement définitif.",
   "cash:close":
@@ -69,6 +72,7 @@ export const PERMISSION_CATEGORIES: Array<{ id: PermissionCategoryId; label: str
 const PERMISSION_CATEGORY_BY_SLUG: Record<string, PermissionCategoryId> = {
   "finance:create-revenue": "finance",
   "finance:create-expense": "finance",
+  "finance:approve-expense": "finance",
   "finance:validate-payment": "finance",
   "cash:close": "finance",
   "finance:cancel-adjustment": "finance",

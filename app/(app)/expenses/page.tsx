@@ -34,6 +34,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
         currency: true,
         paymentMethod: true,
         metadata: true,
+        approvalStatus: true,
         createdAt: true,
       },
     }),
@@ -49,6 +50,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
       currency: expense.currency,
       paymentMethod: expense.paymentMethod,
       metadata: expense.metadata as ExpenseMetadata | null,
+      approvalStatus: expense.approvalStatus,
       createdAt: expense.createdAt.toISOString(),
     }));
 

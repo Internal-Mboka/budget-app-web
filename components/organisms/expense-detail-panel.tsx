@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { ExpenseApprovalSection } from "@/components/organisms/expense-approval-section";
 import { ExpenseStaffPayrollSection } from "@/components/organisms/expense-staff-payroll-section";
 import { ExpenseAttachmentsSection } from "@/components/organisms/expense-attachments-section";
 import { TransactionAdjustmentsSection } from "@/components/organisms/transaction-adjustments-section";
@@ -17,7 +18,8 @@ import type { TransactionAdjustmentRecord } from "@/lib/transactions/adjustments
 import { getNetTransactionAmount } from "@/lib/transactions/adjustments";
 import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { cn } from "@/lib/utils";
-import type { ExpenseCategory } from "@prisma/client";
+import type { ApprovalStatus, ExpenseCategory } from "@prisma/client";
+import { getApprovalStatusLabel, isApprovalPending } from "@/lib/expenses/approval";
 
 type ExpenseDetailPanelProps = {
   expense: {
@@ -29,6 +31,7 @@ type ExpenseDetailPanelProps = {
     paymentMethod: string | null;
     metadata: ExpenseMetadata | null;
     createdAt: string;
+    approvalStatus?: ApprovalStatus;
     isAdjustment?: boolean;
     parentTransaction?: {
       id: string;
@@ -39,10 +42,16 @@ type ExpenseDetailPanelProps = {
   attachments?: ExpenseAttachment[];
   canCreateAdjustment?: boolean;
   canUploadAttachment?: boolean;
+  canApproveExpense?: boolean;
+  approverName?: string | null;
+  approvalThreshold?: number;
   flash?: {
     created?: boolean;
     adjusted?: boolean;
     attached?: boolean;
+    pendingApproval?: boolean;
+    approved?: boolean;
+    rejected?: boolean;
   };
 };
 
@@ -52,20 +61,37 @@ export function ExpenseDetailPanel({
   attachments = [],
   canCreateAdjustment = false,
   canUploadAttachment = false,
+  canApproveExpense = false,
+  approverName,
+  approvalThreshold,
   flash,
 }: ExpenseDetailPanelProps) {
   const netAmount = getNetTransactionAmount(expense.totalAmount, adjustments);
   const staffPayroll = parseStaffPayrollMetadata(expense.metadata);
 
   useEffect(() => {
-    if (flash?.created) {
+    if (flash?.created && flash?.pendingApproval) {
+      toast.message(`Dépense ${expense.code} enregistrée — en attente d'approbation PDG.`);
+    } else if (flash?.created) {
       toast.success(`Dépense ${expense.code} enregistrée.`);
+    } else if (flash?.approved) {
+      toast.success("Dépense approuvée.");
+    } else if (flash?.rejected) {
+      toast.message("Dépense refusée par la direction.");
     } else if (flash?.adjusted) {
       toast.success("Avoir / régularisation enregistré.");
     } else if (flash?.attached) {
       toast.success("Pièce justificative téléversée.");
     }
-  }, [flash?.created, flash?.adjusted, flash?.attached, expense.code]);
+  }, [
+    flash?.created,
+    flash?.pendingApproval,
+    flash?.approved,
+    flash?.rejected,
+    flash?.adjusted,
+    flash?.attached,
+    expense.code,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -93,6 +119,21 @@ export function ExpenseDetailPanel({
           {expense.isAdjustment ? (
             <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
               Avoir / régularisation
+            </span>
+          ) : null}
+          {expense.approvalStatus && expense.approvalStatus !== "NOT_REQUIRED" ? (
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-1 text-xs font-medium",
+                isApprovalPending(expense.approvalStatus)
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                  : expense.approvalStatus === "APPROVED"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
+              )}
+              data-testid="expense-detail-approval-badge"
+            >
+              {getApprovalStatusLabel(expense.approvalStatus)}
             </span>
           ) : null}
         </div>
@@ -139,6 +180,17 @@ export function ExpenseDetailPanel({
       </section>
 
       {staffPayroll ? <ExpenseStaffPayrollSection staffPayroll={staffPayroll} /> : null}
+
+      {!expense.isAdjustment && expense.approvalStatus ? (
+        <ExpenseApprovalSection
+          transactionId={expense.id}
+          approvalStatus={expense.approvalStatus}
+          totalAmount={expense.totalAmount}
+          canApprove={canApproveExpense}
+          approverName={approverName}
+          approvalThreshold={approvalThreshold}
+        />
+      ) : null}
 
       {!expense.isAdjustment ? (
         <ExpenseAttachmentsSection

@@ -3,6 +3,7 @@
 export const PERMISSIONS = {
   FINANCE_CREATE_REVENUE: "finance:create-revenue",
   FINANCE_CREATE_EXPENSE: "finance:create-expense",
+  FINANCE_APPROVE_EXPENSE: "finance:approve-expense",
   FINANCE_VALIDATE_PAYMENT: "finance:validate-payment",
   CASH_CLOSE: "cash:close",
   FINANCE_CANCEL_ADJUSTMENT: "finance:cancel-adjustment",

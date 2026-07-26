@@ -19,7 +19,8 @@ import {
 } from "@/lib/design-tokens";
 import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { cn } from "@/lib/utils";
-import type { ExpenseCategory } from "@prisma/client";
+import type { ExpenseCategory, ApprovalStatus } from "@prisma/client";
+import { getApprovalStatusLabel, isApprovalPending } from "@/lib/expenses/approval";
 
 export type ExpenseListItem = {
   id: string;
@@ -29,6 +30,7 @@ export type ExpenseListItem = {
   currency: string;
   paymentMethod: string | null;
   metadata: ExpenseMetadata | null;
+  approvalStatus: ApprovalStatus;
   createdAt: string;
 };
 
@@ -102,6 +104,20 @@ export function ExpensesManagement({ initialExpenses, pagination }: ExpensesMana
                     <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
                       {getExpenseCategoryLabel(expense.expenseCategory)}
                     </span>
+                    {expense.approvalStatus !== "NOT_REQUIRED" ? (
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                          isApprovalPending(expense.approvalStatus)
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                            : expense.approvalStatus === "APPROVED"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
+                        )}
+                      >
+                        {getApprovalStatusLabel(expense.approvalStatus)}
+                      </span>
+                    ) : null}
                   </div>
 
                   <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">

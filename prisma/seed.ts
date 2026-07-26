@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma";
 const PERMISSIONS = [
   { slug: "finance:create-revenue", description: "Saisie des entrées d'argent" },
   { slug: "finance:create-expense", description: "Saisie des sorties d'argent" },
+  { slug: "finance:approve-expense", description: "Approbation des dépenses à seuil élevé" },
   { slug: "finance:validate-payment", description: "Validation des encaissements" },
   { slug: "cash:close", description: "Clôture de caisse" },
   { slug: "finance:cancel-adjustment", description: "Annulation et avoirs" },

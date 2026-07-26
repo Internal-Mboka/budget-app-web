@@ -8,6 +8,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
+import { resolveExpenseApprovalOnCreate, requiresExpenseApproval } from "@/lib/expenses/approval";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import { parseStaffPayrollMetadata } from "@/lib/expenses/staff-payroll";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -24,6 +25,7 @@ export type CreateExpenseActionResult =
         code: string;
         expenseCategory: string;
         totalAmount: number;
+        pendingApproval?: boolean;
       };
     }
   | { success: false; error: string };
@@ -41,7 +43,8 @@ export async function createExpenseFormAction(
   const result = await createExpenseAction(formData);
 
   if (result.success) {
-    redirect(`/expenses/${result.transaction.id}?created=1`);
+    const query = result.transaction.pendingApproval ? "?created=1&pendingApproval=1" : "?created=1";
+    redirect(`/expenses/${result.transaction.id}${query}`);
   }
 
   return result;
@@ -72,6 +75,8 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
 
   const totalAmount = roundMoney(parsed.totalAmount);
   const metadata: Prisma.InputJsonValue = parsed.metadata as Prisma.InputJsonValue;
+  const creatorCanApprove = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
+  const approval = resolveExpenseApprovalOnCreate(totalAmount, creatorCanApprove, session.user.id);
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -88,6 +93,8 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
           currency: parsed.currency,
           status: "SOLDE",
           paymentMethod: parsed.paymentMethod,
+          approvalStatus: approval.approvalStatus,
+          approvedById: approval.approvedById,
           metadata,
           createdById: session.user.id,
         },
@@ -114,17 +121,38 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
             label: parsed.metadata.label,
             metadata: parsed.metadata as ExpenseMetadata,
             staffPayroll: parseStaffPayrollMetadata(parsed.metadata),
+            approvalStatus: approval.approvalStatus,
+            requiresApproval: requiresExpenseApproval(totalAmount),
             performedBy: session.user.email,
           },
         },
       });
+
+      if (approval.approvalStatus === "PENDING") {
+        await tx.auditLog.create({
+          data: {
+            action: "EXPENSE_APPROVAL_REQUESTED",
+            entity: "Transaction",
+            entityId: transaction.id,
+            userId: session.user.id,
+            details: {
+              code: transaction.code,
+              totalAmount,
+              expenseCategory: transaction.expenseCategory,
+              performedBy: session.user.email,
+            },
+          },
+        });
+      }
 
       return transaction;
     });
 
     revalidatePath("/expenses");
     revalidatePath("/expenses/staff");
+    revalidatePath("/expenses/approvals");
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/financier");
 
     return {
       success: true,
@@ -133,6 +161,7 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
         code: created.code,
         expenseCategory: created.expenseCategory!,
         totalAmount,
+        pendingApproval: approval.approvalStatus === "PENDING",
       },
     };
   } catch (error) {

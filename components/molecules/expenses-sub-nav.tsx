@@ -5,10 +5,19 @@ import { usePathname } from "next/navigation";
 import { MbokaSubNav, type MbokaSubNavItem } from "@/components/molecules/mboka-sub-nav";
 
 function isExpenseDetailPath(pathname: string): boolean {
-  return /^\/expenses\/[^/]+$/.test(pathname) && pathname !== "/expenses/new" && pathname !== "/expenses/staff";
+  return (
+    /^\/expenses\/[^/]+$/.test(pathname) &&
+    pathname !== "/expenses/new" &&
+    pathname !== "/expenses/staff" &&
+    pathname !== "/expenses/approvals"
+  );
 }
 
-export function ExpensesSubNav() {
+type ExpensesSubNavProps = {
+  showApprovalsNav?: boolean;
+};
+
+export function ExpensesSubNav({ showApprovalsNav = false }: ExpensesSubNavProps) {
   const pathname = usePathname();
 
   if (isExpenseDetailPath(pathname)) {
@@ -28,13 +37,23 @@ export function ExpensesSubNav() {
       testId: "expenses-subnav-staff",
       isActive: (path) => path.startsWith("/expenses/staff"),
     },
-    {
-      href: "/expenses/new",
-      label: "Nouvelle dépense",
-      testId: "expenses-subnav-new",
-      isActive: (path) => path.startsWith("/expenses/new"),
-    },
   ];
+
+  if (showApprovalsNav) {
+    items.push({
+      href: "/expenses/approvals",
+      label: "Approbations PDG",
+      testId: "expenses-subnav-approvals",
+      isActive: (path) => path.startsWith("/expenses/approvals"),
+    });
+  }
+
+  items.push({
+    href: "/expenses/new",
+    label: "Nouvelle dépense",
+    testId: "expenses-subnav-new",
+    isActive: (path) => path.startsWith("/expenses/new"),
+  });
 
   return (
     <MbokaSubNav
