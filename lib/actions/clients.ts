@@ -12,7 +12,13 @@ import {
 } from "@/lib/clients/search";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
+import { mergeUniqueTags, removeTagFromList, tagsMatch } from "@/lib/clients/tags";
 import { createClientSchema, updateClientSchema } from "@/lib/validations/client";
+import {
+  clientTagMutationSchema,
+  clientTagRemovalSchema,
+  MAX_CLIENT_TAGS,
+} from "@/lib/validations/client-tags";
 
 export type ClientActionResult =
   | {
@@ -388,4 +394,134 @@ export async function importClientsAction(formData: FormData): Promise<ImportCli
     errors: importErrors,
     error: created === 0 ? "Aucun client importé." : undefined,
   };
+}
+
+export type ClientTagsActionResult =
+  | { success: true; tags: string[] }
+  | { success: false; error: string };
+
+async function requireClientTagsPermission() {
+  return requirePermission(PERMISSIONS.FINANCE_CREATE_REVENUE);
+}
+
+export async function addClientTagAction(formData: FormData): Promise<ClientTagsActionResult> {
+  const session = await requireClientTagsPermission();
+
+  const parsed = clientTagMutationSchema.safeParse({
+    clientId: formData.get("clientId"),
+    tag: formData.get("tag"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides." };
+  }
+
+  const { clientId, tag } = parsed.data;
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: { id: true, name: true, tags: true },
+  });
+
+  if (!client) {
+    return { success: false, error: "Client introuvable." };
+  }
+
+  if (client.tags.length >= MAX_CLIENT_TAGS) {
+    return { success: false, error: `Maximum ${MAX_CLIENT_TAGS} tags par client.` };
+  }
+
+  if (client.tags.some((existingTag) => tagsMatch(existingTag, tag))) {
+    return { success: false, error: "Ce tag est déjà associé au client." };
+  }
+
+  const nextTags = mergeUniqueTags(client.tags, tag);
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const saved = await tx.client.update({
+      where: { id: clientId },
+      data: { tags: nextTags },
+      select: { tags: true },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        action: "CLIENT_TAG_ADDED",
+        entity: "Client",
+        entityId: clientId,
+        userId: session.user.id,
+        details: {
+          clientName: client.name,
+          tag,
+          performedBy: session.user.email,
+        },
+      },
+    });
+
+    return saved;
+  });
+
+  revalidatePath("/clients");
+  revalidatePath(`/clients/${clientId}`);
+
+  return { success: true, tags: updated.tags };
+}
+
+export async function removeClientTagAction(formData: FormData): Promise<ClientTagsActionResult> {
+  const session = await requireClientTagsPermission();
+
+  const parsed = clientTagRemovalSchema.safeParse({
+    clientId: formData.get("clientId"),
+    tag: formData.get("tag"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides." };
+  }
+
+  const { clientId, tag } = parsed.data;
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: { id: true, name: true, tags: true },
+  });
+
+  if (!client) {
+    return { success: false, error: "Client introuvable." };
+  }
+
+  const nextTags = removeTagFromList(client.tags, tag);
+
+  if (nextTags.length === client.tags.length) {
+    return { success: false, error: "Tag introuvable sur ce client." };
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const saved = await tx.client.update({
+      where: { id: clientId },
+      data: { tags: nextTags },
+      select: { tags: true },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        action: "CLIENT_TAG_REMOVED",
+        entity: "Client",
+        entityId: clientId,
+        userId: session.user.id,
+        details: {
+          clientName: client.name,
+          tag,
+          performedBy: session.user.email,
+        },
+      },
+    });
+
+    return saved;
+  });
+
+  revalidatePath("/clients");
+  revalidatePath(`/clients/${clientId}`);
+
+  return { success: true, tags: updated.tags };
 }

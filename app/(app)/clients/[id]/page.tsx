@@ -35,6 +35,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       email: true,
       address: true,
       notes: true,
+      tags: true,
       createdAt: true,
       transactions: {
         orderBy: { createdAt: "desc" },
@@ -94,6 +95,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         email: client.email,
         address: client.address,
         notes: client.notes,
+        tags: client.tags,
         createdAt: client.createdAt.toISOString(),
       }}
       transactions={transactions}

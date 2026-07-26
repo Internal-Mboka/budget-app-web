@@ -29,6 +29,7 @@ export default async function ClientsPage() {
       email: true,
       address: true,
       notes: true,
+      tags: true,
       createdAt: true,
     },
   });
@@ -41,6 +42,7 @@ export default async function ClientsPage() {
     email: client.email,
     address: client.address,
     notes: client.notes,
+    tags: client.tags,
     createdAt: client.createdAt.toISOString(),
   }));
 

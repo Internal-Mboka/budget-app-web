@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -136,7 +136,7 @@
 | US-11 | Recherche & autocomplétion clients | `[x]` |
 | US-12 | Mise à jour & archivage fiches tiers | `[x]` |
 | US-13 | Import/Export base Tiers | `[x]` |
-| US-14 | Tagging & segmentation clients | `[ ]` |
+| US-14 | Tagging & segmentation clients | `[x]` |
 | US-15 | Historique interactions & notes client | `[ ]` |
 
 ### SPEC 3 — Revenus & Réservations
@@ -255,3 +255,4 @@
 | 2026-07-26 | US-11 (Recherche & autocomplétion clients) | *En attente* | — |
 | 2026-07-26 | US-12 (Mise à jour fiches tiers) | *En attente* | — |
 | 2026-07-26 | US-13 (Import / export base Tiers) | *En attente* | — |
+| 2026-07-26 | US-14 (Tagging & segmentation clients) | *En attente* | — |

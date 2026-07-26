@@ -8,6 +8,8 @@ import { useMemo, useState, useEffect } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { ClientEditForm, type ClientEditData } from "@/components/organisms/client-edit-form";
+import { ClientTagsEditor } from "@/components/organisms/client-tags-editor";
+import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { formatMoney } from "@/lib/currency";
@@ -25,6 +27,7 @@ export type ClientDetailData = {
   email: string | null;
   address: string | null;
   notes: string | null;
+  tags: string[];
   createdAt: string;
 };
 
@@ -94,7 +97,7 @@ export function ClientDetailPanel({
 
   useEffect(() => {
     setClient(initialClient);
-  }, [initialClient]);
+  }, [initialClient.id]);
 
   const filteredTransactions = useMemo(() => {
     if (statusFilter === "ALL") {
@@ -130,9 +133,35 @@ export function ClientDetailPanel({
             {client.notes ? (
               <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">{client.notes}</p>
             ) : null}
+            {client.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pt-1" data-testid="client-detail-tags">
+                {client.tags.map((tag) => (
+                  <ClientTagBadge key={tag} tag={tag} />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
+
+      {canEditClient ? (
+        <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="client-tags-section">
+          <div>
+            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
+              Tags & segmentation
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Identifiez les clients VIP, mauvais payeurs ou conditions spécifiques.
+            </p>
+          </div>
+
+          <ClientTagsEditor
+            clientId={client.id}
+            tags={client.tags}
+            onTagsChange={(tags) => setClient((current) => ({ ...current, tags }))}
+          />
+        </section>
+      ) : null}
 
       {canEditClient ? (
         <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="client-edit-section">

@@ -1,18 +1,22 @@
 "use client";
 
-import { Loader2, Pencil, UsersRound } from "lucide-react";
+import { Loader2, Pencil, Tag, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { ClientEditDialog } from "@/components/organisms/client-edit-dialog";
 import type { ClientEditData } from "@/components/organisms/client-edit-form";
+import { ClientTagFilter } from "@/components/organisms/client-tag-filter";
+import { ClientTagsDialog } from "@/components/organisms/client-tags-dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClientAction } from "@/lib/actions/clients";
 import { CLIENT_CATEGORY_OPTIONS, getClientCategoryLabel } from "@/lib/clients/categories";
+import { clientMatchesTagFilter, collectDistinctTags } from "@/lib/clients/tags";
 import {
   mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
@@ -30,6 +34,7 @@ export type ClientListItem = {
   email: string | null;
   address: string | null;
   notes: string | null;
+  tags: string[];
   createdAt: string;
 };
 
@@ -59,6 +64,14 @@ export function ClientsManagement({
   const [category, setCategory] = useState<string>(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
   const [editingClient, setEditingClient] = useState<ClientEditData | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [taggingClient, setTaggingClient] = useState<ClientListItem | null>(null);
+  const [tagsDialogOpen, setTagsDialogOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const availableTags = collectDistinctTags(clients);
+  const filteredClients = clients.filter((client) =>
+    clientMatchesTagFilter(client.tags, selectedTags)
+  );
 
   useEffect(() => {
     setClients(initialClients);
@@ -87,6 +100,7 @@ export function ClientsManagement({
       email: String(formData.get("email") ?? "") || null,
       address: null,
       notes: null,
+      tags: [],
       createdAt: new Date().toISOString(),
     };
 
@@ -113,6 +127,7 @@ export function ClientsManagement({
                 email: result.client.email,
                 address: result.client.address ?? null,
                 notes: result.client.notes ?? null,
+                tags: result.client.tags ?? [],
                 createdAt: new Date().toISOString(),
               }
             : client
@@ -159,6 +174,20 @@ export function ClientsManagement({
       )
     );
     router.refresh();
+  }
+
+  function handleOpenTags(client: ClientListItem) {
+    setTaggingClient(client);
+    setTagsDialogOpen(true);
+  }
+
+  function handleTagsChange(clientId: string, tags: string[]) {
+    setClients((current) =>
+      sortClients(
+        current.map((client) => (client.id === clientId ? { ...client, tags } : client))
+      )
+    );
+    setTaggingClient((current) => (current?.id === clientId ? { ...current, tags } : current));
   }
 
   return (
@@ -244,18 +273,29 @@ export function ClientsManagement({
         </form>
       </section>
 
+      {availableTags.length > 0 ? (
+        <ClientTagFilter
+          availableTags={availableTags}
+          selectedTags={selectedTags}
+          onChange={setSelectedTags}
+        />
+      ) : null}
+
       <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}>
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-          Clients enregistrés ({clients.length})
+          Clients enregistrés ({filteredClients.length}
+          {selectedTags.length > 0 ? ` / ${clients.length}` : ""})
         </h2>
 
-        {clients.length === 0 ? (
+        {filteredClients.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Aucun client pour le moment. Utilisez le formulaire ci-dessus.
+            {clients.length === 0
+              ? "Aucun client pour le moment. Utilisez le formulaire ci-dessus."
+              : "Aucun client ne correspond aux tags sélectionnés."}
           </p>
         ) : (
           <div className="space-y-3">
-            {clients.map((client) => (
+            {filteredClients.map((client) => (
               <article
                 key={client.id}
                 data-testid={`client-row-${client.id}`}
@@ -288,23 +328,48 @@ export function ClientsManagement({
                   <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                     {[client.phone, client.email].filter(Boolean).join(" · ") || "Aucun contact renseigné"}
                   </p>
+
+                  {client.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {client.tags.map((tag) => (
+                        <ClientTagBadge key={tag} tag={tag} />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
+                <div className="flex shrink-0 flex-col gap-2">
                 {canEditClient && !client.id.startsWith("optimistic-") ? (
+                  <>
+                  <button
+                    type="button"
+                    data-testid={`client-tags-button-${client.id}`}
+                    aria-label={`Tags de ${client.name}`}
+                    className={cn(
+                      mbokaButtonOutlineClassName,
+                      "px-3 py-2 text-xs"
+                    )}
+                    onClick={() => handleOpenTags(client)}
+                  >
+                    <Tag className="size-3.5" />
+                    Tags
+                  </button>
                   <button
                     type="button"
                     data-testid={`client-edit-button-${client.id}`}
                     aria-label={`Modifier ${client.name}`}
                     className={cn(
                       mbokaButtonOutlineClassName,
-                      "shrink-0 px-3 py-2 text-xs"
+                      "px-3 py-2 text-xs"
                     )}
                     onClick={() => handleOpenEdit(client)}
                   >
                     <Pencil className="size-3.5" />
                     Modifier
                   </button>
+                  </>
                 ) : null}
+                </div>
               </article>
             ))}
           </div>
@@ -316,6 +381,13 @@ export function ClientsManagement({
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onUpdated={handleClientUpdated}
+      />
+
+      <ClientTagsDialog
+        client={taggingClient}
+        open={tagsDialogOpen}
+        onOpenChange={setTagsDialogOpen}
+        onTagsChange={handleTagsChange}
       />
     </div>
   );
