@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { ClientDetailPanel } from "@/components/organisms/client-detail-panel";
-import { hasAnyPermission, requireSession } from "@/lib/auth/session";
+import { hasAnyPermission, hasPermission, requireSession } from "@/lib/auth/session";
 import { computeClientStats, decimalToNumber } from "@/lib/clients/stats";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -17,6 +17,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     PERMISSIONS.DASHBOARD_FULL,
     PERMISSIONS.DASHBOARD_FINANCIAL,
   ]);
+  const canEditClient = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
 
   if (!canViewDetail) {
     redirect("/clients");
@@ -97,6 +98,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       }}
       transactions={transactions}
       stats={stats}
+      canEditClient={canEditClient}
     />
   );
 }

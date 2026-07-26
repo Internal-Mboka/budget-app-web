@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { ClientEditForm, type ClientEditData } from "@/components/organisms/client-edit-form";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { formatMoney } from "@/lib/currency";
@@ -47,6 +48,7 @@ type ClientDetailPanelProps = {
     balanceDue: number;
     transactionCount: number;
   };
+  canEditClient?: boolean;
 };
 
 const statusFilterOptions = PAYMENT_STATUS_FILTER_OPTIONS.map((option) => ({
@@ -81,8 +83,18 @@ function TransactionDate({ isoDate }: { isoDate: string }) {
   );
 }
 
-export function ClientDetailPanel({ client, transactions, stats }: ClientDetailPanelProps) {
+export function ClientDetailPanel({
+  client: initialClient,
+  transactions,
+  stats,
+  canEditClient = false,
+}: ClientDetailPanelProps) {
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [client, setClient] = useState(initialClient);
+
+  useEffect(() => {
+    setClient(initialClient);
+  }, [initialClient]);
 
   const filteredTransactions = useMemo(() => {
     if (statusFilter === "ALL") {
@@ -121,6 +133,26 @@ export function ClientDetailPanel({ client, transactions, stats }: ClientDetailP
           </div>
         </div>
       </section>
+
+      {canEditClient ? (
+        <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="client-edit-section">
+          <div>
+            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
+              Coordonnées & notes
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Les modifications n&apos;impactent pas les transactions déjà enregistrées.
+            </p>
+          </div>
+
+          <ClientEditForm
+            client={client as ClientEditData}
+            formId="client-detail-edit-form"
+            onUpdated={(updatedClient) => setClient((current) => ({ ...current, ...updatedClient }))}
+            showActions
+          />
+        </section>
+      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-3">
         <article className={cn(mbokaPanelClassName, "p-5")} data-testid="client-stat-total-spent">

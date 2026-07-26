@@ -1,17 +1,20 @@
 "use client";
 
-import { Loader2, UsersRound } from "lucide-react";
+import { Loader2, Pencil, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
+import { ClientEditDialog } from "@/components/organisms/client-edit-dialog";
+import type { ClientEditData } from "@/components/organisms/client-edit-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClientAction } from "@/lib/actions/clients";
 import { CLIENT_CATEGORY_OPTIONS, getClientCategoryLabel } from "@/lib/clients/categories";
 import {
+  mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
   mbokaFieldClassName,
   mbokaLabelClassName,
@@ -25,12 +28,15 @@ export type ClientListItem = {
   category: string;
   phone: string | null;
   email: string | null;
+  address: string | null;
+  notes: string | null;
   createdAt: string;
 };
 
 type ClientsManagementProps = {
   initialClients: ClientListItem[];
   canViewDetail?: boolean;
+  canEditClient?: boolean;
 };
 
 const categoryOptions = CLIENT_CATEGORY_OPTIONS.map((option) => ({
@@ -42,11 +48,17 @@ function sortClients(clients: ClientListItem[]) {
   return [...clients].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function ClientsManagement({ initialClients, canViewDetail = false }: ClientsManagementProps) {
+export function ClientsManagement({
+  initialClients,
+  canViewDetail = false,
+  canEditClient = false,
+}: ClientsManagementProps) {
   const router = useRouter();
   const [clients, setClients] = useState(initialClients);
   const [isCreating, setIsCreating] = useState(false);
   const [category, setCategory] = useState<string>(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
+  const [editingClient, setEditingClient] = useState<ClientEditData | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     setClients(initialClients);
@@ -73,6 +85,8 @@ export function ClientsManagement({ initialClients, canViewDetail = false }: Cli
       category,
       phone: String(formData.get("phone") ?? "") || null,
       email: String(formData.get("email") ?? "") || null,
+      address: null,
+      notes: null,
       createdAt: new Date().toISOString(),
     };
 
@@ -97,6 +111,8 @@ export function ClientsManagement({ initialClients, canViewDetail = false }: Cli
                 category: result.client.category,
                 phone: result.client.phone,
                 email: result.client.email,
+                address: result.client.address ?? null,
+                notes: result.client.notes ?? null,
                 createdAt: new Date().toISOString(),
               }
             : client
@@ -108,6 +124,40 @@ export function ClientsManagement({ initialClients, canViewDetail = false }: Cli
     setCategory(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
     toast.success("Client enregistré.");
     setIsCreating(false);
+    router.refresh();
+  }
+
+  function handleOpenEdit(client: ClientListItem) {
+    setEditingClient({
+      id: client.id,
+      name: client.name,
+      category: client.category,
+      phone: client.phone,
+      email: client.email,
+      address: client.address,
+      notes: client.notes,
+    });
+    setEditDialogOpen(true);
+  }
+
+  function handleClientUpdated(updatedClient: ClientEditData) {
+    setClients((current) =>
+      sortClients(
+        current.map((client) =>
+          client.id === updatedClient.id
+            ? {
+                ...client,
+                name: updatedClient.name,
+                category: updatedClient.category,
+                phone: updatedClient.phone,
+                email: updatedClient.email,
+                address: updatedClient.address,
+                notes: updatedClient.notes,
+              }
+            : client
+        )
+      )
+    );
     router.refresh();
   }
 
@@ -239,11 +289,34 @@ export function ClientsManagement({ initialClients, canViewDetail = false }: Cli
                     {[client.phone, client.email].filter(Boolean).join(" · ") || "Aucun contact renseigné"}
                   </p>
                 </div>
+
+                {canEditClient && !client.id.startsWith("optimistic-") ? (
+                  <button
+                    type="button"
+                    data-testid={`client-edit-button-${client.id}`}
+                    aria-label={`Modifier ${client.name}`}
+                    className={cn(
+                      mbokaButtonOutlineClassName,
+                      "shrink-0 px-3 py-2 text-xs"
+                    )}
+                    onClick={() => handleOpenEdit(client)}
+                  >
+                    <Pencil className="size-3.5" />
+                    Modifier
+                  </button>
+                ) : null}
               </article>
             ))}
           </div>
         )}
       </section>
+
+      <ClientEditDialog
+        client={editingClient}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdated={handleClientUpdated}
+      />
     </div>
   );
 }

@@ -15,11 +15,12 @@ export function ClientSearchPanel() {
     <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="client-search-panel">
       <div>
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-          Retrouver un client
+          Associer un client
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-          Saisissez un nom, un téléphone ou une catégorie pour retrouver un client. S&apos;il
-          n&apos;existe pas encore, vous pouvez le créer ici sans quitter la page.
+          Recherchez par nom, téléphone ou catégorie, puis sélectionnez le bon profil. S&apos;il
+          n&apos;existe pas encore, créez-le ici — la sélection sera prête pour une future facture ou
+          transaction.
         </p>
       </div>
 

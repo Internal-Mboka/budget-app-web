@@ -1,7 +1,7 @@
 import { ClientsManagement } from "@/components/organisms/clients-management";
 import { ClientSearchPanel } from "@/components/organisms/client-search-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
-import { hasAnyPermission, requirePermission } from "@/lib/auth/session";
+import { hasAnyPermission, hasPermission, requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 
@@ -12,6 +12,7 @@ export default async function ClientsPage() {
     PERMISSIONS.DASHBOARD_FULL,
     PERMISSIONS.DASHBOARD_FINANCIAL,
   ]);
+  const canEditClient = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
 
   const clients = await prisma.client.findMany({
     orderBy: [{ name: "asc" }],
@@ -21,6 +22,8 @@ export default async function ClientsPage() {
       category: true,
       phone: true,
       email: true,
+      address: true,
+      notes: true,
       createdAt: true,
     },
   });
@@ -31,6 +34,8 @@ export default async function ClientsPage() {
     category: client.category,
     phone: client.phone,
     email: client.email,
+    address: client.address,
+    notes: client.notes,
     createdAt: client.createdAt.toISOString(),
   }));
 
@@ -44,7 +49,11 @@ export default async function ClientsPage() {
 
       <ClientSearchPanel />
 
-      <ClientsManagement initialClients={clientRows} canViewDetail={canViewDetail} />
+      <ClientsManagement
+        initialClients={clientRows}
+        canViewDetail={canViewDetail}
+        canEditClient={canEditClient}
+      />
     </div>
   );
 }

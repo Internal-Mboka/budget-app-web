@@ -25,3 +25,19 @@ export const createClientSchema = z.object({
 });
 
 export type CreateClientInput = z.infer<typeof createClientSchema>;
+
+export const updateClientSchema = createClientSchema.extend({
+  id: z.string().trim().min(1, "Client invalide."),
+  address: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value ?? ""),
+  notes: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value ?? ""),
+});
+
+export type UpdateClientInput = z.infer<typeof updateClientSchema>;
