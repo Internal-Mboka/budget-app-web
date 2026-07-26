@@ -10,6 +10,7 @@ declare module "next-auth" {
       roleName: RoleName;
       permissions: PermissionSlug[];
       mustChangePassword: boolean;
+      sessionId?: string;
     } & DefaultSession["user"];
   }
 
@@ -28,5 +29,7 @@ declare module "next-auth/jwt" {
     roleName?: RoleName;
     permissions?: PermissionSlug[];
     mustChangePassword?: boolean;
+    sessionId?: string;
+    lastActiveBump?: number;
   }
 }

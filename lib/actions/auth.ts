@@ -2,6 +2,7 @@
 
 import { AuthError } from "next-auth";
 
+import { revokeCurrentSessionOnLogout } from "@/lib/actions/sessions";
 import { signIn, signOut } from "@/lib/auth/instance";
 
 export async function loginAction(formData: FormData) {
@@ -35,5 +36,6 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
+  await revokeCurrentSessionOnLogout();
   await signOut({ redirectTo: "/login" });
 }

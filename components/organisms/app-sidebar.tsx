@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MonitorSmartphone,
   ShieldCheck,
   Users,
   X,
@@ -55,6 +56,7 @@ export function AppSidebar({
   const navItems: NavItem[] = [
     { href: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
     { href: "/account/password", label: "Mot de passe", icon: KeyRound },
+    { href: "/account/sessions", label: "Sessions", icon: MonitorSmartphone },
   ];
 
   if (canManageUsers) {
@@ -68,6 +70,10 @@ export function AppSidebar({
     }
 
     if (href === "/account/password") {
+      return pathname === href;
+    }
+
+    if (href === "/account/sessions") {
       return pathname === href;
     }
 
@@ -137,7 +143,9 @@ export function AppSidebar({
                   ? "nav-utilisateurs"
                   : item.href === "/admin/roles"
                     ? "nav-permissions"
-                    : undefined
+                    : item.href === "/account/sessions"
+                      ? "nav-sessions"
+                      : undefined
               }
               onClick={() => setMobileOpen(false)}
                 className={cn(

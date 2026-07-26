@@ -17,6 +17,7 @@ import {
 } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
+import { revokeAllUserSessions } from "@/lib/sessions/service";
 import {
   adminResetPasswordSchema,
   changePasswordSchema,
@@ -123,6 +124,7 @@ export async function changePasswordAction(formData: FormData): Promise<Password
 
   revalidatePath("/account/password");
 
+  await revokeAllUserSessions(dbUser.id);
   await signOut({ redirect: false });
 
   return {
@@ -227,6 +229,8 @@ export async function resetPasswordWithTokenAction(
     prisma.passwordResetToken.delete({ where: { id: resetToken.id } }),
   ]);
 
+  await revokeAllUserSessions(resetToken.userId);
+
   await writePasswordAudit(resetToken.userId, "PASSWORD_RESET_COMPLETED", {
     email: resetToken.user.email,
     context: "forgot_reset",
@@ -282,6 +286,8 @@ export async function adminResetPasswordAction(
       mustChangePassword: true,
     },
   });
+
+  await revokeAllUserSessions(userId);
 
   await writePasswordAudit(
     userId,

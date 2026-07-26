@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts` (US-01, US-05), `users.cy.ts` (US-02), `password.cy.ts` (US-04), `roles.cy.ts` (US-06)
+- [x] **Cypress** — specs `auth.cy.ts` (US-01, US-05), `users.cy.ts` (US-02), `password.cy.ts` (US-04), `roles.cy.ts` (US-06), `sessions.cy.ts` (US-07)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -124,7 +124,7 @@
 | US-04 | Réinitialisation / gestion mot de passe | `[x]` |
 | US-05 | Déconnexion sécurisée | `[x]` |
 | US-06 | Gestion dynamique des permissions par rôle | `[x]` |
-| US-07 | Sessions actives & déconnexion à distance | `[ ]` |
+| US-07 | Sessions actives & déconnexion à distance | `[x]` |
 | US-08 | Authentification 2FA / OTP | `[ ]` |
 
 ### SPEC 2 — Gestion des Tiers & Clients
@@ -248,3 +248,4 @@
 | 2026-07-26 | Phase 3 (Auth, RBAC, Login + pattern UI) | GO reçu | — |
 | 2026-07-26 | US-04 (Gestion mot de passe) | *En attente* | — |
 | 2026-07-26 | US-06 (Permissions par rôle) | *En attente* | — |
+| 2026-07-26 | US-07 (Sessions actives) | *En attente* | — |
