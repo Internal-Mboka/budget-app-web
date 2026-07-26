@@ -313,48 +313,50 @@ export function ClientsManagement({
               <article
                 key={client.id}
                 data-testid={`client-row-${client.id}`}
-                className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-white/80 px-4 py-3 dark:border-sky-900 dark:bg-slate-900/50 sm:gap-4 sm:py-3.5"
+                className="rounded-2xl border border-sky-100 bg-white/80 px-3 py-3 dark:border-sky-900 dark:bg-slate-900/50 sm:flex sm:items-center sm:gap-4 sm:px-4 sm:py-3.5"
               >
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-50">
-                  <UsersRound className="size-5" />
-                </div>
-
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {canViewDetail && !client.id.startsWith("optimistic-") ? (
-                      <Link
-                        href={`/clients/${client.id}`}
-                        data-testid={`client-detail-link-${client.id}`}
-                        className="text-sm font-semibold text-[#10579F] hover:underline dark:text-sky-50"
-                      >
-                        {client.name}
-                      </Link>
-                    ) : (
-                      <h3 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
-                        {client.name}
-                      </h3>
-                    )}
-                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-[#10579F] dark:bg-sky-950/40 dark:text-sky-300">
-                      {getClientCategoryLabel(client.category)}
-                    </span>
+                <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] sm:size-11 dark:bg-slate-800 dark:text-sky-50">
+                    <UsersRound className="size-5" />
                   </div>
 
-                  <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {[client.phone, client.email].filter(Boolean).join(" · ") || "Aucun contact renseigné"}
-                  </p>
-
-                  {client.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {client.tags.map((tag) => (
-                        <ClientTagBadge key={tag} tag={tag} />
-                      ))}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canViewDetail && !client.id.startsWith("optimistic-") ? (
+                        <Link
+                          href={`/clients/${client.id}`}
+                          data-testid={`client-detail-link-${client.id}`}
+                          className="text-sm font-semibold break-words text-[#10579F] hover:underline dark:text-sky-50"
+                        >
+                          {client.name}
+                        </Link>
+                      ) : (
+                        <h3 className="text-sm font-semibold break-words text-[#10579F] dark:text-sky-50">
+                          {client.name}
+                        </h3>
+                      )}
+                      <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-[#10579F] dark:bg-sky-950/40 dark:text-sky-300">
+                        {getClientCategoryLabel(client.category)}
+                      </span>
                     </div>
-                  ) : null}
+
+                    <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      {[client.phone, client.email].filter(Boolean).join(" · ") || "Aucun contact renseigné"}
+                    </p>
+
+                    {client.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {client.tags.map((tag) => (
+                          <ClientTagBadge key={tag} tag={tag} />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 {canEditClient && !client.id.startsWith("optimistic-") ? (
                   <div
-                    className="flex shrink-0 flex-wrap items-center justify-end gap-1.5"
+                    className="mt-3 grid grid-cols-3 gap-1.5 border-t border-sky-100 pt-3 sm:mt-0 sm:flex sm:w-auto sm:shrink-0 sm:items-center sm:justify-end sm:border-0 sm:pt-0 sm:pl-0"
                     data-testid={`client-row-actions-${client.id}`}
                   >
                     <button
@@ -364,12 +366,12 @@ export function ClientsManagement({
                       title="Notes"
                       className={cn(
                         mbokaButtonOutlineClassName,
-                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                        "justify-center px-2 py-2 text-[11px] sm:px-3"
                       )}
                       onClick={() => handleOpenNotes(client)}
                     >
                       <MessageSquareText className="size-3.5" />
-                      <span className="hidden sm:inline">Notes</span>
+                      Notes
                     </button>
                     <button
                       type="button"
@@ -378,12 +380,12 @@ export function ClientsManagement({
                       title="Tags"
                       className={cn(
                         mbokaButtonOutlineClassName,
-                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                        "justify-center px-2 py-2 text-[11px] sm:px-3"
                       )}
                       onClick={() => handleOpenTags(client)}
                     >
                       <Tag className="size-3.5" />
-                      <span className="hidden sm:inline">Tags</span>
+                      Tags
                     </button>
                     <button
                       type="button"
@@ -392,12 +394,12 @@ export function ClientsManagement({
                       title="Modifier"
                       className={cn(
                         mbokaButtonOutlineClassName,
-                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                        "justify-center px-2 py-2 text-[11px] sm:px-3"
                       )}
                       onClick={() => handleOpenEdit(client)}
                     >
                       <Pencil className="size-3.5" />
-                      <span className="hidden sm:inline">Modifier</span>
+                      Modifier
                     </button>
                   </div>
                 ) : null}
