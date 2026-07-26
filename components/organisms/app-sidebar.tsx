@@ -26,6 +26,12 @@ type NavItem = {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  testId?: string;
+};
+
+type NavSection = {
+  title?: string;
+  items: NavItem[];
 };
 
 type AppSidebarProps = {
@@ -45,6 +51,30 @@ function getInitials(name: string): string {
     .join("");
 }
 
+function isNavItemActive(pathname: string, href: string, dashboardPath: string): boolean {
+  if (href === dashboardPath) {
+    return pathname === href || pathname.startsWith("/dashboard");
+  }
+
+  if (href === "/clients") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
+  if (href === "/account/password") {
+    return pathname === href;
+  }
+
+  if (href === "/account/sessions") {
+    return pathname === href;
+  }
+
+  if (href === "/account/two-factor") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AppSidebar({
   userName,
   roleName,
@@ -57,45 +87,38 @@ export function AppSidebar({
 
   const roleLabel = ROLE_LABELS[roleName] ?? roleName;
 
-  const navItems: NavItem[] = [
-    { href: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
-    { href: "/account/password", label: "Mot de passe", icon: KeyRound },
-    { href: "/account/sessions", label: "Sessions", icon: MonitorSmartphone },
-    { href: "/account/two-factor", label: "2FA", icon: Fingerprint },
+  const navSections: NavSection[] = [
+    {
+      items: [{ href: dashboardPath, label: "Dashboard", icon: LayoutDashboard }],
+    },
+    ...(canManageClients
+      ? [
+          {
+            title: "Opérations",
+            items: [{ href: "/clients", label: "Clients", icon: UsersRound, testId: "nav-clients" }],
+          } satisfies NavSection,
+        ]
+      : []),
+    {
+      title: "Mon compte",
+      items: [
+        { href: "/account/password", label: "Mot de passe", icon: KeyRound },
+        { href: "/account/sessions", label: "Sessions", icon: MonitorSmartphone, testId: "nav-sessions" },
+        { href: "/account/two-factor", label: "2FA", icon: Fingerprint, testId: "nav-two-factor" },
+      ],
+    },
+    ...(canManageUsers
+      ? [
+          {
+            title: "Administration",
+            items: [
+              { href: "/admin/users", label: "Utilisateurs", icon: Users, testId: "nav-utilisateurs" },
+              { href: "/admin/roles", label: "Permissions", icon: ShieldCheck, testId: "nav-permissions" },
+            ],
+          } satisfies NavSection,
+        ]
+      : []),
   ];
-
-  if (canManageClients) {
-    navItems.splice(1, 0, { href: "/clients", label: "Clients", icon: UsersRound });
-  }
-
-  if (canManageUsers) {
-    navItems.push({ href: "/admin/users", label: "Utilisateurs", icon: Users });
-    navItems.push({ href: "/admin/roles", label: "Permissions", icon: ShieldCheck });
-  }
-
-  function isActive(href: string) {
-    if (href === dashboardPath) {
-      return pathname === href || pathname.startsWith("/dashboard");
-    }
-
-    if (href === "/clients") {
-      return pathname === href || pathname.startsWith(`${href}/`);
-    }
-
-    if (href === "/account/password") {
-      return pathname === href;
-    }
-
-    if (href === "/account/sessions") {
-      return pathname === href;
-    }
-
-    if (href === "/account/two-factor") {
-      return pathname === href;
-    }
-
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
 
   return (
     <div className="contents">
@@ -146,41 +169,39 @@ export function AppSidebar({
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+        <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+          {navSections.map((section, sectionIndex) => (
+            <div key={section.title ?? `section-${sectionIndex}`} className="space-y-1">
+              {section.title ? (
+                <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase dark:text-slate-500">
+                  {section.title}
+                </p>
+              ) : null}
 
-            return (
-            <Link
-              key={item.href}
-              href={item.href}
-              data-testid={
-                item.href === "/admin/users"
-                  ? "nav-utilisateurs"
-                  : item.href === "/admin/roles"
-                    ? "nav-permissions"
-                    : item.href === "/account/sessions"
-                      ? "nav-sessions"
-                      : item.href === "/account/two-factor"
-                        ? "nav-two-factor"
-                        : item.href === "/clients"
-                          ? "nav-clients"
-                          : undefined
-              }
-              onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                  active
-                    ? "bg-sky-50 text-[#10579F] ring-1 ring-sky-100 dark:bg-slate-800 dark:text-sky-50 dark:ring-sky-900"
-                    : "text-slate-600 hover:bg-sky-50/70 hover:text-[#10579F] dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-sky-50"
-                )}
-              >
-                <Icon className={cn("size-4 shrink-0", active ? "text-[#10579F] dark:text-sky-400" : "")} />
-                {item.label}
-              </Link>
-            );
-          })}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = isNavItemActive(pathname, item.href, dashboardPath);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    data-testid={item.testId}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                      active
+                        ? "bg-sky-50 text-[#10579F] ring-1 ring-sky-100 dark:bg-slate-800 dark:text-sky-50 dark:ring-sky-900"
+                        : "text-slate-600 hover:bg-sky-50/70 hover:text-[#10579F] dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-sky-50"
+                    )}
+                  >
+                    <Icon className={cn("size-4 shrink-0", active ? "text-[#10579F] dark:text-sky-400" : "")} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-sky-100 p-4 dark:border-sky-900">

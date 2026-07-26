@@ -1,6 +1,4 @@
-import { ClientImportExportPanel } from "@/components/organisms/client-import-export-panel";
 import { ClientsManagement } from "@/components/organisms/clients-management";
-import { ClientSearchPanel } from "@/components/organisms/client-search-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasAnyPermission, hasPermission, requirePermission } from "@/lib/auth/session";
 import { parseClientTagsParam } from "@/lib/clients/list-url";
@@ -25,10 +23,6 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
     PERMISSIONS.DASHBOARD_FINANCIAL,
   ]);
   const canEditClient = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
-  const canImportExport = hasAnyPermission(session.user.permissions, [
-    PERMISSIONS.DASHBOARD_FULL,
-    PERMISSIONS.DASHBOARD_FINANCIAL,
-  ]);
 
   const where: Prisma.ClientWhereInput =
     selectedTags.length > 0
@@ -79,16 +73,12 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const availableTags = collectDistinctTags(tagSourceRows);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <MbokaPageHeader
         eyebrow="Tiers & clients"
         title="Répertoire clients"
-        description="Enregistrez et catégorisez les clients pour la facturation et le suivi des prestations."
+        description="Consultez, filtrez et gérez les clients enregistrés pour la facturation et le suivi."
       />
-
-      <ClientSearchPanel />
-
-      {canImportExport ? <ClientImportExportPanel /> : null}
 
       <ClientsManagement
         initialClients={clientRows}

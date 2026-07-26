@@ -1,12 +1,10 @@
 "use client";
 
-import { Loader2, MessageSquareText, Pencil, Tag, UsersRound } from "lucide-react";
+import { MessageSquareText, Pencil, Plus, Tag, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
-import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { ClientEditDialog } from "@/components/organisms/client-edit-dialog";
@@ -14,19 +12,14 @@ import { ClientInteractionsDialog } from "@/components/organisms/client-interact
 import type { ClientEditData } from "@/components/organisms/client-edit-form";
 import { ClientTagFilter } from "@/components/organisms/client-tag-filter";
 import { ClientTagsDialog } from "@/components/organisms/client-tags-dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { createClientAction } from "@/lib/actions/clients";
-import { CLIENT_CATEGORY_OPTIONS, getClientCategoryLabel } from "@/lib/clients/categories";
 import { buildClientsListHref } from "@/lib/clients/list-url";
 import type { PaginationMeta } from "@/lib/pagination";
 import {
   mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
-  mbokaFieldClassName,
-  mbokaLabelClassName,
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
+import { getClientCategoryLabel } from "@/lib/clients/categories";
 import { cn } from "@/lib/utils";
 
 export type ClientListItem = {
@@ -50,11 +43,6 @@ type ClientsManagementProps = {
   canEditClient?: boolean;
 };
 
-const categoryOptions = CLIENT_CATEGORY_OPTIONS.map((option) => ({
-  value: option.value,
-  label: option.label,
-}));
-
 function sortClients(clients: ClientListItem[]) {
   return [...clients].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -69,8 +57,6 @@ export function ClientsManagement({
 }: ClientsManagementProps) {
   const router = useRouter();
   const [clients, setClients] = useState(initialClients);
-  const [isCreating, setIsCreating] = useState(false);
-  const [category, setCategory] = useState<string>(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
   const [editingClient, setEditingClient] = useState<ClientEditData | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [taggingClient, setTaggingClient] = useState<ClientListItem | null>(null);
@@ -84,71 +70,6 @@ export function ClientsManagement({
 
   function handleTagFilterChange(tags: string[]) {
     router.push(buildClientsListHref({ page: 1, pageSize: pagination.pageSize, tags }));
-  }
-
-  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsCreating(true);
-
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    formData.set("category", category);
-
-    if (!category) {
-      toast.error("Veuillez sélectionner une catégorie.");
-      setIsCreating(false);
-      return;
-    }
-
-    const tempId = `optimistic-${crypto.randomUUID()}`;
-    const optimisticClient: ClientListItem = {
-      id: tempId,
-      name: String(formData.get("name") ?? ""),
-      category,
-      phone: String(formData.get("phone") ?? "") || null,
-      email: String(formData.get("email") ?? "") || null,
-      address: null,
-      notes: null,
-      tags: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    setClients((current) => sortClients([...current, optimisticClient]));
-
-    const result = await createClientAction(formData);
-
-    if (!result.success) {
-      setClients((current) => current.filter((client) => client.id !== tempId));
-      toast.error(result.error);
-      setIsCreating(false);
-      return;
-    }
-
-    setClients((current) =>
-      sortClients(
-        current.map((client) =>
-          client.id === tempId
-            ? {
-                id: result.client.id,
-                name: result.client.name,
-                category: result.client.category,
-                phone: result.client.phone,
-                email: result.client.email,
-                address: result.client.address ?? null,
-                notes: result.client.notes ?? null,
-                tags: [],
-                createdAt: new Date().toISOString(),
-              }
-            : client
-        )
-      )
-    );
-
-    form.reset();
-    setCategory(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
-    toast.success("Client enregistré.");
-    setIsCreating(false);
-    router.refresh();
   }
 
   function handleOpenEdit(client: ClientListItem) {
@@ -205,88 +126,7 @@ export function ClientsManagement({
   }
 
   return (
-    <div className="space-y-8">
-      <section className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
-        <div>
-          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Nouveau client</h2>
-          <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            Nom et catégorie obligatoires.
-          </p>
-        </div>
-
-        <form onSubmit={handleCreate} className="space-y-5" data-testid="client-create-form">
-          <FieldGroup className="gap-5">
-            <Field>
-              <FieldLabel htmlFor="name" className={mbokaLabelClassName}>
-                Nom *
-              </FieldLabel>
-              <Input
-                id="name"
-                name="name"
-                required
-                minLength={2}
-                placeholder="Ex. Maisha Music, Jean Mukendi…"
-                className={mbokaFieldClassName}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="category" className={mbokaLabelClassName}>
-                Catégorie *
-              </FieldLabel>
-              <MbokaSelect
-                id="category"
-                name="category"
-                value={category}
-                onValueChange={setCategory}
-                options={categoryOptions}
-                placeholder="Sélectionner une catégorie"
-                required
-              />
-            </Field>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="phone" className={mbokaLabelClassName}>
-                  Téléphone
-                </FieldLabel>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+243 …"
-                  className={mbokaFieldClassName}
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="email" className={mbokaLabelClassName}>
-                  Email
-                </FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="contact@exemple.com"
-                  className={mbokaFieldClassName}
-                />
-              </Field>
-            </div>
-          </FieldGroup>
-
-          <button type="submit" className={mbokaButtonPrimaryClassName} disabled={isCreating}>
-            {isCreating ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Enregistrement...
-              </>
-            ) : (
-              "Enregistrer le client"
-            )}
-          </button>
-        </form>
-      </section>
-
+    <div className="space-y-6">
       {availableTags.length > 0 ? (
         <ClientTagFilter
           availableTags={availableTags}
@@ -296,16 +136,39 @@ export function ClientsManagement({
       ) : null}
 
       <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}>
-        <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-          Clients enregistrés ({pagination.total}
-          {selectedTags.length > 0 ? " filtrés" : ""})
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
+            Clients enregistrés ({pagination.total}
+            {selectedTags.length > 0 ? " filtrés" : ""})
+          </h2>
+
+          {canEditClient ? (
+            <Link
+              href="/clients/new"
+              data-testid="client-new-link"
+              className={cn(mbokaButtonPrimaryClassName, "no-underline")}
+            >
+              <Plus className="size-4" />
+              Nouveau client
+            </Link>
+          ) : null}
+        </div>
 
         {clients.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {pagination.total === 0 && selectedTags.length === 0
-              ? "Aucun client pour le moment. Utilisez le formulaire ci-dessus."
-              : "Aucun client ne correspond aux critères sélectionnés."}
+            {pagination.total === 0 && selectedTags.length === 0 ? (
+              <>
+                Aucun client pour le moment.{" "}
+                {canEditClient ? (
+                  <Link href="/clients/new" className="font-medium text-[#10579F] hover:underline dark:text-sky-300">
+                    Créez le premier client
+                  </Link>
+                ) : null}
+                .
+              </>
+            ) : (
+              "Aucun client ne correspond aux critères sélectionnés."
+            )}
           </p>
         ) : (
           <div className="space-y-3">
