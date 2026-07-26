@@ -1,0 +1,133 @@
+"use client";
+
+import { useEffect } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { formatMoney } from "@/lib/currency";
+import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+
+type CashClosingDetailPanelProps = {
+  closing: {
+    id: string;
+    date: string;
+    theoreticalCash: number;
+    theoreticalMobileMoney: number;
+    realCash: number;
+    realMobileMoney: number;
+    gapAmount: number;
+    hasDiscrepancy: boolean;
+    operator: {
+      firstName: string;
+      lastName: string;
+      avatarUrl: string | null;
+    };
+  };
+  flash?: {
+    created?: boolean;
+  };
+};
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
+}
+
+export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPanelProps) {
+  useEffect(() => {
+    if (flash?.created) {
+      toast.success("Clôture de caisse enregistrée.");
+    }
+  }, [flash?.created]);
+
+  const closingDateLabel = format(new Date(closing.date), "d MMMM yyyy", { locale: fr });
+
+  return (
+    <div className="space-y-6">
+      <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="cash-closing-detail-panel">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+            {closingDateLabel}
+          </span>
+          {closing.hasDiscrepancy ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+              data-testid="cash-closing-discrepancy-badge"
+            >
+              <AlertTriangle className="size-3.5" />
+              Écart constaté
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+              data-testid="cash-closing-balanced-badge"
+            >
+              <CheckCircle2 className="size-3.5" />
+              Caisse conforme
+            </span>
+          )}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className={mbokaLabelClassName}>Espèces théoriques</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.theoreticalCash)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Mobile Money théorique</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.theoreticalMobileMoney)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Espèces comptées</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.realCash)}</p>
+          </div>
+          <div>
+            <p className={mbokaLabelClassName}>Mobile Money compté</p>
+            <p className="mt-1 text-sm font-medium">{formatMoney(closing.realMobileMoney)}</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+          <p className={mbokaLabelClassName}>Écart total</p>
+          <p
+            className={cn(
+              "mt-1 text-xl font-semibold",
+              closing.hasDiscrepancy
+                ? "text-amber-700 dark:text-amber-300"
+                : "text-emerald-700 dark:text-emerald-300"
+            )}
+            data-testid="cash-closing-detail-gap"
+          >
+            {formatMoney(closing.gapAmount)}
+          </p>
+        </div>
+      </section>
+
+      <section
+        className={cn(mbokaPanelClassName, "flex items-center gap-4 p-5 sm:p-6")}
+        data-testid="cash-closing-operator-card"
+      >
+        {closing.operator.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={closing.operator.avatarUrl}
+            alt={`${closing.operator.firstName} ${closing.operator.lastName}`}
+            className="size-12 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#10579F] text-sm font-semibold text-white">
+            {getInitials(closing.operator.firstName, closing.operator.lastName)}
+          </div>
+        )}
+        <div>
+          <p className={mbokaLabelClassName}>Opérateur de clôture</p>
+          <p className="mt-1 text-sm font-semibold text-[#10579F] dark:text-sky-50" data-testid="cash-closing-operator-name">
+            {closing.operator.firstName} {closing.operator.lastName}
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}

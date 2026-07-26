@@ -3,6 +3,7 @@
 import {
   Fingerprint,
   KeyRound,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -43,6 +44,7 @@ type AppSidebarProps = {
   canManageUsers: boolean;
   canManageClients: boolean;
   canManageExpenses: boolean;
+  canCloseCash: boolean;
 };
 
 function getInitials(name: string): string {
@@ -71,6 +73,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/cash-closing") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -93,6 +99,7 @@ export function AppSidebar({
   canManageUsers,
   canManageClients,
   canManageExpenses,
+  canCloseCash,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -103,7 +110,7 @@ export function AppSidebar({
     {
       items: [{ href: dashboardPath, label: "Dashboard", icon: LayoutDashboard }],
     },
-    ...(canManageClients || canManageExpenses
+    ...(canManageClients || canManageExpenses || canCloseCash
       ? [
           {
             title: "Opérations",
@@ -116,6 +123,16 @@ export function AppSidebar({
                 : []),
               ...(canManageExpenses
                 ? [{ href: "/expenses", label: "Dépenses", icon: Wallet, testId: "nav-expenses" }]
+                : []),
+              ...(canCloseCash
+                ? [
+                    {
+                      href: "/cash-closing",
+                      label: "Clôture caisse",
+                      icon: Landmark,
+                      testId: "nav-cash-closing",
+                    },
+                  ]
                 : []),
             ],
           } satisfies NavSection,
