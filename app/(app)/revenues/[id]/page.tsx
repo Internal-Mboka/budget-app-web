@@ -2,18 +2,22 @@ import { notFound } from "next/navigation";
 
 import { RevenueDetailPanel } from "@/components/organisms/revenue-detail-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
+import { hasPermission, requireSession } from "@/lib/auth/session";
+import { parseRevenueCancellation } from "@/lib/revenues/cancellation";
 import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import type { RevenueMetadata } from "@/lib/revenues/metadata";
+import { PERMISSIONS } from "@/lib/permissions";
 import { decimalToNumber } from "@/lib/transactions/decimal";
 import { prisma } from "@/lib/prisma";
 import type { RevenueCategory } from "@prisma/client";
 
 type RevenueDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paid?: string; realized?: string; created?: string }>;
+  searchParams: Promise<{ paid?: string; realized?: string; created?: string; cancelled?: string }>;
 };
 
 export default async function RevenueDetailPage({ params, searchParams }: RevenueDetailPageProps) {
+  const session = await requireSession();
   const { id } = await params;
   const query = await searchParams;
 
@@ -44,10 +48,14 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
     notFound();
   }
 
+  const canCancel = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CANCEL_ADJUSTMENT);
+  const cancellation = parseRevenueCancellation(revenue.metadata);
+
   const flash = {
     created: query.created === "1",
     paid: query.paid === "solde" ? ("solde" as const) : query.paid === "partial" ? ("partial" as const) : undefined,
     realized: query.realized === "1",
+    cancelled: query.cancelled === "1",
   };
 
   return (
@@ -71,8 +79,10 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
           paymentMethod: revenue.paymentMethod,
           metadata: revenue.metadata as RevenueMetadata | null,
           fulfillment: parseRevenueFulfillment(revenue.metadata),
+          cancellation,
           createdAt: revenue.createdAt.toISOString(),
           client: revenue.client,
+          canCancel,
         }}
         flash={flash}
       />

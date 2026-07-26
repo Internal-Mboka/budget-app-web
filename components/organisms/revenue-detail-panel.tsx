@@ -18,6 +18,7 @@ import {
   type MarkRevenueRealizedFormState,
   type RecordRevenuePaymentFormState,
 } from "@/lib/actions/revenue-payments";
+import { RevenueCancellationSection } from "@/components/organisms/revenue-cancellation-section";
 import { formatMoney } from "@/lib/currency";
 import {
   mbokaButtonOutlineClassName,
@@ -27,8 +28,10 @@ import {
 } from "@/lib/design-tokens";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import type { RevenueFulfillmentMetadata } from "@/lib/revenues/fulfillment";
+import type { RevenueCancellationMetadata } from "@/lib/revenues/cancellation";
 import { getRevenueMetadataSummary, type RevenueMetadata } from "@/lib/revenues/metadata";
 import {
+  canCancelRevenue,
   canMarkRevenueRealized,
   canRecordRevenuePayment,
   getPaymentStatusPreviewHint,
@@ -51,11 +54,13 @@ export type RevenueDetailData = {
   paymentMethod: string | null;
   metadata: RevenueMetadata | null;
   fulfillment: RevenueFulfillmentMetadata;
+  cancellation?: RevenueCancellationMetadata | null;
   createdAt: string;
   client: {
     id: string;
     name: string;
   } | null;
+  canCancel?: boolean;
 };
 
 type RevenueDetailPanelProps = {
@@ -64,6 +69,7 @@ type RevenueDetailPanelProps = {
     created?: boolean;
     paid?: "partial" | "solde";
     realized?: boolean;
+    cancelled?: boolean;
   };
 };
 
@@ -100,6 +106,7 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
 
   const showPaymentForm = canRecordRevenuePayment(revenue.status, revenue.remainingAmount);
   const showRealizedAction = canMarkRevenueRealized(revenue.status, revenue.fulfillment);
+  const showCancelAction = Boolean(revenue.canCancel) && canCancelRevenue(revenue.status);
 
   useEffect(() => {
     if (flash?.created) {
@@ -110,8 +117,10 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
       toast.success("Paiement enregistré.");
     } else if (flash?.realized) {
       toast.success("Prestation marquée comme réalisée.");
+    } else if (flash?.cancelled) {
+      toast.success("Revenu annulé.");
     }
-  }, [flash?.created, flash?.paid, flash?.realized, revenue.code]);
+  }, [flash?.created, flash?.paid, flash?.realized, flash?.cancelled, revenue.code]);
 
   useEffect(() => {
     if (!paymentState || paymentState === handledPaymentRef.current || paymentState.success) {
@@ -300,6 +309,15 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
             </MbokaPendingFieldset>
           </form>
         </section>
+      ) : null}
+
+      {showCancelAction || revenue.cancellation ? (
+        <RevenueCancellationSection
+          transactionId={revenue.id}
+          totalAmount={revenue.totalAmount}
+          paidAmount={revenue.paidAmount}
+          cancellation={revenue.cancellation}
+        />
       ) : null}
     </div>
   );

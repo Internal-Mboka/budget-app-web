@@ -106,3 +106,7 @@ export function canMarkRevenueRealized(
 ): boolean {
   return financialStatus !== "LITIGE_ANNULE" && fulfillment?.fulfillmentStatus !== "REALIZED";
 }
+
+export function canCancelRevenue(financialStatus: PaymentStatus | string): boolean {
+  return financialStatus !== "LITIGE_ANNULE";
+}
