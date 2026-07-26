@@ -1,4 +1,5 @@
 import { ClientsManagement } from "@/components/organisms/clients-management";
+import { ClientSearchPanel } from "@/components/organisms/client-search-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasAnyPermission, requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -40,6 +41,8 @@ export default async function ClientsPage() {
         title="Répertoire clients"
         description="Enregistrez et catégorisez les clients pour la facturation et le suivi des prestations."
       />
+
+      <ClientSearchPanel />
 
       <ClientsManagement initialClients={clientRows} canViewDetail={canViewDetail} />
     </div>

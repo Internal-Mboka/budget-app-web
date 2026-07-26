@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { requirePermission } from "@/lib/auth/session";
+import {
+  buildClientSearchWhere,
+  CLIENT_SEARCH_LIMIT,
+  CLIENT_SEARCH_MIN_LENGTH,
+  type ClientSearchResult,
+} from "@/lib/clients/search";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 import { createClientSchema } from "@/lib/validations/client";
@@ -117,4 +123,28 @@ export async function createClientAction(formData: FormData): Promise<ClientActi
       email: created.email,
     },
   };
+}
+
+export async function searchClientsAction(query: string): Promise<ClientSearchResult[]> {
+  await requirePermission(PERMISSIONS.FINANCE_CREATE_REVENUE);
+
+  const term = query.trim();
+  if (term.length < CLIENT_SEARCH_MIN_LENGTH) {
+    return [];
+  }
+
+  const clients = await prisma.client.findMany({
+    where: buildClientSearchWhere(term),
+    take: CLIENT_SEARCH_LIMIT,
+    orderBy: [{ name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      phone: true,
+      email: true,
+    },
+  });
+
+  return clients;
 }
