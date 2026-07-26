@@ -1,4 +1,7 @@
 import type { CurrencyType, ExpenseCategory, PaymentMethod } from "@prisma/client";
+import { z } from "zod";
+
+import { buildExpenseMetadataFromFormData } from "@/lib/expenses/metadata";
 import { parseMoneyInput } from "@/lib/transactions/decimal";
 
 const expenseCategorySchema = z.enum([
