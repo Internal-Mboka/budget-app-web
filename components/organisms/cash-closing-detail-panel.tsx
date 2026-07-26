@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
+import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
 import { formatMoney } from "@/lib/currency";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -64,8 +65,8 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
         emphasized={closing.hasDiscrepancy}
         subtitle={
           closing.hasDiscrepancy
-            ? "Responsable identifié — un écart a été constaté sur cette clôture"
-            : "Responsable identifié — clôture conforme"
+            ? "Responsable identifié — une différence a été constatée"
+            : "Responsable identifié — comptages conformes au registre"
         }
       />
 
@@ -80,7 +81,7 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
               data-testid="cash-closing-discrepancy-badge"
             >
               <AlertTriangle className="size-3.5" />
-              Écart constaté
+              Différence constatée
             </span>
           ) : (
             <span
@@ -88,7 +89,7 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
               data-testid="cash-closing-balanced-badge"
             >
               <CheckCircle2 className="size-3.5" />
-              Caisse conforme
+              Tout correspond
             </span>
           )}
         </div>
@@ -133,7 +134,7 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-          <p className={mbokaLabelClassName}>Écarts par canal</p>
+          <p className={mbokaLabelClassName}>Résultat du rapprochement</p>
           <div className="mt-2 space-y-1 text-sm">
             <p>
               Espèces :{" "}
@@ -145,11 +146,11 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
                     : "text-emerald-700 dark:text-emerald-300"
                 )}
               >
-                {formatMoney(gap.gapCash)}
+                {formatGapDifference(gap.gapCash)}
               </span>
             </p>
             <p>
-              Mobile Money :{" "}
+              Mobile money :{" "}
               <span
                 className={cn(
                   "font-semibold",
@@ -158,17 +159,25 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
                     : "text-emerald-700 dark:text-emerald-300"
                 )}
               >
-                {formatMoney(gap.gapMobileMoney)}
+                {formatGapDifference(gap.gapMobileMoney)}
               </span>
             </p>
           </div>
-          <p className={cn("mt-3 text-xl font-semibold", closing.hasDiscrepancy
-                ? "text-amber-700 dark:text-amber-300"
-                : "text-emerald-700 dark:text-emerald-300")}
-            data-testid="cash-closing-detail-gap"
-          >
-            Écart cumulé : {formatMoney(closing.gapAmount)}
-          </p>
+          {closing.hasDiscrepancy ? (
+            <p
+              className="mt-3 text-sm text-amber-700 dark:text-amber-300"
+              data-testid="cash-closing-detail-gap"
+            >
+              Différence signalée pour revue.
+            </p>
+          ) : (
+            <p
+              className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
+              data-testid="cash-closing-detail-gap"
+            >
+              Comptages conformes au registre.
+            </p>
+          )}
         </div>
       </section>
     </div>

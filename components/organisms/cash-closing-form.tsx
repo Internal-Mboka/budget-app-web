@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Calculator, Info } from "lucide-react";
@@ -11,8 +12,9 @@ import {
   createCashClosingFormAction,
   type CashClosingFormState,
 } from "@/lib/actions/cash-closing";
-import { computeExpectedClosingBalances, describeGapAmount } from "@/lib/cash-closing/expected";
+import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
+import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
 import type { SuggestedOpeningFloat } from "@/lib/cash-closing/load-closings";
 import type { CashClosingDaySummary } from "@/lib/cash-closing/theoretical";
 import { formatMoney } from "@/lib/currency";
@@ -83,19 +85,12 @@ function formatOpeningInput(value: number): string {
   return value === 0 ? "0" : String(value);
 }
 
-function describeGapKindLabel(gap: number): string {
-  if (gap === 0) {
-    return "conforme";
-  }
-
-  return describeGapAmount(gap) === "overage" ? "surplus" : "manque";
-}
-
 export function CashClosingForm({
   summary,
   defaultClosingDate,
   suggestedOpening,
 }: CashClosingFormProps) {
+  const router = useRouter();
   const handledStateRef = useRef<CashClosingFormState>(null);
   const [state, formAction] = useActionState(createCashClosingFormAction, null);
   const [openingCashInput, setOpeningCashInput] = useState(() =>
@@ -218,9 +213,20 @@ export function CashClosingForm({
                   name="closingDate"
                   type="date"
                   required
+                  key={defaultClosingDate}
                   defaultValue={defaultClosingDate}
+                  onChange={(event) => {
+                    const value = event.target.value;
+
+                    if (value && value !== defaultClosingDate) {
+                      router.push(`/cash-closing?date=${value}`);
+                    }
+                  }}
                   className={cn(mbokaFieldClassName, "max-w-xs")}
                 />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Les montants du jour se mettent à jour quand vous changez la date.
+                </p>
               </Field>
 
               <div className="space-y-4">
@@ -405,32 +411,27 @@ export function CashClosingForm({
               >
                 {preview.gap.hasDiscrepancy ? (
                   <div className="space-y-2">
-                    <p className="font-medium">Écarts par canal (compté − attendu)</p>
+                    <p className="font-medium">Vos comptages ne correspondent pas au registre</p>
                     <p data-testid="cash-closing-gap-cash">
                       Espèces :{" "}
-                      <span className="font-semibold">{formatMoney(preview.gap.gapCash)}</span>
-                      {" — "}
-                      {describeGapKindLabel(preview.gap.gapCash)}
+                      <span className="font-semibold">{formatGapDifference(preview.gap.gapCash)}</span>
                     </p>
                     <p data-testid="cash-closing-gap-mobile">
-                      Mobile Money :{" "}
-                      <span className="font-semibold">{formatMoney(preview.gap.gapMobileMoney)}</span>
-                      {" — "}
-                      {describeGapKindLabel(preview.gap.gapMobileMoney)}
+                      Mobile money :{" "}
+                      <span className="font-semibold">
+                        {formatGapDifference(preview.gap.gapMobileMoney)}
+                      </span>
                     </p>
                     <p className="text-xs opacity-80">
-                      Écart cumulé :{" "}
-                      <span className="font-semibold" data-testid="cash-closing-gap-amount">
-                        {formatMoney(preview.gap.gapAmount)}
-                      </span>
+                      Vous pouvez quand même valider — la différence sera signalée pour revue.
                     </p>
                   </div>
                 ) : (
                   <p>
-                    Espèces et Mobile Money conformes —{" "}
                     <span className="font-semibold" data-testid="cash-closing-gap-amount">
-                      caisse conforme
-                    </span>
+                      Tout correspond
+                    </span>{" "}
+                    — espèces et mobile money OK.
                   </p>
                 )}
               </div>

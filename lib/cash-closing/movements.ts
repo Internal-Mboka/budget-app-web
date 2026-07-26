@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 import type { PaymentMethod } from "@prisma/client";
 
 import { parseRevenuePaymentHistory } from "@/lib/revenues/payment-history";
@@ -22,14 +24,20 @@ export function createEmptyMovementBuckets(): MovementBuckets {
   };
 }
 
-export function isWithinClosingDay(isoDate: string | Date, start: Date, end: Date): boolean {
-  const date = typeof isoDate === "string" ? new Date(isoDate) : isoDate;
+export function getCalendarDayKey(value: string | Date): string | null {
+  const date = typeof value === "string" ? new Date(value) : value;
 
   if (Number.isNaN(date.getTime())) {
-    return false;
+    return null;
   }
 
-  return date >= start && date <= end;
+  return format(date, "yyyy-MM-dd");
+}
+
+export function isWithinClosingDay(value: string | Date, closingDate: string): boolean {
+  const dayKey = getCalendarDayKey(value);
+
+  return dayKey !== null && dayKey === closingDate;
 }
 
 export function addSignedMovement(
@@ -61,7 +69,23 @@ export function addSignedMovement(
   }
 }
 
-/** Ventile les encaissements revenus du jour (historique de versements ou repli legacy). */
+/** Ajoute un encaissement revenu du jour. */
+export function accumulateRevenuePayment(
+  buckets: MovementBuckets,
+  payment: {
+    amount: number;
+    paymentMethod: PaymentMethod | null;
+    fallbackPaymentMethod: PaymentMethod | null;
+  }
+): void {
+  addSignedMovement(
+    buckets,
+    payment.paymentMethod ?? payment.fallbackPaymentMethod,
+    payment.amount
+  );
+}
+
+/** @deprecated Conservé pour les tests ou repli manuel. */
 export function accumulateRevenueMovements(
   buckets: MovementBuckets,
   input: {
@@ -70,14 +94,13 @@ export function accumulateRevenueMovements(
     paidAmount: number;
     createdAt: Date;
   },
-  start: Date,
-  end: Date
+  closingDate: string
 ): void {
   const history = parseRevenuePaymentHistory(input.metadata);
 
   if (history.length > 0) {
     for (const entry of history) {
-      if (entry.amount <= 0 || !isWithinClosingDay(entry.recordedAt, start, end)) {
+      if (entry.amount <= 0 || !isWithinClosingDay(entry.recordedAt, closingDate)) {
         continue;
       }
 
@@ -87,9 +110,20 @@ export function accumulateRevenueMovements(
     return;
   }
 
-  if (input.paidAmount > 0 && isWithinClosingDay(input.createdAt, start, end)) {
+  if (input.paidAmount > 0 && isWithinClosingDay(input.createdAt, closingDate)) {
     addSignedMovement(buckets, input.paymentMethod, input.paidAmount);
   }
+}
+
+/** Soustrait une dépense liquide déjà filtrée sur le jour de clôture. */
+export function accumulateExpensePayment(
+  buckets: MovementBuckets,
+  payment: {
+    amount: number;
+    paymentMethod: PaymentMethod;
+  }
+): void {
+  addSignedMovement(buckets, payment.paymentMethod, -payment.amount);
 }
 
 /** Soustrait une dépense liquide enregistrée le jour de clôture. */
@@ -100,13 +134,12 @@ export function accumulateExpenseMovement(
     paidAmount: number;
     createdAt: Date;
   },
-  start: Date,
-  end: Date
+  closingDate: string
 ): void {
   if (
     input.paidAmount <= 0 ||
     !input.paymentMethod ||
-    !isWithinClosingDay(input.createdAt, start, end)
+    !isWithinClosingDay(input.createdAt, closingDate)
   ) {
     return;
   }

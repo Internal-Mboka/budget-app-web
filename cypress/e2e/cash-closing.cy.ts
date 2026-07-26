@@ -22,7 +22,7 @@ describe("Mboka Budget — US-32 Clôture de caisse", () => {
     cy.get("#openingMobileMoney").clear().type("0");
     cy.get("#realCash").type("0");
     cy.get("#realMobileMoney").type("0");
-    cy.get('[data-testid="cash-closing-gap-preview"]').should("contain", "caisse conforme");
+    cy.get('[data-testid="cash-closing-gap-preview"]').should("contain", "Tout correspond");
     cy.get('[data-testid="cash-closing-submit"]').click();
 
     cy.location("pathname", { timeout: 15000 }).should("match", /^\/cash-closing\//);

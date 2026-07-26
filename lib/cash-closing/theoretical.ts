@@ -1,11 +1,13 @@
-import { getClosingDayRange } from "@/lib/cash-closing/day-range";
 import {
-  accumulateExpenseMovement,
-  accumulateRevenueMovements,
+  accumulateExpensePayment,
+  accumulateRevenuePayment,
   createEmptyMovementBuckets,
 } from "@/lib/cash-closing/movements";
-import { prisma } from "@/lib/prisma";
-import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
+import {
+  loadExpensePaymentsForClosingDay,
+  loadRevenuePaymentsForClosingDay,
+} from "@/lib/cash-closing/load-day-movements";
+import { roundMoney } from "@/lib/transactions/decimal";
 
 /** Résumé des mouvements du jour par mode de paiement. */
 export type CashClosingDaySummary = {
@@ -28,66 +30,26 @@ export type TheoreticalCashBalances = CashClosingDaySummary & {
 export async function computeCashClosingDaySummary(
   closingDate: string
 ): Promise<CashClosingDaySummary> {
-  const { start, end } = getClosingDayRange(closingDate);
   const buckets = createEmptyMovementBuckets();
 
-  const [revenues, expenses] = await Promise.all([
-    prisma.transaction.findMany({
-      where: {
-        type: "REVENUE",
-        status: { not: "LITIGE_ANNULE" },
-        isRecurring: false,
-        approvalStatus: { notIn: ["PENDING", "REJECTED"] },
-        OR: [{ createdAt: { gte: start, lte: end } }, { updatedAt: { gte: start, lte: end } }],
-      },
-      select: {
-        metadata: true,
-        paymentMethod: true,
-        paidAmount: true,
-        createdAt: true,
-      },
-    }),
-    prisma.transaction.findMany({
-      where: {
-        type: "EXPENSE",
-        status: "SOLDE",
-        isRecurring: false,
-        approvalStatus: { notIn: ["PENDING", "REJECTED"] },
-        paymentMethod: { not: null },
-        createdAt: { gte: start, lte: end },
-      },
-      select: {
-        paymentMethod: true,
-        paidAmount: true,
-        createdAt: true,
-      },
-    }),
+  const [revenuePayments, expensePayments] = await Promise.all([
+    loadRevenuePaymentsForClosingDay(closingDate),
+    loadExpensePaymentsForClosingDay(closingDate),
   ]);
 
-  for (const revenue of revenues) {
-    accumulateRevenueMovements(
-      buckets,
-      {
-        metadata: revenue.metadata,
-        paymentMethod: revenue.paymentMethod,
-        paidAmount: decimalToNumber(revenue.paidAmount),
-        createdAt: revenue.createdAt,
-      },
-      start,
-      end
-    );
+  for (const payment of revenuePayments) {
+    accumulateRevenuePayment(buckets, payment);
   }
 
-  for (const expense of expenses) {
+  for (const expense of expensePayments) {
     accumulateExpenseMovement(
       buckets,
       {
         paymentMethod: expense.paymentMethod,
-        paidAmount: decimalToNumber(expense.paidAmount),
-        createdAt: expense.createdAt,
+        paidAmount: expense.amount,
+        createdAt: new Date(`${closingDate}T12:00:00`),
       },
-      start,
-      end
+      closingDate
     );
   }
 

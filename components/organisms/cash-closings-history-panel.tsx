@@ -72,7 +72,7 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                   {closing.hasDiscrepancy ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
                       <AlertTriangle className="size-3" />
-                      Écart
+                      Différence
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -92,8 +92,8 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                   emphasized={closing.hasDiscrepancy}
                   subtitle={
                     closing.hasDiscrepancy
-                      ? "Responsable identifié — écart constaté sur cette journée"
-                      : "Clôture validée sans écart"
+                      ? "Responsable identifié — différence constatée ce jour-là"
+                      : "Clôture validée — tout correspondait"
                   }
                   className="border-0 bg-transparent shadow-none"
                 />
