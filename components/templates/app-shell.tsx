@@ -5,6 +5,7 @@ import { getDefaultDashboardPath } from "@/lib/auth/routes";
 import { hasPermission } from "@/lib/auth/session";
 import { mbokaPageClassName } from "@/lib/design-tokens";
 import { PERMISSIONS } from "@/lib/permissions";
+import { canEnableTwoFactor } from "@/lib/two-factor/eligibility";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -15,6 +16,7 @@ type AppShellProps = {
 export function AppShell({ user, children }: AppShellProps) {
   const dashboardPath = getDefaultDashboardPath(user);
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
+  const showTwoFactorNav = canEnableTwoFactor(user.roleName);
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden", mbokaPageClassName)}>
@@ -23,6 +25,7 @@ export function AppShell({ user, children }: AppShellProps) {
         roleName={user.roleName}
         dashboardPath={dashboardPath}
         canManageUsers={canManageUsers}
+        canEnableTwoFactor={showTwoFactorNav}
       />
 
       <div className="flex min-h-0 flex-1 flex-col lg:pl-72">

@@ -15,7 +15,7 @@ export default auth((request) => {
   const isLoggedIn = Boolean(session?.user);
 
   if (isPublicPath(pathname)) {
-    if (isLoggedIn && pathname === "/login") {
+    if (isLoggedIn && (pathname === "/login" || pathname === "/login/two-factor")) {
       const destination = session!.user.mustChangePassword
         ? PASSWORD_CHANGE_PATH
         : getDefaultDashboardPath(session!.user);

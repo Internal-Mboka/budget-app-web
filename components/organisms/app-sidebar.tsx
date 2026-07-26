@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fingerprint,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -31,6 +32,7 @@ type AppSidebarProps = {
   roleName: string;
   dashboardPath: string;
   canManageUsers: boolean;
+  canEnableTwoFactor: boolean;
 };
 
 function getInitials(name: string): string {
@@ -47,6 +49,7 @@ export function AppSidebar({
   roleName,
   dashboardPath,
   canManageUsers,
+  canEnableTwoFactor,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -58,6 +61,10 @@ export function AppSidebar({
     { href: "/account/password", label: "Mot de passe", icon: KeyRound },
     { href: "/account/sessions", label: "Sessions", icon: MonitorSmartphone },
   ];
+
+  if (canEnableTwoFactor) {
+    navItems.push({ href: "/account/two-factor", label: "2FA", icon: Fingerprint });
+  }
 
   if (canManageUsers) {
     navItems.push({ href: "/admin/users", label: "Utilisateurs", icon: Users });
@@ -74,6 +81,10 @@ export function AppSidebar({
     }
 
     if (href === "/account/sessions") {
+      return pathname === href;
+    }
+
+    if (href === "/account/two-factor") {
       return pathname === href;
     }
 
@@ -145,7 +156,9 @@ export function AppSidebar({
                     ? "nav-permissions"
                     : item.href === "/account/sessions"
                       ? "nav-sessions"
-                      : undefined
+                      : item.href === "/account/two-factor"
+                        ? "nav-two-factor"
+                        : undefined
               }
               onClick={() => setMobileOpen(false)}
                 className={cn(

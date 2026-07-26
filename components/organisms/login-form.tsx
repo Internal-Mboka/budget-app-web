@@ -77,6 +77,12 @@ export function LoginForm({ callbackUrl, initialError, initialMessage }: LoginFo
       return;
     }
 
+    if ("requires2FA" in result && result.requires2FA) {
+      router.push(result.redirectTo ?? "/login/two-factor");
+      router.refresh();
+      return;
+    }
+
     if (result?.error === "server-error") {
       toast.error("Erreur serveur. Réessayez dans quelques instants.");
       setIsSubmitting(false);

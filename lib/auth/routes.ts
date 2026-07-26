@@ -1,7 +1,13 @@
 import type { PermissionSlug } from "@/lib/permissions";
 import { PERMISSIONS } from "@/lib/permissions";
 
-export const PUBLIC_PATHS = ["/login", "/login/forgot-password", "/login/reset-password", "/offline"] as const;
+export const PUBLIC_PATHS = [
+  "/login",
+  "/login/forgot-password",
+  "/login/reset-password",
+  "/login/two-factor",
+  "/offline",
+] as const;
 
 export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
   "/dashboard": PERMISSIONS.DASHBOARD_FULL,
