@@ -1,20 +1,21 @@
+import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
+import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { requirePermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const session = await requirePermission(PERMISSIONS.DASHBOARD_FULL);
 
   return (
-    <section className="space-y-4">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-[0.28em] text-sky-500">Dashboard</p>
-        <h1 className="mt-2 text-3xl font-semibold text-primary">Vue complète</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Bienvenue {session.user.name}. Pilotage macro et micro — modules métier à venir.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <MbokaPageHeader
+        eyebrow="Dashboard"
+        title="Vue complète"
+        description={`Bienvenue ${session.user.name}. Pilotage macro et micro — modules métier à venir.`}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <section className={cn(mbokaPanelClassName, "grid gap-4 p-6 sm:grid-cols-3 sm:p-8")}>
         {[
           { label: "Chiffre d'affaires", value: "—" },
           { label: "Dépenses", value: "—" },
@@ -28,7 +29,7 @@ export default async function DashboardPage() {
             <p className="mt-3 text-2xl font-semibold text-primary">{metric.value}</p>
           </article>
         ))}
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

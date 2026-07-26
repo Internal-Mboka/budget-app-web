@@ -10,14 +10,17 @@ import { z } from "zod";
 
 import { Logo } from "@/components/atoms/logo";
 import { ThemeToggle } from "@/components/atoms/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { loginAction } from "@/lib/actions/auth";
 import {
-  authButtonClassName,
-  authFieldClassName,
-  authLabelClassName,
+  mbokaEyebrowClassName,
+  mbokaFieldClassName,
+  mbokaLabelClassName,
+  mbokaPanelClassName,
+  mbokaSubmitButtonClassName,
+  mbokaSubtitleClassName,
+  mbokaTitleClassName,
 } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -58,8 +61,14 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
 
     const result = await loginAction(formData);
 
-    if (result?.error) {
+    if (result?.error === "invalid-credentials") {
       toast.error("Identifiants incorrects ou compte désactivé.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (result?.error === "server-error") {
+      toast.error("Erreur serveur. Réessayez dans quelques instants.");
       setIsSubmitting(false);
       return;
     }
@@ -78,19 +87,13 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
       </div>
 
       <main className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center justify-center">
-        <section className="w-full rounded-4xl border border-sky-100 bg-white/90 p-6 shadow-[var(--mboka-card-shadow)] backdrop-blur sm:p-8 dark:border-sky-900 dark:bg-slate-900/90">
+        <section className={cn("w-full p-6 sm:p-8", mbokaPanelClassName)}>
           <Logo variant="auth" />
 
           <div className="mt-6 text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.28em] text-sky-400">
-              Bienvenue
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#10579F] dark:text-sky-50">
-              Connexion
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Accédez à votre espace Mboka Budget.
-            </p>
+            <p className={mbokaEyebrowClassName}>Bienvenue</p>
+            <h1 className={cn("mt-3", mbokaTitleClassName)}>Connexion</h1>
+            <p className={cn("mt-3", mbokaSubtitleClassName)}>Accédez à votre espace Mboka Budget.</p>
           </div>
 
           {initialError === "forbidden" ? (
@@ -102,7 +105,7 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <FieldGroup className="gap-5">
               <Field>
-                <FieldLabel htmlFor="email" className={authLabelClassName}>
+                <FieldLabel htmlFor="email" className={mbokaLabelClassName}>
                   Email
                 </FieldLabel>
                 <Input
@@ -110,14 +113,14 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
                   type="email"
                   autoComplete="email"
                   placeholder="nom@exemple.com"
-                  className={cn(authFieldClassName, "h-auto min-h-12")}
+                  className={mbokaFieldClassName}
                   {...form.register("email")}
                 />
                 <FieldError errors={[form.formState.errors.email]} />
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="password" className={authLabelClassName}>
+                <FieldLabel htmlFor="password" className={mbokaLabelClassName}>
                   Mot de passe
                 </FieldLabel>
                 <Input
@@ -125,18 +128,14 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
                   type="password"
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className={cn(authFieldClassName, "h-auto min-h-12")}
+                  className={mbokaFieldClassName}
                   {...form.register("password")}
                 />
                 <FieldError errors={[form.formState.errors.password]} />
               </Field>
             </FieldGroup>
 
-            <Button
-              type="submit"
-              className={cn(authButtonClassName, "h-auto")}
-              disabled={isSubmitting}
-            >
+            <button type="submit" className={mbokaSubmitButtonClassName} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -145,7 +144,7 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
               ) : (
                 "Se connecter"
               )}
-            </Button>
+            </button>
           </form>
         </section>
       </main>

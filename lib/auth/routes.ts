@@ -8,7 +8,12 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
   "/dashboard/financier": PERMISSIONS.DASHBOARD_FINANCIAL,
   "/dashboard/operations": PERMISSIONS.DASHBOARD_OPERATIONAL,
   "/dashboard/macro": PERMISSIONS.DASHBOARD_MACRO,
+  "/admin/users": PERMISSIONS.USERS_MANAGE,
 };
+
+export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: PermissionSlug }> = [
+  { prefix: "/admin", permission: PERMISSIONS.USERS_MANAGE },
+];
 
 type DashboardSessionUser = {
   permissions: PermissionSlug[];
@@ -35,6 +40,12 @@ export function getDefaultDashboardPath(user: DashboardSessionUser): string {
 }
 
 export function canAccessRoute(pathname: string, permissions: PermissionSlug[]): boolean {
+  for (const { prefix, permission } of ROUTE_PREFIX_PERMISSIONS) {
+    if (pathname.startsWith(prefix) && !permissions.includes(permission)) {
+      return false;
+    }
+  }
+
   const requiredPermission = ROUTE_PERMISSIONS[pathname];
 
   if (!requiredPermission) {

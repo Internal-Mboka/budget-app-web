@@ -34,7 +34,10 @@ export default auth((request) => {
     );
   }
 
-  if (pathname.startsWith("/dashboard") && !canAccessRoute(pathname, session!.user.permissions)) {
+  if (
+    (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) &&
+    !canAccessRoute(pathname, session!.user.permissions)
+  ) {
     return NextResponse.redirect(
       new URL(getDefaultDashboardPath(session!.user), request.url)
     );

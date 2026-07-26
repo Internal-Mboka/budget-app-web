@@ -17,64 +17,56 @@ export const credentialsProvider = Credentials({
     password: { label: "Mot de passe", type: "password" },
   },
   async authorize(credentials) {
-    const parsed = loginSchema.safeParse(credentials);
+    try {
+      const parsed = loginSchema.safeParse(credentials);
 
-    if (!parsed.success) {
-      return null;
-    }
+      if (!parsed.success) {
+        return null;
+      }
 
-    const { email, password } = parsed.data;
+      const { email, password } = parsed.data;
 
-    const user = await prisma.user.findFirst({
-      where: {
-        email: {
-          equals: email,
-          mode: "insensitive",
-        },
-      },
-      include: {
-        role: {
-          include: {
-            permissions: true,
+      const user = await prisma.user.findFirst({
+        where: {
+          email: {
+            equals: email,
+            mode: "insensitive",
           },
         },
-      },
-    });
-
-    if (!user || !user.isActive) {
-      return null;
-    }
-
-    const passwordMatches = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatches) {
-      return null;
-    }
-
-    const permissions = user.role.permissions.map(
-      (permission) => permission.slug as PermissionSlug
-    );
-
-    await prisma.auditLog.create({
-      data: {
-        action: "USER_LOGIN",
-        entity: "User",
-        entityId: user.id,
-        userId: user.id,
-        details: {
-          email: user.email,
-          role: user.role.name,
+        include: {
+          role: {
+            include: {
+              permissions: true,
+            },
+          },
         },
-      },
-    });
+      });
 
-    return {
-      id: user.id,
-      email: user.email,
-      name: `${user.firstName} ${user.lastName}`,
-      roleId: user.roleId,
-      roleName: user.role.name as RoleName,
-      permissions,
-    };
+      if (!user || !user.isActive) {
+        return null;
+      }
+
+      const passwordMatches = await bcrypt.compare(password, user.password);
+
+      if (!passwordMatches) {
+        return null;
+      }
+
+      const permissions = user.role.permissions.map(
+        (permission) => permission.slug as PermissionSlug
+      );
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        roleId: user.roleId,
+        roleName: user.role.name as RoleName,
+        permissions,
+      };
+    } catch (error) {
+      console.error("Credentials authorize failed", error);
+      return null;
+    }
   },
 });

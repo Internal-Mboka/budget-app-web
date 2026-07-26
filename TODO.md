@@ -119,7 +119,7 @@
 | US | Titre | Statut |
 |----|-------|--------|
 | US-01 | Connexion sécurisée & persistance de session | `[x]` |
-| US-02 | Management utilisateurs & attribution des rôles | `[ ]` |
+| US-02 | Management utilisateurs & attribution des rôles | `[x]` |
 | US-03 | Middleware RBAC (permissions) | `[x]` |
 | US-04 | Réinitialisation / gestion mot de passe | `[ ]` |
 | US-05 | Déconnexion sécurisée | `[x]` |
@@ -245,4 +245,5 @@
 | 2026-07-26 | Phase 0 (Analyse) | GO reçu | — |
 | 2026-07-26 | Phase 1 (Nettoyage & Dépendances) | GO reçu | — |
 | 2026-07-26 | Phase 2 (Prisma & Migration + Seed) | GO reçu | — |
-| 2026-07-26 | Phase 3 (Auth, RBAC, Login) | *En attente* | — |
+| 2026-07-26 | Phase 3 (Auth, RBAC, Login + pattern UI) | GO reçu | — |
+| 2026-07-26 | US-02 (Gestion utilisateurs) | *En attente* | — |
