@@ -12,23 +12,34 @@ type SubNavItem = {
   isActive: (pathname: string) => boolean;
 };
 
-const items: SubNavItem[] = [
-  {
-    href: "/revenues",
-    label: "Registre",
-    testId: "revenues-subnav-registre",
-    isActive: (path) => path === "/revenues",
-  },
-  {
-    href: "/revenues/new",
-    label: "Nouveau revenu",
-    testId: "revenues-subnav-new",
-    isActive: (path) => path.startsWith("/revenues/new"),
-  },
-];
+function isRevenueDetailPath(pathname: string): boolean {
+  return /^\/revenues\/[^/]+$/.test(pathname) && pathname !== "/revenues/new";
+}
 
 export function RevenuesSubNav() {
   const pathname = usePathname();
+
+  if (isRevenueDetailPath(pathname)) {
+    return null;
+  }
+
+  const items: SubNavItem[] = [
+    {
+      href: "/revenues",
+      label: "Registre",
+      testId: "revenues-subnav-registre",
+      isActive: (path) => path === "/revenues",
+    },
+  ];
+
+  if (pathname !== "/revenues/new") {
+    items.push({
+      href: "/revenues/new",
+      label: "Nouveau revenu",
+      testId: "revenues-subnav-new",
+      isActive: (path) => path.startsWith("/revenues/new"),
+    });
+  }
 
   return (
     <nav

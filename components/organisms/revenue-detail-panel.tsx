@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ArrowLeft, CheckCircle2, Receipt } from "lucide-react";
+import { CheckCircle2, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -133,18 +133,6 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/revenues"
-        className={cn(
-          mbokaButtonOutlineClassName,
-          "inline-flex w-fit items-center gap-2 no-underline"
-        )}
-        data-testid="revenue-detail-back"
-      >
-        <ArrowLeft className="size-4" />
-        Retour au registre
-      </Link>
-
       <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="revenue-detail-panel">
         <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-50">
