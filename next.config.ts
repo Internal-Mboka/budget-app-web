@@ -10,6 +10,8 @@ const withPWA = withPWAInit({
   },
 });
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  serverExternalPackages: ["@neondatabase/serverless", "@prisma/adapter-neon", "ws"],
+};
 
 export default withPWA(nextConfig);

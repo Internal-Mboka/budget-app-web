@@ -11,7 +11,7 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 const adapter = new PrismaNeon({ connectionString });
 
 // Bump when adapter setup changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 1;
+const PRISMA_CLIENT_VERSION = 3;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
