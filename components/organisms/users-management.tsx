@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { PasswordInput } from "@/components/atoms/password-input";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
-import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -285,7 +284,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
             </Field>
           </FieldGroup>
 
-          <Button type="submit" className={mbokaButtonPrimaryClassName} disabled={isCreating}>
+          <button type="submit" className={mbokaButtonPrimaryClassName} disabled={isCreating}>
             {isCreating ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
@@ -294,7 +293,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
             ) : (
               "Créer l'utilisateur"
             )}
-          </Button>
+          </button>
         </form>
       </section>
 
@@ -343,18 +342,16 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
                         className={mbokaButtonOutlineClassName}
                         disabled={isOptimistic}
                         onClick={() => (isEditing ? setEditingId(null) : startEditing(user))}
                       >
                         {isEditing ? "Annuler" : "Modifier"}
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         type="button"
-                        variant="outline"
                         className={cn(
                           mbokaButtonOutlineClassName,
                           user.isActive
@@ -366,7 +363,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                       >
                         {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
                         {user.isActive ? "Bloquer" : "Activer"}
-                      </Button>
+                      </button>
                     </div>
                   </div>
 
@@ -427,7 +424,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                           />
                         </div>
                       </div>
-                      <Button type="submit" className={mbokaButtonPrimaryClassName} disabled={isLoading}>
+                      <button type="submit" className={mbokaButtonPrimaryClassName} disabled={isLoading}>
                         {isLoading ? (
                           <>
                             <Loader2 className="size-4 animate-spin" />
@@ -436,7 +433,7 @@ export function UsersManagement({ initialUsers, roles, currentUserId }: UsersMan
                         ) : (
                           "Enregistrer"
                         )}
-                      </Button>
+                      </button>
                     </form>
                   ) : null}
                 </article>

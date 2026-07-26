@@ -2,6 +2,7 @@
  * Pattern UI Mboka — référence : page /login
  * À utiliser sur toutes les pages de l'application.
  */
+import { cn } from "@/lib/utils";
 export const MBOKA = {
   brand: "#10579F",
   brandHover: "#0d4a87",
@@ -35,15 +36,26 @@ export const mbokaFieldClassName =
 export const mbokaLabelClassName =
   "mb-2 block text-sm font-medium text-[#10579F] dark:text-sky-100";
 
-/** Bouton pleine largeur — identique à la branche main (login). */
-export const mbokaSubmitButtonClassName =
-  "mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#10579F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40";
+/** Padding vertical commun aux champs et boutons (réf. login). */
+const mbokaButtonBaseClassName =
+  "inline-flex h-auto min-h-[48px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm";
 
-export const mbokaButtonPrimaryClassName =
-  "inline-flex items-center justify-center gap-2 rounded-2xl bg-[#10579F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40";
+/** Bouton primaire — même hauteur que les champs, largeur au contenu. */
+export const mbokaButtonPrimaryClassName = cn(
+  mbokaButtonBaseClassName,
+  "font-semibold text-white bg-[#10579F] shadow-lg shadow-sky-200 transition hover:bg-[#0d4a87] disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-sky-950/40"
+);
 
-export const mbokaButtonOutlineClassName =
-  "inline-flex items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white px-4 py-3 text-sm font-medium text-[#10579F] transition hover:bg-sky-50 dark:border-sky-900 dark:bg-slate-900 dark:text-sky-100 dark:hover:bg-slate-800";
+/** Bouton submit login — pleine largeur uniquement sur les formulaires auth. */
+export const mbokaSubmitButtonClassName = cn(
+  mbokaButtonPrimaryClassName,
+  "mt-2 flex w-full"
+);
+
+export const mbokaButtonOutlineClassName = cn(
+  mbokaButtonBaseClassName,
+  "font-medium text-[#10579F] border border-sky-100 bg-white transition hover:bg-sky-50 dark:border-sky-900 dark:bg-slate-900 dark:text-sky-100 dark:hover:bg-slate-800"
+);
 
 /** @deprecated Utiliser mbokaFieldClassName */
 export const authFieldClassName = mbokaFieldClassName;

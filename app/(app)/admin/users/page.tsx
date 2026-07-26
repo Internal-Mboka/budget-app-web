@@ -43,7 +43,7 @@ export default async function AdminUsersPage() {
       <MbokaPageHeader
         eyebrow="Administration"
         title="Gestion des utilisateurs"
-        description="Créez, modifiez et bloquez les comptes. Réservé au PDG et au Directeur Technique."
+        description="Créez, modifiez et bloquez les comptes."
       />
 
       <UsersManagement
