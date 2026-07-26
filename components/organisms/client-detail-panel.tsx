@@ -2,8 +2,7 @@
 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ArrowLeft, Receipt } from "lucide-react";
-import Link from "next/link";
+import { Receipt } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
@@ -120,14 +119,6 @@ export function ClientDetailPanel({
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/clients"
-        className="inline-flex items-center gap-2 text-sm font-medium text-sky-600 hover:text-[#10579F] dark:text-sky-400"
-      >
-        <ArrowLeft className="size-4" />
-        Retour au répertoire
-      </Link>
-
       <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">

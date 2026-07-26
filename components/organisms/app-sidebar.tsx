@@ -7,6 +7,7 @@ import {
   LogOut,
   Menu,
   MonitorSmartphone,
+  Receipt,
   ShieldCheck,
   Users,
   UsersRound,
@@ -60,6 +61,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/revenues") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -95,7 +100,10 @@ export function AppSidebar({
       ? [
           {
             title: "Opérations",
-            items: [{ href: "/clients", label: "Clients", icon: UsersRound, testId: "nav-clients" }],
+            items: [
+              { href: "/clients", label: "Clients", icon: UsersRound, testId: "nav-clients" },
+              { href: "/revenues", label: "Revenus", icon: Receipt, testId: "nav-revenues" },
+            ],
           } satisfies NavSection,
         ]
       : []),

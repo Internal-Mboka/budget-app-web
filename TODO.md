@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -143,8 +143,8 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-16 | Saisie entrée d'argent (Studio, Mix, Véhicules, Annexes) | `[ ]` |
-| US-17 | Sécurisation UX anti-doublon | `[ ]` |
+| US-16 | Saisie entrée d'argent (Studio, Mix, Véhicules, Annexes) | `[x]` |
+| US-17 | Sécurisation UX anti-doublon | `[x]` |
 | US-18 | Échéanciers de paiement (Acompte & Solde) | `[ ]` |
 | US-19 | Annulations & pénalités | `[ ]` |
 | US-20 | Pro-forma / reçus (PDF) | `[ ]` |
@@ -257,3 +257,5 @@
 | 2026-07-26 | US-13 (Import / export base Tiers) | *En attente* | — |
 | 2026-07-26 | US-14 (Tagging & segmentation clients) | *En attente* | — |
 | 2026-07-26 | US-15 (Historique interactions & notes client) | *En attente* | — |
+| 2026-07-26 | US-16 (Saisie entrée d'argent) | *En attente* | — |
+| 2026-07-26 | US-17 (Anti-doublon saisie financière) | *En attente* | — |
