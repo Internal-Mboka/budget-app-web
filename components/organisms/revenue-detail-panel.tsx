@@ -19,6 +19,7 @@ import {
   type RecordRevenuePaymentFormState,
 } from "@/lib/actions/revenue-payments";
 import { RevenueCancellationSection } from "@/components/organisms/revenue-cancellation-section";
+import { TransactionAdjustmentsSection } from "@/components/organisms/transaction-adjustments-section";
 import { RevenuePdfActions } from "@/components/molecules/revenue-pdf-actions";
 import { RevenuePaymentHistory } from "@/components/molecules/revenue-payment-history";
 import { formatMoney } from "@/lib/currency";
@@ -40,6 +41,8 @@ import {
   getPaymentStatusPreviewHint,
 } from "@/lib/revenues/status";
 import { parseMoneyInput } from "@/lib/transactions/decimal";
+import type { TransactionAdjustmentRecord } from "@/lib/transactions/adjustments";
+import { getNetTransactionAmount } from "@/lib/transactions/adjustments";
 import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/transactions/payment-methods";
 import { cn } from "@/lib/utils";
@@ -65,6 +68,13 @@ export type RevenueDetailData = {
     name: string;
   } | null;
   canCancel?: boolean;
+  canCreateAdjustment?: boolean;
+  isAdjustment?: boolean;
+  parentTransaction?: {
+    id: string;
+    code: string;
+  } | null;
+  adjustments?: TransactionAdjustmentRecord[];
 };
 
 type RevenueDetailPanelProps = {
@@ -74,6 +84,7 @@ type RevenueDetailPanelProps = {
     paid?: "partial" | "solde";
     realized?: boolean;
     cancelled?: boolean;
+    adjusted?: boolean;
   };
 };
 
@@ -108,9 +119,11 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
       ? getPaymentStatusPreviewHint(revenue.totalAmount, projectedPaid)
       : "Saisissez le montant encaissé pour prévisualiser le nouveau statut financier.";
 
-  const showPaymentForm = canRecordRevenuePayment(revenue.status, revenue.remainingAmount);
-  const showRealizedAction = canMarkRevenueRealized(revenue.status, revenue.fulfillment);
-  const showCancelAction = Boolean(revenue.canCancel) && canCancelRevenue(revenue.status);
+  const showPaymentForm = canRecordRevenuePayment(revenue.status, revenue.remainingAmount) && !revenue.isAdjustment;
+  const showRealizedAction = canMarkRevenueRealized(revenue.status, revenue.fulfillment) && !revenue.isAdjustment;
+  const showCancelAction = Boolean(revenue.canCancel) && canCancelRevenue(revenue.status) && !revenue.isAdjustment;
+  const adjustments = revenue.adjustments ?? [];
+  const netAmount = getNetTransactionAmount(revenue.totalAmount, adjustments);
 
   useEffect(() => {
     if (flash?.created) {
@@ -123,8 +136,10 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
       toast.success("Prestation marquée comme réalisée.");
     } else if (flash?.cancelled) {
       toast.success("Revenu annulé.");
+    } else if (flash?.adjusted) {
+      toast.success("Avoir / régularisation enregistré.");
     }
-  }, [flash?.created, flash?.paid, flash?.realized, flash?.cancelled, revenue.code]);
+  }, [flash?.created, flash?.paid, flash?.realized, flash?.cancelled, flash?.adjusted, revenue.code]);
 
   useEffect(() => {
     if (!paymentState || paymentState === handledPaymentRef.current || paymentState.success) {
@@ -146,6 +161,22 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
 
   return (
     <div className="space-y-6">
+      {revenue.isAdjustment && revenue.parentTransaction ? (
+        <div
+          className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"
+          data-testid="revenue-adjustment-banner"
+        >
+          Écriture de régularisation liée à{" "}
+          <Link
+            href={`/revenues/${revenue.parentTransaction.id}`}
+            className="font-semibold underline"
+          >
+            {revenue.parentTransaction.code}
+          </Link>
+          .
+        </div>
+      ) : null}
+
       <section className={cn(mbokaPanelClassName, "space-y-5 p-5 sm:p-6")} data-testid="revenue-detail-panel">
         <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-50">
@@ -197,8 +228,13 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
           <div className="rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 dark:border-sky-900 dark:bg-slate-800/60">
             <p className="text-xs font-medium uppercase tracking-wide text-sky-500">Total</p>
             <p className="mt-1 text-lg font-semibold text-[#10579F] dark:text-sky-50" data-testid="revenue-detail-total">
-              {formatMoney(revenue.totalAmount)}
+              {formatMoney(revenue.isAdjustment ? revenue.totalAmount : netAmount)}
             </p>
+            {!revenue.isAdjustment && adjustments.length > 0 ? (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Initial {formatMoney(revenue.totalAmount)}
+              </p>
+            ) : null}
           </div>
           <div className="rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 dark:border-sky-900 dark:bg-slate-800/60">
             <p className="text-xs font-medium uppercase tracking-wide text-sky-500">Encaissé</p>
@@ -329,6 +365,17 @@ export function RevenueDetailPanel({ revenue, flash }: RevenueDetailPanelProps) 
           totalAmount={revenue.totalAmount}
           paidAmount={revenue.paidAmount}
           cancellation={revenue.cancellation}
+        />
+      ) : null}
+
+      {!revenue.isAdjustment ? (
+        <TransactionAdjustmentsSection
+          transactionId={revenue.id}
+          parentCode={revenue.code}
+          parentTotalAmount={revenue.totalAmount}
+          detailBasePath="/revenues"
+          adjustments={adjustments}
+          canCreate={Boolean(revenue.canCreateAdjustment)}
         />
       ) : null}
     </div>

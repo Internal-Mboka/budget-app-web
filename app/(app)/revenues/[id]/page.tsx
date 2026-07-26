@@ -8,13 +8,14 @@ import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { getRevenuePaymentHistoryForDisplay } from "@/lib/revenues/payment-history";
 import type { RevenueMetadata } from "@/lib/revenues/metadata";
 import { PERMISSIONS } from "@/lib/permissions";
+import { loadTransactionAdjustments } from "@/lib/transactions/load-adjustments";
 import { decimalToNumber } from "@/lib/transactions/decimal";
 import { prisma } from "@/lib/prisma";
 import type { RevenueCategory } from "@prisma/client";
 
 type RevenueDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paid?: string; realized?: string; created?: string; cancelled?: string }>;
+  searchParams: Promise<{ paid?: string; realized?: string; created?: string; cancelled?: string; adjusted?: string }>;
 };
 
 export default async function RevenueDetailPage({ params, searchParams }: RevenueDetailPageProps) {
@@ -36,6 +37,14 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
       paymentMethod: true,
       metadata: true,
       createdAt: true,
+      isAdjustment: true,
+      parentTransactionId: true,
+      parentTransaction: {
+        select: {
+          id: true,
+          code: true,
+        },
+      },
       client: {
         select: {
           id: true,
@@ -50,7 +59,9 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
   }
 
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_CANCEL_ADJUSTMENT);
+  const canCreateAdjustment = canCancel;
   const cancellation = parseRevenueCancellation(revenue.metadata);
+  const adjustments = revenue.isAdjustment ? [] : await loadTransactionAdjustments(revenue.id);
   const paymentHistory = getRevenuePaymentHistoryForDisplay(
     revenue.metadata,
     decimalToNumber(revenue.paidAmount),
@@ -62,6 +73,7 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
     paid: query.paid === "solde" ? ("solde" as const) : query.paid === "partial" ? ("partial" as const) : undefined,
     realized: query.realized === "1",
     cancelled: query.cancelled === "1",
+    adjusted: query.adjusted === "1",
   };
 
   return (
@@ -90,6 +102,10 @@ export default async function RevenueDetailPage({ params, searchParams }: Revenu
           createdAt: revenue.createdAt.toISOString(),
           client: revenue.client,
           canCancel,
+          canCreateAdjustment,
+          isAdjustment: revenue.isAdjustment,
+          parentTransaction: revenue.parentTransaction,
+          adjustments,
         }}
         flash={flash}
       />
