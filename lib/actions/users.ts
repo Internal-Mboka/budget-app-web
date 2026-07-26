@@ -13,7 +13,18 @@ import {
 } from "@/lib/validations/user";
 
 export type UserActionResult =
-  | { success: true }
+  | {
+      success: true;
+      user?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        isActive: boolean;
+        roleId: number;
+        roleName: string;
+      };
+    }
   | { success: false; error: string };
 
 export async function createUserAction(formData: FormData): Promise<UserActionResult> {
@@ -50,8 +61,8 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await prisma.$transaction(async (tx) => {
-    const created = await tx.user.create({
+  const created = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
       data: {
         firstName,
         lastName,
@@ -65,22 +76,33 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
       data: {
         action: "USER_CREATED",
         entity: "User",
-        entityId: created.id,
+        entityId: user.id,
         userId: session.user.id,
         details: {
-          targetEmail: created.email,
+          targetEmail: user.email,
           targetRole: role.name,
           performedBy: session.user.email,
         },
       },
     });
 
-    return created;
+    return user;
   });
 
   revalidatePath("/admin/users");
 
-  return { success: true };
+  return {
+    success: true,
+    user: {
+      id: created.id,
+      firstName: created.firstName,
+      lastName: created.lastName,
+      email: created.email,
+      isActive: created.isActive,
+      roleId: created.roleId,
+      roleName: role.name,
+    },
+  };
 }
 
 export async function updateUserAction(formData: FormData): Promise<UserActionResult> {

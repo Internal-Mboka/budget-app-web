@@ -17,20 +17,18 @@ export function AppShell({ user, children }: AppShellProps) {
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
 
   return (
-    <div className={cn("min-h-screen", mbokaPageClassName)}>
-      <div className="flex min-h-screen">
-        <AppSidebar
-          userName={user.name ?? "Utilisateur"}
-          roleName={user.roleName}
-          dashboardPath={dashboardPath}
-          canManageUsers={canManageUsers}
-        />
+    <div className={cn("flex h-dvh flex-col overflow-hidden", mbokaPageClassName)}>
+      <AppSidebar
+        userName={user.name ?? "Utilisateur"}
+        roleName={user.roleName}
+        dashboardPath={dashboardPath}
+        canManageUsers={canManageUsers}
+      />
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <div className="mx-auto max-w-6xl">{children}</div>
-          </main>
-        </div>
+      <div className="flex min-h-0 flex-1 flex-col lg:pl-72">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   );

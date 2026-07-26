@@ -9,7 +9,7 @@ type LogoProps = {
 };
 
 const badgeSizeMap = {
-  sm: { box: "h-10 w-10", image: 40 },
+  sm: { box: "h-11 w-11", image: 44 },
   md: { box: "h-16 w-16", image: 64 },
   lg: { box: "h-20 w-20", image: 80 },
 } as const;
@@ -45,7 +45,7 @@ export function Logo({ className, variant = "auth", size = "md" }: LogoProps) {
         alt="Mboka Budget"
         width={dimensions.image}
         height={dimensions.image}
-        className="h-[62%] w-[62%] object-contain brightness-0 invert"
+        className="h-[88%] w-[88%] object-contain brightness-0 invert"
         priority
       />
     </div>

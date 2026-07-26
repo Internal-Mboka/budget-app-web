@@ -1,5 +1,4 @@
-import { UserCreateForm } from "@/components/organisms/user-create-form";
-import { UsersList } from "@/components/organisms/users-list";
+import { UsersManagement } from "@/components/organisms/users-management";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -47,8 +46,11 @@ export default async function AdminUsersPage() {
         description="Créez, modifiez et bloquez les comptes. Réservé au PDG et au Directeur Technique."
       />
 
-      <UserCreateForm roles={roles} />
-      <UsersList users={userRows} roles={roles} currentUserId={session.user.id} />
+      <UsersManagement
+        initialUsers={userRows}
+        roles={roles}
+        currentUserId={session.user.id}
+      />
     </div>
   );
 }

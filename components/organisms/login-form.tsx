@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Logo } from "@/components/atoms/logo";
+import { PasswordInput } from "@/components/atoms/password-input";
 import { ThemeToggle } from "@/components/atoms/theme-toggle";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -123,12 +124,10 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
                 <FieldLabel htmlFor="password" className={mbokaLabelClassName}>
                   Mot de passe
                 </FieldLabel>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className={mbokaFieldClassName}
                   {...form.register("password")}
                 />
                 <FieldError errors={[form.formState.errors.password]} />
