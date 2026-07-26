@@ -47,7 +47,9 @@ export default auth((request) => {
   }
 
   if (
-    (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) &&
+    (pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/clients")) &&
     !canAccessRoute(pathname, session!.user.permissions)
   ) {
     return NextResponse.redirect(

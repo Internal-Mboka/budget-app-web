@@ -9,6 +9,7 @@ import {
   MonitorSmartphone,
   ShieldCheck,
   Users,
+  UsersRound,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,6 +33,7 @@ type AppSidebarProps = {
   roleName: string;
   dashboardPath: string;
   canManageUsers: boolean;
+  canManageClients: boolean;
 };
 
 function getInitials(name: string): string {
@@ -48,6 +50,7 @@ export function AppSidebar({
   roleName,
   dashboardPath,
   canManageUsers,
+  canManageClients,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -61,6 +64,10 @@ export function AppSidebar({
     { href: "/account/two-factor", label: "2FA", icon: Fingerprint },
   ];
 
+  if (canManageClients) {
+    navItems.splice(1, 0, { href: "/clients", label: "Clients", icon: UsersRound });
+  }
+
   if (canManageUsers) {
     navItems.push({ href: "/admin/users", label: "Utilisateurs", icon: Users });
     navItems.push({ href: "/admin/roles", label: "Permissions", icon: ShieldCheck });
@@ -69,6 +76,10 @@ export function AppSidebar({
   function isActive(href: string) {
     if (href === dashboardPath) {
       return pathname === href || pathname.startsWith("/dashboard");
+    }
+
+    if (href === "/clients") {
+      return pathname === href || pathname.startsWith(`${href}/`);
     }
 
     if (href === "/account/password") {
@@ -153,7 +164,9 @@ export function AppSidebar({
                       ? "nav-sessions"
                       : item.href === "/account/two-factor"
                         ? "nav-two-factor"
-                        : undefined
+                        : item.href === "/clients"
+                          ? "nav-clients"
+                          : undefined
               }
               onClick={() => setMobileOpen(false)}
                 className={cn(
