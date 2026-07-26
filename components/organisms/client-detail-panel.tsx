@@ -9,6 +9,7 @@ import { useMemo, useState, useEffect } from "react";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { ClientEditForm, type ClientEditData } from "@/components/organisms/client-edit-form";
+import { ClientInteractionsPanel } from "@/components/organisms/client-interactions-panel";
 import { ClientTagsEditor } from "@/components/organisms/client-tags-editor";
 import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { getClientCategoryLabel } from "@/lib/clients/categories";
@@ -21,6 +22,7 @@ import {
   PAYMENT_STATUS_FILTER_OPTIONS,
 } from "@/lib/transactions/labels";
 import { cn } from "@/lib/utils";
+import type { ClientNoteItem } from "@/lib/actions/client-notes";
 
 export type ClientDetailData = {
   id: string;
@@ -48,6 +50,8 @@ export type ClientTransactionItem = {
 
 type ClientDetailPanelProps = {
   client: ClientDetailData;
+  interactions: ClientNoteItem[];
+  interactionsPagination: PaginationMeta;
   transactions: ClientTransactionItem[];
   transactionsPagination: PaginationMeta;
   stats: {
@@ -92,6 +96,8 @@ function TransactionDate({ isoDate }: { isoDate: string }) {
 
 export function ClientDetailPanel({
   client: initialClient,
+  interactions,
+  interactionsPagination,
   transactions,
   transactionsPagination,
   stats,
@@ -187,6 +193,21 @@ export function ClientDetailPanel({
           />
         </section>
       ) : null}
+
+      <ClientInteractionsPanel
+        clientId={client.id}
+        initialNotes={interactions}
+        pagination={interactionsPagination}
+        buildNotesHref={(page, pageSize) =>
+          buildClientDetailHref(client.id, {
+            txPage: transactionsPagination.page,
+            txPageSize: transactionsPagination.pageSize,
+            notesPage: page,
+            notesPageSize: pageSize ?? interactionsPagination.pageSize,
+          })
+        }
+        canAddNote={canEditClient}
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
         <article className={cn(mbokaPanelClassName, "p-5")} data-testid="client-stat-total-spent">

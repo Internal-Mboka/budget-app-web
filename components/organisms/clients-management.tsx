@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Pencil, Tag, UsersRound } from "lucide-react";
+import { Loader2, MessageSquareText, Pencil, Tag, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { ClientTagBadge } from "@/components/molecules/client-tag-badge";
 import { ClientEditDialog } from "@/components/organisms/client-edit-dialog";
+import { ClientInteractionsDialog } from "@/components/organisms/client-interactions-dialog";
 import type { ClientEditData } from "@/components/organisms/client-edit-form";
 import { ClientTagFilter } from "@/components/organisms/client-tag-filter";
 import { ClientTagsDialog } from "@/components/organisms/client-tags-dialog";
@@ -74,6 +75,8 @@ export function ClientsManagement({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [taggingClient, setTaggingClient] = useState<ClientListItem | null>(null);
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false);
+  const [notesClient, setNotesClient] = useState<{ id: string; name: string } | null>(null);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
 
   useEffect(() => {
     setClients(initialClients);
@@ -196,6 +199,11 @@ export function ClientsManagement({
     setTaggingClient((current) => (current?.id === clientId ? { ...current, tags } : current));
   }
 
+  function handleOpenNotes(client: ClientListItem) {
+    setNotesClient({ id: client.id, name: client.name });
+    setNotesDialogOpen(true);
+  }
+
   return (
     <div className="space-y-8">
       <section className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
@@ -305,7 +313,7 @@ export function ClientsManagement({
               <article
                 key={client.id}
                 data-testid={`client-row-${client.id}`}
-                className="flex items-start gap-4 rounded-2xl border border-sky-100 bg-white/80 px-4 py-4 dark:border-sky-900 dark:bg-slate-900/50"
+                className="flex items-center gap-3 rounded-2xl border border-sky-100 bg-white/80 px-4 py-3 dark:border-sky-900 dark:bg-slate-900/50 sm:gap-4 sm:py-3.5"
               >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-50">
                   <UsersRound className="size-5" />
@@ -344,38 +352,55 @@ export function ClientsManagement({
                   ) : null}
                 </div>
 
-                <div className="flex shrink-0 flex-col gap-2">
                 {canEditClient && !client.id.startsWith("optimistic-") ? (
-                  <>
-                  <button
-                    type="button"
-                    data-testid={`client-tags-button-${client.id}`}
-                    aria-label={`Tags de ${client.name}`}
-                    className={cn(
-                      mbokaButtonOutlineClassName,
-                      "px-3 py-2 text-xs"
-                    )}
-                    onClick={() => handleOpenTags(client)}
+                  <div
+                    className="flex shrink-0 flex-wrap items-center justify-end gap-1.5"
+                    data-testid={`client-row-actions-${client.id}`}
                   >
-                    <Tag className="size-3.5" />
-                    Tags
-                  </button>
-                  <button
-                    type="button"
-                    data-testid={`client-edit-button-${client.id}`}
-                    aria-label={`Modifier ${client.name}`}
-                    className={cn(
-                      mbokaButtonOutlineClassName,
-                      "px-3 py-2 text-xs"
-                    )}
-                    onClick={() => handleOpenEdit(client)}
-                  >
-                    <Pencil className="size-3.5" />
-                    Modifier
-                  </button>
-                  </>
+                    <button
+                      type="button"
+                      data-testid={`client-notes-button-${client.id}`}
+                      aria-label={`Notes de ${client.name}`}
+                      title="Notes"
+                      className={cn(
+                        mbokaButtonOutlineClassName,
+                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                      )}
+                      onClick={() => handleOpenNotes(client)}
+                    >
+                      <MessageSquareText className="size-3.5" />
+                      <span className="hidden sm:inline">Notes</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`client-tags-button-${client.id}`}
+                      aria-label={`Tags de ${client.name}`}
+                      title="Tags"
+                      className={cn(
+                        mbokaButtonOutlineClassName,
+                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                      )}
+                      onClick={() => handleOpenTags(client)}
+                    >
+                      <Tag className="size-3.5" />
+                      <span className="hidden sm:inline">Tags</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`client-edit-button-${client.id}`}
+                      aria-label={`Modifier ${client.name}`}
+                      title="Modifier"
+                      className={cn(
+                        mbokaButtonOutlineClassName,
+                        "px-2.5 py-1.5 text-[11px] sm:px-3"
+                      )}
+                      onClick={() => handleOpenEdit(client)}
+                    >
+                      <Pencil className="size-3.5" />
+                      <span className="hidden sm:inline">Modifier</span>
+                    </button>
+                  </div>
                 ) : null}
-                </div>
               </article>
             ))}
           </div>
@@ -401,6 +426,12 @@ export function ClientsManagement({
         open={tagsDialogOpen}
         onOpenChange={setTagsDialogOpen}
         onTagsChange={handleTagsChange}
+      />
+
+      <ClientInteractionsDialog
+        client={notesClient}
+        open={notesDialogOpen}
+        onOpenChange={setNotesDialogOpen}
       />
     </div>
   );

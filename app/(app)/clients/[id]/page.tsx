@@ -9,7 +9,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 
 type ClientDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ txPage?: string; txPageSize?: string }>;
+  searchParams: Promise<{ txPage?: string; txPageSize?: string; notesPage?: string; notesPageSize?: string }>;
 };
 
 export default async function ClientDetailPage({ params, searchParams }: ClientDetailPageProps) {
@@ -31,6 +31,10 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     page: query.txPage,
     pageSize: query.txPageSize,
   });
+  const notesPaginationParams = parsePagination({
+    page: query.notesPage,
+    pageSize: query.notesPageSize,
+  });
 
   const client = await prisma.client.findUnique({
     where: { id },
@@ -51,7 +55,7 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     notFound();
   }
 
-  const [txTotal, transactions, statsSource] = await Promise.all([
+  const [txTotal, transactions, statsSource, notesTotal, interactions] = await Promise.all([
     prisma.transaction.count({ where: { clientId: id } }),
     prisma.transaction.findMany({
       where: { clientId: id },
@@ -78,6 +82,26 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
         paidAmount: true,
         remainingAmount: true,
         status: true,
+      },
+    }),
+    prisma.clientNote.count({ where: { clientId: id } }),
+    prisma.clientNote.findMany({
+      where: { clientId: id },
+      orderBy: { createdAt: "desc" },
+      skip: notesPaginationParams.skip,
+      take: notesPaginationParams.take,
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     }),
   ]);
@@ -115,6 +139,23 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
     txPagination.pageSize
   );
 
+  const interactionsPagination = buildPaginationMeta(
+    notesTotal,
+    notesPaginationParams.page,
+    notesPaginationParams.pageSize
+  );
+
+  const interactionRows = interactions.map((note) => ({
+    id: note.id,
+    content: note.content,
+    createdAt: note.createdAt.toISOString(),
+    author: {
+      id: note.author.id,
+      name: `${note.author.firstName} ${note.author.lastName}`.trim(),
+      email: note.author.email,
+    },
+  }));
+
   return (
     <ClientDetailPanel
       client={{
@@ -128,6 +169,8 @@ export default async function ClientDetailPage({ params, searchParams }: ClientD
         tags: client.tags,
         createdAt: client.createdAt.toISOString(),
       }}
+      interactions={interactionRows}
+      interactionsPagination={interactionsPagination}
       transactions={transactionRows}
       transactionsPagination={transactionsPagination}
       stats={stats}
