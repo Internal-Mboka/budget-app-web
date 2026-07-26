@@ -194,6 +194,19 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
     };
   } catch (error) {
     console.error("createRevenueAction failed", error);
+
+    if (isRetryableDbConnectionError(error)) {
+      return {
+        success: false,
+        error: "Connexion base de données instable. Réessayez dans quelques secondes.",
+      };
+    }
+
     return { success: false, error: "Impossible d'enregistrer le revenu." };
   }
+}
+
+function isRetryableDbConnectionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /fetch failed|ETIMEDOUT|NeonDbError|Error connecting to database|ErrorEvent/i.test(message);
 }
