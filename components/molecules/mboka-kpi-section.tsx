@@ -54,7 +54,7 @@ export function MbokaKpiBoard({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">{children}</div>
+      <div className="grid items-start gap-6 lg:grid-cols-2">{children}</div>
     </section>
   );
 }
