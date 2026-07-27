@@ -28,6 +28,7 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [isPinging, setIsPinging] = useState(false);
+  const [webhookEnabled, setWebhookEnabled] = useState(settings.webhookEnabled);
 
   const defaultThreshold = settings.adjustmentThresholdUsd ?? getExpenseApprovalThreshold();
   const updatedLabel = settings.updatedByUserId
@@ -112,10 +113,16 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
               description="Discord, Slack ou autre canal de discussion."
               defaultChecked={settings.webhookEnabled}
               testId="alert-settings-webhook"
+              onCheckedChange={setWebhookEnabled}
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div
+            className={cn(
+              "grid gap-4 md:grid-cols-2",
+              !webhookEnabled && "pointer-events-none opacity-50"
+            )}
+          >
             <div>
               <label htmlFor="webhookUrl" className={mbokaLabelClassName}>
                 Lien du canal
@@ -127,9 +134,10 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
                 defaultValue={settings.webhookUrl ?? ""}
                 placeholder="Coller le lien fourni par Discord ou Slack…"
                 className={mbokaFieldClassName}
+                disabled={!webhookEnabled}
                 data-testid="alert-settings-webhook-url"
               />
-              {settings.envFallbackActive ? (
+              {webhookEnabled && settings.envFallbackActive ? (
                 <p className="mt-1 text-xs text-slate-500">
                   Une adresse est déjà configurée côté serveur — laissez vide pour l&apos;utiliser.
                 </p>
@@ -149,12 +157,15 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
                 }
                 className={mbokaFieldClassName}
                 autoComplete="new-password"
+                disabled={!webhookEnabled}
                 data-testid="alert-settings-webhook-secret"
               />
               <p className="mt-1 text-xs text-slate-500">
-                {settings.webhookSecretConfigured
-                  ? "Clé enregistrée — protège les messages envoyés vers votre canal."
-                  : "Optionnel — sécurise les messages envoyés vers votre canal."}
+                {webhookEnabled
+                  ? settings.webhookSecretConfigured
+                    ? "Clé enregistrée — protège les messages envoyés vers votre canal."
+                    : "Optionnel — sécurise les messages envoyés vers votre canal."
+                  : "Activez la messagerie d'équipe pour configurer ce canal."}
               </p>
             </div>
           </div>
@@ -244,18 +255,26 @@ function ToggleField({
   description,
   defaultChecked,
   testId,
+  onCheckedChange,
 }: {
   name: string;
   label: string;
   description: string;
   defaultChecked: boolean;
   testId: string;
+  onCheckedChange?: (checked: boolean) => void;
 }) {
   return (
     <label className="flex h-full cursor-pointer flex-col gap-2 rounded-2xl border border-sky-100 bg-white/80 p-3 dark:border-sky-900 dark:bg-slate-900/50">
       <span className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-[#10579F] dark:text-sky-50">{label}</span>
-        <input type="checkbox" name={name} defaultChecked={defaultChecked} data-testid={testId} />
+        <input
+          type="checkbox"
+          name={name}
+          defaultChecked={defaultChecked}
+          data-testid={testId}
+          onChange={(event) => onCheckedChange?.(event.target.checked)}
+        />
       </span>
       <span className="text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</span>
     </label>

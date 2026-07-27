@@ -62,6 +62,10 @@ export async function updateAlertSettingsAction(formData: FormData): Promise<Ale
       ? input.webhookSecret
       : existing?.webhookSecret ?? null;
 
+  const nextWebhookUrl = input.webhookEnabled
+    ? input.webhookUrl
+    : (existing?.webhookUrl ?? input.webhookUrl);
+
   await prisma.alertSettings.upsert({
     where: { id: "default" },
     create: {
@@ -69,7 +73,7 @@ export async function updateAlertSettingsAction(formData: FormData): Promise<Ale
       alertsEnabled: input.alertsEnabled,
       emailEnabled: input.emailEnabled,
       webhookEnabled: input.webhookEnabled,
-      webhookUrl: input.webhookUrl,
+      webhookUrl: nextWebhookUrl,
       webhookSecret: nextSecret,
       adjustmentThresholdUsd: input.adjustmentThresholdUsd,
       disabledAlertTypes: input.disabledAlertTypes,
@@ -79,7 +83,7 @@ export async function updateAlertSettingsAction(formData: FormData): Promise<Ale
       alertsEnabled: input.alertsEnabled,
       emailEnabled: input.emailEnabled,
       webhookEnabled: input.webhookEnabled,
-      webhookUrl: input.webhookUrl,
+      webhookUrl: nextWebhookUrl,
       webhookSecret: nextSecret,
       adjustmentThresholdUsd: input.adjustmentThresholdUsd,
       disabledAlertTypes: input.disabledAlertTypes,
