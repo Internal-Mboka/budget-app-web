@@ -1,6 +1,7 @@
 import { canManageAlertSettings } from "@/lib/alerts/access";
+import { canAccessFinancialExports } from "@/lib/exports/access";
 import type { PermissionSlug, RoleName } from "@/lib/permissions";
-import { PERMISSIONS } from "@/lib/permissions";
+import { PERMISSIONS, ROLES } from "@/lib/permissions";
 
 export const PUBLIC_PATHS = [
   "/login",
@@ -25,12 +26,10 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
 
 export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: PermissionSlug }> = [
   { prefix: "/admin", permission: PERMISSIONS.USERS_MANAGE },
-  { prefix: "/exports", permission: PERMISSIONS.DASHBOARD_FINANCIAL },
   { prefix: "/audit", permission: PERMISSIONS.AUDIT_VIEW },
   { prefix: "/clients", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },
   { prefix: "/revenues", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },
   { prefix: "/expenses", permission: PERMISSIONS.FINANCE_CREATE_EXPENSE },
-  { prefix: "/exports", permission: PERMISSIONS.DASHBOARD_FINANCIAL },
 ];
 
 type DashboardSessionUser = {
@@ -64,6 +63,13 @@ export function canAccessRoute(
 ): boolean {
   if (pathname === "/admin/alerts" || pathname.startsWith("/admin/alerts/")) {
     return roleName ? canManageAlertSettings(roleName) : false;
+  }
+
+  if (pathname === "/exports" || pathname.startsWith("/exports/")) {
+    return canAccessFinancialExports({
+      roleName: roleName ?? ROLES.OBSERVATEUR,
+      permissions,
+    });
   }
 
   for (const { prefix, permission } of ROUTE_PREFIX_PERMISSIONS) {

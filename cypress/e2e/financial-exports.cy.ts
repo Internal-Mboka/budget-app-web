@@ -20,6 +20,7 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
     cy.get('[data-testid="financial-export-pdf"]').should("be.visible");
     cy.get('[data-testid="financial-export-expense-justificatifs"]').should("be.visible");
     cy.get('[data-testid="financial-export-csv-download"]').should("be.visible");
+    cy.get('[data-testid="exports-history-link"]').should("be.visible");
   });
 
   it("applique une période et conserve les paramètres URL", () => {

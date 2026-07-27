@@ -219,7 +219,7 @@
 <!-- US-58 : /admin/alerts (DT uniquement) — toggles canaux, webhook URL/secret, seuil régularisation, types désactivables, ping test. Push web = prochaine version. -->
 | US-59 | Historique exports & stockage | `[x]` |
 
-<!-- US-59 : GeneratedExport + storage/exports — historique /exports/history, téléchargement archive ou régénération. -->
+<!-- US-59 : GeneratedExport + storage/exports — historique /exports/history (PDG, DT, Comptable), téléchargement archive ou régénération. -->
 | US-60 | Queue sync hors-ligne transactions | `[ ]` |
 
 ### SPEC 9 — Ergonomie UX & Robustesse

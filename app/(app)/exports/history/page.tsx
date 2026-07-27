@@ -4,26 +4,15 @@ import { ArrowLeft } from "lucide-react";
 import { ExportsHistoryFilters } from "@/components/organisms/exports-history-filters";
 import { ExportsHistoryTable } from "@/components/organisms/exports-history-table";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
-import { hasAnyPermission, requireSession } from "@/lib/auth/session";
+import { requireFinancialExportAccess } from "@/lib/exports/access";
 import { loadExportHistory, parseExportHistoryFilters } from "@/lib/exports/load-export-history";
-import { PERMISSIONS } from "@/lib/permissions";
-import { redirect } from "next/navigation";
 
 type ExportsHistoryPageProps = {
   searchParams: Promise<{ from?: string; to?: string; kind?: string }>;
 };
 
 export default async function ExportsHistoryPage({ searchParams }: ExportsHistoryPageProps) {
-  const session = await requireSession();
-
-  if (
-    !hasAnyPermission(session.user.permissions, [
-      PERMISSIONS.DASHBOARD_FULL,
-      PERMISSIONS.DASHBOARD_FINANCIAL,
-    ])
-  ) {
-    redirect("/login?error=forbidden");
-  }
+  await requireFinancialExportAccess();
 
   const query = await searchParams;
   const filters = parseExportHistoryFilters(query);

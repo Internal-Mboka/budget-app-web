@@ -50,6 +50,7 @@ export default auth((request) => {
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/admin") ||
       pathname.startsWith("/audit") ||
+      pathname.startsWith("/exports") ||
       pathname.startsWith("/clients") ||
       pathname.startsWith("/revenues") ||
       pathname.startsWith("/expenses")) &&
