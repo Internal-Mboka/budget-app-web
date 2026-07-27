@@ -38,26 +38,28 @@ export function DashboardAnalyticsPanel({
   return (
     <div className="space-y-4" data-testid="dashboard-analytics-panel">
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
-        <MbokaPeriodSwitch
-          label="Période des indicateurs"
-          testId="dashboard-kpi-period-switch"
-          value={kpiPeriod}
-          options={KPI_PERIOD_OPTIONS.map((value) => ({
-            value,
-            label: getKpiPeriodLabel(value),
-          }))}
-          buildHref={(value) =>
-            buildFinancialDashboardHref(basePath, {
-              kpiPeriod: value,
-              kpiScope,
-              granularity,
-              categoryPeriod,
-              occupancyPeriod,
-              projectionPeriod,
-              projectionScenario,
-            })
-          }
-        />
+        {kpiScope === "period" ? (
+          <MbokaPeriodSwitch
+            label="Période des indicateurs"
+            testId="dashboard-kpi-period-switch"
+            value={kpiPeriod}
+            options={KPI_PERIOD_OPTIONS.map((value) => ({
+              value,
+              label: getKpiPeriodLabel(value),
+            }))}
+            buildHref={(value) =>
+              buildFinancialDashboardHref(basePath, {
+                kpiPeriod: value,
+                kpiScope,
+                granularity,
+                categoryPeriod,
+                occupancyPeriod,
+                projectionPeriod,
+                projectionScenario,
+              })
+            }
+          />
+        ) : null}
 
         <MbokaPeriodSwitch
           label="Granularité du graphique"

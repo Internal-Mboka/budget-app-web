@@ -18,8 +18,8 @@ type MbokaKpiCardProps = {
 };
 
 const scopeSurfaceClassName = {
-  period: "bg-sky-50/70 dark:bg-sky-950/20",
-  global: "bg-slate-50/80 dark:bg-slate-800/35",
+  period: "border border-sky-100/80 bg-sky-50/50 dark:border-sky-900/80 dark:bg-sky-950/25",
+  global: "border border-slate-100/80 bg-slate-50/60 dark:border-slate-800/80 dark:bg-slate-800/30",
 } as const;
 
 const scopeBadgeClassName = {

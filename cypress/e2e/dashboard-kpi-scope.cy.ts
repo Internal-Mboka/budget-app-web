@@ -36,12 +36,20 @@ describe("Mboka Budget — SPEC 10 US-68 Toggle portée KPI", () => {
     cy.contains("Total historique des montants enregistrés").should("be.visible");
   });
 
-  it("préserve kpiScope lors d'un changement de période graphique", () => {
+  it("masque le filtre période des indicateurs en mode Global", () => {
     cy.visit("/dashboard?kpiScope=global");
     cy.dismissPwaPrompt();
 
-    cy.get('[data-testid="dashboard-kpi-period-switch-quarter"]').click();
+    cy.get('[data-testid="dashboard-kpi-period-switch"]').should("not.exist");
+    cy.get('[data-testid="dashboard-granularity-switch"]').should("be.visible");
+  });
+
+  it("préserve kpiScope lors d'un changement de granularité", () => {
+    cy.visit("/dashboard?kpiScope=global");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="dashboard-granularity-day"]').click();
     cy.location("search").should("include", "kpiScope=global");
-    cy.location("search").should("include", "kpiPeriod=quarter");
+    cy.location("search").should("include", "granularity=day");
   });
 });
