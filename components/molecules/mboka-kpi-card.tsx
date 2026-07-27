@@ -14,8 +14,13 @@ type MbokaKpiCardProps = {
   testId?: string;
   className?: string;
   format?: "money" | "percent" | "hours" | "number";
-  size?: "default" | "compact";
+  size?: "default" | "compact" | "stat";
 };
+
+const scopeAccentClassName = {
+  period: "border-l-[#10579F] dark:border-l-sky-400",
+  global: "border-l-slate-300 dark:border-l-slate-600",
+} as const;
 
 export function MbokaKpiCard({
   label,
@@ -29,6 +34,7 @@ export function MbokaKpiCard({
   size = "default",
 }: MbokaKpiCardProps) {
   const isCompact = size === "compact";
+  const isStat = size === "stat";
 
   const displayValue =
     format === "percent"
@@ -39,6 +45,40 @@ export function MbokaKpiCard({
           ? value.toLocaleString("fr-FR")
           : formatMoney(value);
 
+  if (isStat) {
+    return (
+      <article
+        className={cn(
+          "border-l-2 pl-3",
+          scope ? scopeAccentClassName[scope] : "border-l-sky-200",
+          className
+        )}
+        data-testid={testId}
+        data-scope={scope}
+        title={hint}
+      >
+        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          {label}
+        </p>
+        <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-[#10579F] dark:text-sky-50 sm:text-2xl">
+          {displayValue}
+        </p>
+        {delta ? (
+          <MbokaKpiTrend
+            delta={delta}
+            testId={testId ? `${testId}-delta` : undefined}
+            className="mt-1.5 text-[11px]"
+          />
+        ) : null}
+        {scope ? (
+          <span className="sr-only" data-testid={testId ? `${testId}-scope` : undefined}>
+            {scope === "period" ? "Période" : "Global"}
+          </span>
+        ) : null}
+      </article>
+    );
+  }
+
   return (
     <article
       className={cn(
@@ -47,6 +87,7 @@ export function MbokaKpiCard({
         className
       )}
       data-testid={testId}
+      data-scope={scope}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <p

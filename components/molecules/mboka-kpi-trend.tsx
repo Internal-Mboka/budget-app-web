@@ -11,6 +11,7 @@ export type KpiTrendDelta = {
 type MbokaKpiTrendProps = {
   delta: KpiTrendDelta;
   testId?: string;
+  className?: string;
 };
 
 function getTrendPresentation(delta: KpiTrendDelta) {
@@ -45,13 +46,13 @@ function getTrendPresentation(delta: KpiTrendDelta) {
   };
 }
 
-export function MbokaKpiTrend({ delta, testId }: MbokaKpiTrendProps) {
+export function MbokaKpiTrend({ delta, testId, className }: MbokaKpiTrendProps) {
   const trend = getTrendPresentation(delta);
   const Icon = trend.Icon;
 
   return (
     <p
-      className={cn("mt-2 flex items-center gap-1 text-xs font-medium", trend.className)}
+      className={cn("mt-2 flex items-center gap-1 text-xs font-medium", trend.className, className)}
       data-testid={testId}
     >
       <Icon className="size-3.5 shrink-0" aria-hidden="true" />
