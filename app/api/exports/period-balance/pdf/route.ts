@@ -1,26 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/lib/auth/get-session";
-import { hasAnyPermission } from "@/lib/auth/session";
+import { assertFinancialExportSession } from "@/lib/exports/access";
+import { persistGeneratedExport } from "@/lib/exports/persist-generated-export";
 import { loadPeriodBalancePdfData } from "@/lib/period-closure/close-period";
 import { getPeriodBalancePdfFilename } from "@/lib/period-closure/load-period-balance";
 import { renderPeriodBalancePdf } from "@/lib/period-closure/pdf/render-period-balance-pdf";
-import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET(request: Request) {
-  const session = await getSession();
+  const auth = await assertFinancialExportSession();
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
-  }
-
-  if (
-    !hasAnyPermission(session.user.permissions, [
-      PERMISSIONS.DASHBOARD_FULL,
-      PERMISSIONS.DASHBOARD_FINANCIAL,
-    ])
-  ) {
-    return NextResponse.json({ error: "Bilan réservé au PDG et au Comptable." }, { status: 403 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const url = new URL(request.url);
@@ -44,6 +34,16 @@ export async function GET(request: Request) {
   try {
     const pdfBuffer = await renderPeriodBalancePdf(data);
     const filename = getPeriodBalancePdfFilename(data.documentCode, data.isPreview);
+    const bytes = Buffer.from(pdfBuffer);
+
+    void persistGeneratedExport({
+      kind: "PERIOD_BALANCE_PDF",
+      fileName: filename,
+      mimeType: "application/pdf",
+      bytes,
+      context: { from: from ?? "", to: to ?? "", preview },
+      userId: auth.session.user.id,
+    });
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,

@@ -25,6 +25,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
 
 export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: PermissionSlug }> = [
   { prefix: "/admin", permission: PERMISSIONS.USERS_MANAGE },
+  { prefix: "/exports", permission: PERMISSIONS.DASHBOARD_FINANCIAL },
   { prefix: "/audit", permission: PERMISSIONS.AUDIT_VIEW },
   { prefix: "/clients", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },
   { prefix: "/revenues", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },

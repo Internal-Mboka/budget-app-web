@@ -60,6 +60,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   FISCAL_PERIOD_CLOSED: "Trimestre comptable clôturé",
   FISCAL_PERIOD_OPENED: "Trimestre comptable ouvert",
   FINANCIAL_REGISTER_EXPORTED: "Export registre comptable",
+  EXPORT_DOWNLOADED: "Export archivé téléchargé",
+  EXPORT_REGENERATED: "Export régénéré",
   FINANCIAL_PERIOD_CLOSED: "Clôture mensuelle — bilan périodique",
   CRITICAL_ALERT_DISPATCHED: "Alerte critique envoyée",
   ALERT_SETTINGS_UPDATED: "Configuration alertes modifiée",
@@ -76,6 +78,7 @@ const AUDIT_ENTITY_LABELS: Record<string, string> = {
   FinancialPeriodClosure: "Clôture mensuelle",
   Role: "Rôle",
   AuditLog: "Journal d'audit",
+  GeneratedExport: "Export archivé",
   UserSession: "Session",
 };
 

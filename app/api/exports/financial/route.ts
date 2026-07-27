@@ -2,8 +2,7 @@ import { format } from "date-fns";
 import { NextResponse } from "next/server";
 
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
-import { getSession } from "@/lib/auth/get-session";
-import { hasAnyPermission } from "@/lib/auth/session";
+import { assertFinancialExportSession } from "@/lib/exports/access";
 import {
   parseFinancialExportFilters,
   parseFinancialExportRegister,
@@ -13,22 +12,13 @@ import {
   countFinancialExportRows,
   getFinancialExportFilename,
 } from "@/lib/exports/load-financial-register";
-import { PERMISSIONS } from "@/lib/permissions";
+import { persistGeneratedExport } from "@/lib/exports/persist-generated-export";
 
 export async function GET(request: Request) {
-  const session = await getSession();
+  const auth = await assertFinancialExportSession();
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
-  }
-
-  if (
-    !hasAnyPermission(session.user.permissions, [
-      PERMISSIONS.DASHBOARD_FULL,
-      PERMISSIONS.DASHBOARD_FINANCIAL,
-    ])
-  ) {
-    return NextResponse.json({ error: "Export réservé au PDG et au Comptable." }, { status: 403 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
   const url = new URL(request.url);
@@ -52,7 +42,7 @@ export async function GET(request: Request) {
     captureRequest: false,
     action: "FINANCIAL_REGISTER_EXPORTED",
     entity: "Transaction",
-    userId: session.user.id,
+    userId: auth.session.user.id,
     details: {
       register,
       from: filters.from,
@@ -64,11 +54,22 @@ export async function GET(request: Request) {
 
   const filename = getFinancialExportFilename(register, filters);
   const stamp = format(exportedAt, "yyyyMMdd-HHmmss");
+  const stampedFilename = `${filename.replace(".csv", "")}-${stamp}.csv`;
+  const bytes = Buffer.from(csv, "utf-8");
+
+  void persistGeneratedExport({
+    kind: "FINANCIAL_CSV",
+    fileName: stampedFilename,
+    mimeType: "text/csv; charset=utf-8",
+    bytes,
+    context: { register, from: filters.from, to: filters.to },
+    userId: auth.session.user.id,
+  });
 
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename.replace(".csv", "")}-${stamp}.csv"`,
+      "Content-Disposition": `attachment; filename="${stampedFilename}"`,
     },
   });
 }

@@ -1,5 +1,6 @@
 import { FinancialExportsPanel } from "@/components/organisms/financial-exports-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
+import Link from "next/link";
 import { hasAnyPermission, requireSession } from "@/lib/auth/session";
 import { parseFinancialExportFilters } from "@/lib/exports/filters";
 import {
@@ -93,6 +94,15 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
         eyebrow="Archives & exports"
         title="Exports comptables"
         description="Exportez vos registres comptables et vos documents PDF pour la période de votre choix."
+        descriptionAside={
+          <Link
+            href="/exports/history"
+            className="text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+            data-testid="exports-history-link"
+          >
+            Voir l&apos;historique des exports
+          </Link>
+        }
       />
 
       <FinancialExportsPanel

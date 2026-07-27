@@ -34,6 +34,7 @@ model User {
   clientNotes        ClientNote[]
   auditLogs          AuditLog[] @relation("UserAuditLogs")
   alertSettingsUpdates AlertSettings[] @relation("AlertSettingsUpdater")
+  generatedExports   GeneratedExport[] @relation("GeneratedExportAuthor")
   passwordResetTokens PasswordResetToken[]
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -331,6 +332,34 @@ model AlertSettings {
   updatedAt              DateTime @updatedAt
   updatedByUserId        String?
   updatedBy              User?    @relation("AlertSettingsUpdater", fields: [updatedByUserId], references: [id])
+}
+
+// ==========================================
+// 4.e ARCHIVES EXPORTS (SPEC 8 US-59)
+// ==========================================
+
+enum GeneratedExportKind {
+  FINANCIAL_CSV
+  EXPENSE_RECAP_PDF
+  PERIOD_BALANCE_PDF
+  FISCAL_PERIOD_BALANCE_PDF
+}
+
+model GeneratedExport {
+  id                String              @id @default(cuid())
+  kind              GeneratedExportKind
+  fileName          String
+  mimeType          String
+  sizeBytes         Int
+  storagePath       String
+  context           Json
+  generatedByUserId String
+  generatedBy       User                @relation("GeneratedExportAuthor", fields: [generatedByUserId], references: [id])
+  createdAt         DateTime            @default(now())
+
+  @@index([createdAt])
+  @@index([kind])
+  @@index([generatedByUserId])
 }
 
 // ==========================================
