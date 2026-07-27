@@ -28,6 +28,7 @@ import {
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/transactions/payment-methods";
 import { parseMoneyInput } from "@/lib/transactions/decimal";
 import { enqueueRevenueForm, isOffline } from "@/lib/pwa/offline-sync-queue";
+import { useFormAutofocus } from "@/hooks/use-form-shortcuts";
 import { cn } from "@/lib/utils";
 
 const categoryOptions = REVENUE_CATEGORY_OPTIONS.map((option) => ({
@@ -56,6 +57,7 @@ export function RevenueCreateForm({
   defaultSessionDate,
 }: RevenueCreateFormProps) {
   const router = useRouter();
+  const sectionRef = useRef<HTMLElement>(null);
   const handledStateRef = useRef<CreateRevenueFormState>(null);
   const [state, formAction] = useActionState(createRevenueFormAction, null);
   const [revenueCategory, setRevenueCategory] = useState<RevenueCategory>("STUDIO_SESSION");
@@ -69,6 +71,8 @@ export function RevenueCreateForm({
   const [baseAmountInput, setBaseAmountInput] = useState("");
   const [discountType, setDiscountType] = useState<DiscountType>("NONE");
   const [discountValueInput, setDiscountValueInput] = useState("");
+
+  useFormAutofocus(sectionRef);
 
   const baseAmount = parseMoneyInput(baseAmountInput || totalAmountInput);
   const discountValue = parseMoneyInput(discountValueInput);
@@ -115,7 +119,7 @@ export function RevenueCreateForm({
   }, [state]);
 
   return (
-    <section className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
+    <section ref={sectionRef} className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
       <form
         action={formAction}
         className="space-y-6"
@@ -169,6 +173,7 @@ export function RevenueCreateForm({
               onChange={setClient}
               label="Client *"
               placeholder="Rechercher un client…"
+              autoFocus
             />
 
             <RevenueMetadataFields

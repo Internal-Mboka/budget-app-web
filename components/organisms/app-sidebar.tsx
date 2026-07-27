@@ -247,7 +247,8 @@ export function AppSidebar({
           type="button"
           aria-label="Ouvrir le menu"
           onClick={() => setMobileOpen(true)}
-          className="rounded-xl border border-sky-100 p-2 text-[#10579F] dark:border-sky-900 dark:text-sky-50"
+          data-testid="app-mobile-menu-button"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-sky-100 text-[#10579F] dark:border-sky-900 dark:text-sky-50"
         >
           <Menu className="size-5" />
         </button>
@@ -274,7 +275,7 @@ export function AppSidebar({
           type="button"
           aria-label="Fermer le menu"
           onClick={() => setMobileOpen(false)}
-          className="absolute top-3 right-3 rounded-lg p-1 text-slate-500 lg:hidden"
+          className="absolute top-3 right-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-500 lg:hidden"
         >
           <X className="size-5" />
         </button>
@@ -309,7 +310,7 @@ export function AppSidebar({
                     data-testid={item.testId}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                      "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                       active
                         ? "bg-sky-50 text-[#10579F] ring-1 ring-sky-100 dark:bg-slate-800 dark:text-sky-50 dark:ring-sky-900"
                         : "text-slate-600 hover:bg-sky-50/70 hover:text-[#10579F] dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-sky-50"
@@ -342,7 +343,7 @@ export function AppSidebar({
               data-testid="app-logout"
               className={cn(
                 mbokaButtonOutlineClassName,
-                "w-full justify-start border-transparent bg-transparent px-3 text-slate-600 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                "min-h-11 w-full justify-start border-transparent bg-transparent px-3 text-slate-600 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
               )}
             >
               <LogOut className="size-4" />

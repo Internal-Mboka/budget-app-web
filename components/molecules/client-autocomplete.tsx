@@ -17,6 +17,7 @@ type ClientAutocompleteProps = {
   onSelect: (client: ClientSearchResult | null) => void;
   onCreateRequest: (query: string) => void;
   disabled?: boolean;
+  autoFocus?: boolean;
 };
 
 export function ClientAutocomplete({
@@ -27,6 +28,7 @@ export function ClientAutocomplete({
   onSelect,
   onCreateRequest,
   disabled = false,
+  autoFocus = false,
 }: ClientAutocompleteProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -118,6 +120,8 @@ export function ClientAutocomplete({
           disabled={disabled}
           placeholder={placeholder}
           autoComplete="off"
+          autoFocus={autoFocus}
+          data-form-autofocus={autoFocus ? "true" : undefined}
           role="combobox"
           aria-expanded={showDropdown}
           aria-controls={listboxId}

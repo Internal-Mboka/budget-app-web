@@ -9,6 +9,7 @@ import { MbokaPendingFieldset, MbokaSubmitButton } from "@/components/molecules/
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createExpenseFormAction, type CreateExpenseFormState } from "@/lib/actions/expenses";
+import { useFormAutofocus } from "@/hooks/use-form-shortcuts";
 import { ExpenseStaffFields } from "@/components/organisms/expense-staff-fields";
 import {
   mbokaFieldClassName,
@@ -34,6 +35,7 @@ type ExpenseCreateFormProps = {
 };
 
 export function ExpenseCreateForm({ defaultCategory }: ExpenseCreateFormProps = {}) {
+  const sectionRef = useRef<HTMLElement>(null);
   const handledStateRef = useRef<CreateExpenseFormState>(null);
   const [state, formAction] = useActionState(createExpenseFormAction, null);
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>(
@@ -43,6 +45,8 @@ export function ExpenseCreateForm({ defaultCategory }: ExpenseCreateFormProps = 
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [staffPaymentType, setStaffPaymentType] = useState("CACHET");
   const isStaffExpense = expenseCategory === "PAIES_CACHETS_STAFF";
+
+  useFormAutofocus(sectionRef);
 
   useEffect(() => {
     if (!state || state === handledStateRef.current || state.success) {
@@ -54,7 +58,7 @@ export function ExpenseCreateForm({ defaultCategory }: ExpenseCreateFormProps = 
   }, [state]);
 
   return (
-    <section className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
+    <section ref={sectionRef} className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
       <form action={formAction} className="space-y-6" data-testid="expense-create-form">
         <MbokaPendingFieldset>
           <FieldGroup className="gap-5">
@@ -84,6 +88,7 @@ export function ExpenseCreateForm({ defaultCategory }: ExpenseCreateFormProps = 
                 id="label"
                 name="label"
                 required={!isStaffExpense}
+                data-form-autofocus="true"
                 placeholder={
                   isStaffExpense
                     ? "Optionnel — généré automatiquement si vide"

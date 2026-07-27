@@ -2,13 +2,14 @@
 
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClientAction } from "@/lib/actions/clients";
+import { useFormAutofocus } from "@/hooks/use-form-shortcuts";
 import { CLIENT_CATEGORY_OPTIONS } from "@/lib/clients/categories";
 import {
   mbokaButtonPrimaryClassName,
@@ -29,8 +30,11 @@ type ClientCreateFormProps = {
 
 export function ClientCreateForm({ redirectTo = "/clients" }: ClientCreateFormProps) {
   const router = useRouter();
+  const sectionRef = useRef<HTMLElement>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [category, setCategory] = useState<string>(CLIENT_CATEGORY_OPTIONS[0]?.value ?? "");
+
+  useFormAutofocus(sectionRef);
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,7 +64,7 @@ export function ClientCreateForm({ redirectTo = "/clients" }: ClientCreateFormPr
   }
 
   return (
-    <section className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
+    <section ref={sectionRef} className={cn(mbokaPanelClassName, "space-y-6 p-5 sm:p-6")}>
       <form onSubmit={handleCreate} className="space-y-5" data-testid="client-create-form">
         <FieldGroup className="gap-5">
           <Field>
@@ -72,6 +76,7 @@ export function ClientCreateForm({ redirectTo = "/clients" }: ClientCreateFormPr
               name="name"
               required
               minLength={2}
+              data-form-autofocus="true"
               placeholder="Ex. Maisha Music, Jean Mukendi…"
               className={mbokaFieldClassName}
             />

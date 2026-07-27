@@ -228,12 +228,14 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-61 | Skeleton Screen & React Suspense | `[ ]` |
-| US-62 | Toasts instantanés (Sonner) | `[ ]` |
-| US-63 | Raccourcis clavier saisie rapide | `[ ]` |
-| US-64 | Thème sombre / clair studio | `[ ]` |
-| US-65 | Error Boundaries globales | `[ ]` |
-| US-66 | Responsive mobile & tablettes régie | `[ ]` |
+| US-61 | Skeleton Screen & React Suspense | `[x]` |
+| US-62 | Toasts instantanés (Sonner) | `[x]` |
+| US-63 | Raccourcis clavier saisie rapide | `[x]` |
+| US-64 | Thème sombre / clair studio | `[x]` |
+| US-65 | Error Boundaries globales | `[x]` |
+| US-66 | Responsive mobile & tablettes régie | `[x]` |
+
+<!-- SPEC 9 : MbokaSkeleton + loading.tsx (dashboard, revenus, dépenses, clients), Toaster Mboka, Ctrl+Shift+N / Ctrl+Entrée, theme storageKey mboka-theme, error.tsx, touch targets 44px sidebar. -->
 
 ---
 

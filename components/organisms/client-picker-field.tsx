@@ -12,6 +12,7 @@ type ClientPickerFieldProps = {
   label?: string;
   placeholder?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
 };
 
 export function ClientPickerField({
@@ -20,6 +21,7 @@ export function ClientPickerField({
   label,
   placeholder,
   disabled = false,
+  autoFocus = false,
 }: ClientPickerFieldProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prefillName, setPrefillName] = useState("");
@@ -38,6 +40,7 @@ export function ClientPickerField({
         onSelect={onChange}
         onCreateRequest={handleCreateRequest}
         disabled={disabled}
+        autoFocus={autoFocus}
       />
 
       <ClientQuickCreateDialog
