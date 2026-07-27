@@ -19,8 +19,11 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 
 const adapter = new PrismaNeon({ connectionString });
 
-// Bump when adapter setup changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 8;
+// Bump when schema/adapter changes so dev HMR recreates a stale cached client.
+const PRISMA_CLIENT_VERSION = 9;
+
+/** Models that must exist on the cached client (guards stale webpack/global singletons). */
+const REQUIRED_DELEGATES = ["alertSettings"] as const;
 
 const RETRYABLE_DB_ERROR_PATTERN =
   /fetch failed|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Connection terminated|NeonDbError|Error connecting to database/i;
@@ -55,6 +58,14 @@ const globalForPrisma = globalThis as unknown as {
   prismaClientVersion: number | undefined;
 };
 
+function clientHasRequiredDelegates(client: unknown): boolean {
+  if (!client || typeof client !== "object") {
+    return false;
+  }
+
+  return REQUIRED_DELEGATES.every((delegate) => delegate in client);
+}
+
 function createPrismaClient() {
   const client = new PrismaClient({
     adapter,
@@ -84,16 +95,23 @@ function createPrismaClient() {
   });
 }
 
-if (
-  process.env.NODE_ENV !== "production" &&
-  globalForPrisma.prismaClientVersion !== PRISMA_CLIENT_VERSION
-) {
-  void globalForPrisma.prisma?.$disconnect().catch(() => {});
-  globalForPrisma.prisma = createPrismaClient();
+function resolvePrismaClient() {
+  const cached = globalForPrisma.prisma;
+  const versionMatches = globalForPrisma.prismaClientVersion === PRISMA_CLIENT_VERSION;
+
+  if (cached && versionMatches && clientHasRequiredDelegates(cached)) {
+    return cached;
+  }
+
+  void cached?.$disconnect().catch(() => {});
+
+  const client = createPrismaClient();
+  globalForPrisma.prisma = client;
   globalForPrisma.prismaClientVersion = PRISMA_CLIENT_VERSION;
+  return client;
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma = resolvePrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
