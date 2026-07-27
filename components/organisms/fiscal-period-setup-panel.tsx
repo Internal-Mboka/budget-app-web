@@ -17,6 +17,7 @@ import {
   normalizeFiscalPeriodStartDate,
 } from "@/lib/fiscal-period/dates";
 import {
+  mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
   mbokaFieldClassName,
   mbokaLabelClassName,
@@ -178,7 +179,7 @@ export function FiscalPeriodSetupPanel({ defaultStartDate }: FiscalPeriodSetupPa
           >
             {isPending ? "Initialisation…" : "Ouvrir le 1er trimestre"}
           </button>
-          <Link href="/dashboard" className={cn(mbokaButtonPrimaryClassName, "bg-transparent text-[#10579F] ring-1 ring-sky-200 hover:bg-sky-50 dark:text-sky-100 dark:ring-sky-800 dark:hover:bg-slate-800 no-underline")}>
+          <Link href="/dashboard" className={cn(mbokaButtonOutlineClassName, "no-underline")}>
             Retour
           </Link>
         </div>

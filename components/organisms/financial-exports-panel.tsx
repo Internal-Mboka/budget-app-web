@@ -109,6 +109,27 @@ export function FinancialExportsPanel({
     router.push(`/exports?${params.toString()}`);
   }
 
+  function tryApplyDateFilters() {
+    const form = document.getElementById("financial-export-filters-form") as HTMLFormElement | null;
+    if (!form) {
+      return;
+    }
+
+    const formData = new FormData(form);
+    const from = String(formData.get("from") ?? "").trim();
+    const to = String(formData.get("to") ?? "").trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      return;
+    }
+
+    if (from === filters.from && to === filters.to) {
+      return;
+    }
+
+    applyExportFilters();
+  }
+
   return (
     <div className="space-y-6">
       <section className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")} data-testid="financial-export-filters">
@@ -137,7 +158,7 @@ export function FinancialExportsPanel({
             router.push(query ? `/exports?${query}` : "/exports");
           }}
         >
-          <FieldGroup className="gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+          <FieldGroup className="gap-4 sm:grid sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="from" className={mbokaLabelClassName}>
                 Du
@@ -149,6 +170,7 @@ export function FinancialExportsPanel({
                 defaultValue={filters.from}
                 className={mbokaFieldClassName}
                 required
+                onBlur={tryApplyDateFilters}
               />
             </Field>
             <Field>
@@ -162,9 +184,26 @@ export function FinancialExportsPanel({
                 defaultValue={filters.to}
                 className={mbokaFieldClassName}
                 required
+                onBlur={tryApplyDateFilters}
               />
             </Field>
-            <Field className="sm:col-span-2 lg:col-span-1">
+          </FieldGroup>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            La période filtre le CSV, la liste PDF des revenus et le bilan mensuel.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
+              Appliquer la période
+            </button>
+            <Link href="/exports" className={mbokaButtonOutlineClassName}>
+              Réinitialiser
+            </Link>
+          </div>
+
+          <div className="border-t border-sky-100 pt-4 dark:border-sky-900">
+            <Field>
               <FieldLabel htmlFor="register" className={mbokaLabelClassName}>
                 Registre CSV
               </FieldLabel>
@@ -176,18 +215,9 @@ export function FinancialExportsPanel({
                 onValueChange={(value) => applyExportFilters(value as FinancialExportRegister)}
               />
               <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                Met à jour l&apos;export CSV ci-dessous. La liste PDF concerne toujours les revenus.
+                Modifie uniquement le bloc « Export CSV » ci-dessous — pas la liste PDF.
               </p>
             </Field>
-          </FieldGroup>
-
-          <div className="flex flex-wrap gap-2">
-            <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
-              Appliquer les dates
-            </button>
-            <Link href="/exports" className={mbokaButtonOutlineClassName}>
-              Réinitialiser
-            </Link>
           </div>
         </form>
       </section>

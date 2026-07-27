@@ -5,6 +5,7 @@ import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboa
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
+import { FiscalPeriodInitializedBanner } from "@/components/molecules/fiscal-period-init-notice";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
@@ -45,6 +46,7 @@ type DashboardPageProps = {
     projectionScenario?: string;
     kpiScope?: string;
     accountingMode?: string;
+    fiscalPeriodInitialized?: string;
   }>;
 };
 
@@ -86,6 +88,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="space-y-8">
+      {query.fiscalPeriodInitialized === "1" ? <FiscalPeriodInitializedBanner /> : null}
+
       <MbokaPageHeader
         eyebrow="Dashboard"
         title="Vue complète"
