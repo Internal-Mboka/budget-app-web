@@ -3,6 +3,7 @@
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { RevenueByCategoryChart } from "@/components/molecules/revenue-by-category-chart";
 import type { RevenueCategoryBreakdownPoint } from "@/lib/dashboard/load-revenue-by-category";
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
@@ -13,6 +14,7 @@ type DashboardRevenueBreakdownPanelProps = {
   categoryPeriod: DashboardKpiPeriod;
   kpiPeriod: DashboardKpiPeriod;
   kpiScope: DashboardKpiScope;
+  accountingMode: DashboardAccountingMode;
   granularity: DashboardChartGranularity;
   occupancyPeriod: DashboardKpiPeriod;
   projectionPeriod: DashboardKpiPeriod;
@@ -30,6 +32,7 @@ export function DashboardRevenueBreakdownPanel({
   categoryPeriod,
   kpiPeriod,
   kpiScope,
+  accountingMode,
   granularity,
   occupancyPeriod,
   projectionPeriod,
@@ -55,6 +58,7 @@ export function DashboardRevenueBreakdownPanel({
             buildFinancialDashboardHref("/dashboard", {
               kpiPeriod,
               kpiScope,
+              accountingMode,
               granularity,
               categoryPeriod: value,
               occupancyPeriod,
@@ -71,6 +75,7 @@ export function DashboardRevenueBreakdownPanel({
         total={total}
         totalPercentChange={totalPercentChange}
         comparisonLabel={comparisonLabel}
+        accountingMode={accountingMode}
       />
     </div>
   );

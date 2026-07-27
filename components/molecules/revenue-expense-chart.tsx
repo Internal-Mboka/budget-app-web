@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import { formatMoney } from "@/lib/currency";
+import { getAccountingModeDescription, type DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { formatPercentChangeLabel } from "@/lib/dashboard/percent-change";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardChartGranularity } from "@/lib/dashboard/periods";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 type RevenueExpenseChartProps = {
   data: RevenueExpenseComparisonPoint[];
   granularity: DashboardChartGranularity;
+  accountingMode?: DashboardAccountingMode;
   className?: string;
 };
 
@@ -63,7 +65,12 @@ function ChartTooltip({
   );
 }
 
-export function RevenueExpenseChart({ data, granularity, className }: RevenueExpenseChartProps) {
+export function RevenueExpenseChart({
+  data,
+  granularity,
+  accountingMode = "accrual",
+  className,
+}: RevenueExpenseChartProps) {
   const showBucketComparison = granularity === "month";
 
   return (
@@ -74,7 +81,7 @@ export function RevenueExpenseChart({ data, granularity, className }: RevenueExp
       <div>
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Revenus vs dépenses</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Comparaison des montants enregistrés sur la période sélectionnée.
+          {getAccountingModeDescription(accountingMode)}
           {showBucketComparison ? " Survolez une barre pour voir la variation vs le mois précédent." : ""}
         </p>
       </div>

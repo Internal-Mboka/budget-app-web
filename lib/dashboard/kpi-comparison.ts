@@ -1,3 +1,4 @@
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiComparisonLabel, getKpiPeriodRange, getPreviousKpiPeriodRange } from "@/lib/dashboard/periods";
 import { loadPeriodFinancialTotals } from "@/lib/dashboard/load-analytics";
@@ -17,15 +18,16 @@ export type DashboardKpiComparison = {
 
 export async function loadDashboardKpiComparison(
   kpiPeriod: DashboardKpiPeriod = "month",
-  reference = new Date()
+  reference = new Date(),
+  accountingMode: DashboardAccountingMode = "accrual"
 ): Promise<DashboardKpiComparison> {
   const currentRange = getKpiPeriodRange(kpiPeriod, reference);
   const previousRange = getPreviousKpiPeriodRange(kpiPeriod, reference);
   const comparisonLabel = getKpiComparisonLabel(kpiPeriod);
 
   const [currentTotals, previousTotals] = await Promise.all([
-    loadPeriodFinancialTotals(currentRange.from, currentRange.to),
-    loadPeriodFinancialTotals(previousRange.from, previousRange.to),
+    loadPeriodFinancialTotals(currentRange.from, currentRange.to, accountingMode),
+    loadPeriodFinancialTotals(previousRange.from, previousRange.to, accountingMode),
   ]);
 
   return {

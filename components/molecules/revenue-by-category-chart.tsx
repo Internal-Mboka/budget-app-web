@@ -13,6 +13,7 @@ import {
 
 import { MbokaKpiTrend } from "@/components/molecules/mboka-kpi-trend";
 import { formatMoney } from "@/lib/currency";
+import { getAccountingModeDescription, type DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { formatPercentChangeLabel } from "@/lib/dashboard/percent-change";
 import type { RevenueCategoryBreakdownPoint } from "@/lib/dashboard/load-revenue-by-category";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
@@ -31,6 +32,7 @@ type RevenueByCategoryChartProps = {
   total: number;
   totalPercentChange: number | null;
   comparisonLabel: string;
+  accountingMode?: DashboardAccountingMode;
   className?: string;
 };
 
@@ -67,6 +69,7 @@ export function RevenueByCategoryChart({
   total,
   totalPercentChange,
   comparisonLabel,
+  accountingMode = "accrual",
   className,
 }: RevenueByCategoryChartProps) {
   return (
@@ -77,7 +80,7 @@ export function RevenueByCategoryChart({
       <div>
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">CA par activité</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Répartition des revenus par type de prestation — {periodLabel.toLowerCase()}.
+          {getAccountingModeDescription(accountingMode)} — {periodLabel.toLowerCase()}.
           {total > 0 ? ` Total : ${formatMoney(total)}.` : " Aucun revenu enregistré sur cette période."}
         </p>
         <MbokaKpiTrend

@@ -1,3 +1,4 @@
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod, MacroKpiPeriod } from "@/lib/dashboard/periods";
 import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
@@ -5,6 +6,7 @@ import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projec
 export type DashboardHrefParams = {
   kpiPeriod?: DashboardKpiPeriod;
   kpiScope?: DashboardKpiScope;
+  accountingMode?: DashboardAccountingMode;
   granularity?: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -36,6 +38,10 @@ export function buildFinancialDashboardHref(
   return appendParams(basePath, [
     ["kpiPeriod", params.kpiPeriod && params.kpiPeriod !== "month" ? params.kpiPeriod : undefined],
     ["kpiScope", params.kpiScope && params.kpiScope !== "period" ? params.kpiScope : undefined],
+    [
+      "accountingMode",
+      params.accountingMode && params.accountingMode !== "accrual" ? params.accountingMode : undefined,
+    ],
     ["granularity", params.granularity && params.granularity !== "month" ? params.granularity : undefined],
     [
       "categoryPeriod",

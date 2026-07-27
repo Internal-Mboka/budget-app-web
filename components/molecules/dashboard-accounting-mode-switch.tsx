@@ -1,20 +1,19 @@
 "use client";
 
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
-import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
-import { getKpiScopeLabel, type DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
+import { getAccountingModeLabel, type DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
-import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
-const KPI_SCOPE_OPTIONS: DashboardKpiScope[] = ["period", "global"];
+const ACCOUNTING_MODE_OPTIONS: DashboardAccountingMode[] = ["accrual", "cash"];
 
-type DashboardKpiScopeSwitchProps = {
+type DashboardAccountingModeSwitchProps = {
   basePath: "/dashboard" | "/dashboard/financier";
+  accountingMode: DashboardAccountingMode;
   kpiPeriod: DashboardKpiPeriod;
   kpiScope: DashboardKpiScope;
-  accountingMode: DashboardAccountingMode;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -22,31 +21,31 @@ type DashboardKpiScopeSwitchProps = {
   projectionScenario?: TreasuryProjectionScenario;
 };
 
-export function DashboardKpiScopeSwitch({
+export function DashboardAccountingModeSwitch({
   basePath,
+  accountingMode,
   kpiPeriod,
   kpiScope,
-  accountingMode,
   granularity,
   categoryPeriod,
   occupancyPeriod,
   projectionPeriod,
   projectionScenario,
-}: DashboardKpiScopeSwitchProps) {
+}: DashboardAccountingModeSwitchProps) {
   return (
     <MbokaPeriodSwitch
-      label="CA & dépenses"
-      testId="dashboard-kpi-scope-switch"
-      value={kpiScope}
-      options={KPI_SCOPE_OPTIONS.map((value) => ({
+      label="Mode comptable"
+      testId="dashboard-accounting-mode-switch"
+      value={accountingMode}
+      options={ACCOUNTING_MODE_OPTIONS.map((value) => ({
         value,
-        label: getKpiScopeLabel(value),
+        label: getAccountingModeLabel(value),
       }))}
       buildHref={(value) =>
         buildFinancialDashboardHref(basePath, {
           kpiPeriod,
-          kpiScope: value,
-          accountingMode,
+          kpiScope,
+          accountingMode: value,
           granularity,
           categoryPeriod,
           occupancyPeriod,

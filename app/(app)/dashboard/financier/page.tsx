@@ -17,6 +17,7 @@ import {
   getOverdueReceivablesTotal,
   loadOverdueReceivables,
 } from "@/lib/dashboard/load-overdue-receivables";
+import { parseDashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { parseDashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import {
   parseDashboardChartGranularity,
@@ -39,7 +40,7 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type FinancialDashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; kpiScope?: string; projectionPeriod?: string; projectionScenario?: string }>;
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; kpiScope?: string; accountingMode?: string; projectionPeriod?: string; projectionScenario?: string }>;
 };
 
 export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
@@ -47,6 +48,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
   const query = await searchParams;
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const kpiScope = parseDashboardKpiScope(query.kpiScope);
+  const accountingMode = parseDashboardAccountingMode(query.accountingMode);
   const granularity = parseDashboardChartGranularity(query.granularity);
   const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
   const projectionScenario = parseProjectionScenario(query.projectionScenario);
@@ -57,9 +59,9 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
-      loadDashboardKpis(kpiPeriod, undefined, kpiScope),
-      loadDashboardKpiComparison(kpiPeriod),
-      loadRevenueExpenseSeries(granularity),
+      loadDashboardKpis(kpiPeriod, undefined, kpiScope, accountingMode),
+      loadDashboardKpiComparison(kpiPeriod, undefined, accountingMode),
+      loadRevenueExpenseSeries(granularity, undefined, accountingMode),
       loadTreasuryProjection(projectionPeriod, projectionScenario),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
@@ -95,6 +97,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         series={series}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         projectionPeriod={projectionPeriod}
         projectionScenario={projectionScenario}
@@ -106,6 +109,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         projectionScenario={projectionScenario}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         snapshot={treasuryProjection}
         audienceLabel="Comptable"

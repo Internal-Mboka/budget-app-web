@@ -1,7 +1,9 @@
 import type { RevenueCategory } from "@prisma/client";
 
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiComparisonLabel, getKpiPeriodRange, getPreviousKpiPeriodRange } from "@/lib/dashboard/periods";
+import { loadCashRevenueByCategory } from "@/lib/dashboard/load-cash-collections";
 import { computePercentChange } from "@/lib/dashboard/percent-change";
 import { prisma } from "@/lib/prisma";
 import { REVENUE_CATEGORY_OPTIONS } from "@/lib/revenues/categories";
@@ -31,15 +33,16 @@ const ACTIVE_REVENUE_WHERE = {
 
 export async function loadRevenueByCategory(
   period: DashboardKpiPeriod = "month",
-  reference = new Date()
+  reference = new Date(),
+  accountingMode: DashboardAccountingMode = "accrual"
 ): Promise<RevenueByCategoryResult> {
   const currentRange = getKpiPeriodRange(period, reference);
   const previousRange = getPreviousKpiPeriodRange(period, reference);
   const comparisonLabel = getKpiComparisonLabel(period);
 
   const [currentPoints, previousPoints] = await Promise.all([
-    loadRevenueByCategoryForRange(currentRange.from, currentRange.to),
-    loadRevenueByCategoryForRange(previousRange.from, previousRange.to),
+    loadRevenueByCategoryForRange(currentRange.from, currentRange.to, accountingMode),
+    loadRevenueByCategoryForRange(previousRange.from, previousRange.to, accountingMode),
   ]);
 
   const previousByCategory = new Map(previousPoints.map((point) => [point.category, point.amount]));
@@ -63,7 +66,34 @@ export async function loadRevenueByCategory(
   };
 }
 
-async function loadRevenueByCategoryForRange(from: Date, to: Date) {
+async function loadRevenueByCategoryForRange(
+  from: Date,
+  to: Date,
+  accountingMode: DashboardAccountingMode = "accrual"
+) {
+  if (accountingMode === "cash") {
+    const rows = await loadCashRevenueByCategory(from, to);
+    const amountByCategory = new Map<RevenueCategory, number>();
+
+    for (const row of rows) {
+      if (!row.revenueCategory) {
+        continue;
+      }
+
+      const category = row.revenueCategory as RevenueCategory;
+      const current = amountByCategory.get(category) ?? 0;
+      amountByCategory.set(category, roundMoney(current + decimalToNumber(row.amount)));
+    }
+
+    return REVENUE_CATEGORY_OPTIONS.map(({ value, label: categoryLabel }) => ({
+      category: value,
+      label: categoryLabel,
+      amount: amountByCategory.get(value) ?? 0,
+      share: 0,
+      percentChange: null as number | null,
+    }));
+  }
+
   const rows = await prisma.transaction.groupBy({
     by: ["revenueCategory"],
     where: {

@@ -18,6 +18,7 @@ import {
 import { loadRevenueByCategory } from "@/lib/dashboard/load-revenue-by-category";
 import { loadStudioOccupancy } from "@/lib/dashboard/load-studio-occupancy";
 import { loadTreasuryProjection } from "@/lib/dashboard/load-treasury-projection";
+import { parseDashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { parseDashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import {
   parseCategoryPeriod,
@@ -43,6 +44,7 @@ type DashboardPageProps = {
     projectionPeriod?: string;
     projectionScenario?: string;
     kpiScope?: string;
+    accountingMode?: string;
   }>;
 };
 
@@ -51,6 +53,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const query = await searchParams;
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const kpiScope = parseDashboardKpiScope(query.kpiScope);
+  const accountingMode = parseDashboardAccountingMode(query.accountingMode);
   const granularity = parseDashboardChartGranularity(query.granularity);
   const categoryPeriod = parseCategoryPeriod(query.categoryPeriod, kpiPeriod);
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
@@ -60,10 +63,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
     await Promise.all([
-    loadDashboardKpis(kpiPeriod, undefined, kpiScope),
-    loadDashboardKpiComparison(kpiPeriod),
-    loadRevenueExpenseSeries(granularity),
-    loadRevenueByCategory(categoryPeriod),
+    loadDashboardKpis(kpiPeriod, undefined, kpiScope, accountingMode),
+    loadDashboardKpiComparison(kpiPeriod, undefined, accountingMode),
+    loadRevenueExpenseSeries(granularity, undefined, accountingMode),
+    loadRevenueByCategory(categoryPeriod, undefined, accountingMode),
     loadStudioOccupancy(occupancyPeriod),
     loadTreasuryProjection(projectionPeriod, projectionScenario),
     loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
@@ -96,6 +99,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         series={series}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
@@ -107,6 +111,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         categoryPeriod={categoryPeriod}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         occupancyPeriod={occupancyPeriod}
         projectionPeriod={projectionPeriod}
@@ -122,6 +127,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         occupancyPeriod={occupancyPeriod}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         projectionPeriod={projectionPeriod}
@@ -135,6 +141,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         projectionScenario={projectionScenario}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}

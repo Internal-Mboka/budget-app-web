@@ -3,6 +3,7 @@
 import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-card";
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { TreasuryProjectionChart } from "@/components/molecules/treasury-projection-chart";
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { TreasuryProjectionSnapshot } from "@/lib/dashboard/load-treasury-projection";
@@ -23,6 +24,7 @@ type DashboardTreasuryProjectionPanelProps = {
   projectionScenario: TreasuryProjectionScenario;
   kpiPeriod: DashboardKpiPeriod;
   kpiScope: DashboardKpiScope;
+  accountingMode: DashboardAccountingMode;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -39,6 +41,7 @@ export function DashboardTreasuryProjectionPanel({
   projectionScenario,
   kpiPeriod,
   kpiScope,
+  accountingMode,
   granularity,
   categoryPeriod,
   occupancyPeriod,
@@ -68,6 +71,7 @@ export function DashboardTreasuryProjectionPanel({
             buildFinancialDashboardHref(basePath, {
               kpiPeriod,
               kpiScope,
+              accountingMode,
               granularity,
               categoryPeriod,
               occupancyPeriod,
@@ -89,6 +93,7 @@ export function DashboardTreasuryProjectionPanel({
             buildFinancialDashboardHref(basePath, {
               kpiPeriod,
               kpiScope,
+              accountingMode,
               granularity,
               categoryPeriod,
               occupancyPeriod,

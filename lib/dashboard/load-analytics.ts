@@ -10,10 +10,17 @@ import {
   startOfWeek,
 } from "date-fns";
 
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { formatChartBucketLabel, getChartRange, getKpiPeriodRange } from "@/lib/dashboard/periods";
-import { loadGlobalCashCollections, loadPeriodCashCollections } from "@/lib/dashboard/load-cash-collections";
+import {
+  loadCashRevenueMovements,
+  loadGlobalCashCollections,
+  loadGlobalCashDisbursements,
+  loadPeriodCashCollections,
+  loadPeriodCashDisbursements,
+} from "@/lib/dashboard/load-cash-collections";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -111,7 +118,16 @@ function getBucketStart(date: Date, granularity: DashboardChartGranularity) {
   return startOfMonth(date);
 }
 
-export async function loadGlobalFinancialTotals() {
+export async function loadGlobalFinancialTotals(accountingMode: DashboardAccountingMode = "accrual") {
+  if (accountingMode === "cash") {
+    const [revenueTotal, expenseTotal] = await Promise.all([
+      loadGlobalCashCollections(),
+      loadGlobalCashDisbursements(),
+    ]);
+
+    return { revenueTotal, expenseTotal };
+  }
+
   const [allRevenues, allExpenses] = await Promise.all([
     prisma.transaction.findMany({
       where: ACTIVE_REVENUE_WHERE,
@@ -132,13 +148,14 @@ export async function loadGlobalFinancialTotals() {
 export async function loadDashboardKpis(
   kpiPeriod: DashboardKpiPeriod = "month",
   reference = new Date(),
-  kpiScope: DashboardKpiScope = "period"
+  kpiScope: DashboardKpiScope = "period",
+  accountingMode: DashboardAccountingMode = "accrual"
 ): Promise<DashboardKpis> {
   const { from, to, label } = getKpiPeriodRange(kpiPeriod, reference);
   const financialTotals =
     kpiScope === "global"
-      ? await loadGlobalFinancialTotals()
-      : await loadPeriodFinancialTotals(from, to);
+      ? await loadGlobalFinancialTotals(accountingMode)
+      : await loadPeriodFinancialTotals(from, to, accountingMode);
 
   const cashCollectionsPromise =
     kpiScope === "global"
@@ -176,7 +193,20 @@ export async function loadDashboardKpis(
   };
 }
 
-export async function loadPeriodFinancialTotals(from: Date, to: Date) {
+export async function loadPeriodFinancialTotals(
+  from: Date,
+  to: Date,
+  accountingMode: DashboardAccountingMode = "accrual"
+) {
+  if (accountingMode === "cash") {
+    const [revenueTotal, expenseTotal] = await Promise.all([
+      loadPeriodCashCollections(from, to),
+      loadPeriodCashDisbursements(from, to),
+    ]);
+
+    return { revenueTotal, expenseTotal };
+  }
+
   const [periodRevenues, periodExpenses] = await Promise.all([
     prisma.transaction.findMany({
       where: {
@@ -202,7 +232,8 @@ export async function loadPeriodFinancialTotals(from: Date, to: Date) {
 
 export async function loadRevenueExpenseSeries(
   granularity: DashboardChartGranularity,
-  reference = new Date()
+  reference = new Date(),
+  accountingMode: DashboardAccountingMode = "accrual"
 ): Promise<RevenueExpensePoint[]> {
   const { from, to, bucketCount } = getChartRange(granularity, reference);
   const bucketStarts = buildBucketStarts(granularity, from, bucketCount);
@@ -216,6 +247,49 @@ export async function loadRevenueExpenseSeries(
       revenue: 0,
       expense: 0,
     });
+  }
+
+  if (accountingMode === "cash") {
+    const [revenueMovements, expenseRows] = await Promise.all([
+      loadCashRevenueMovements(from, to),
+      prisma.transaction.findMany({
+        where: {
+          ...ACTIVE_EXPENSE_WHERE,
+          paidAmount: { gt: 0 },
+          createdAt: { gte: from, lte: to },
+        },
+        select: {
+          paidAmount: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    for (const movement of revenueMovements) {
+      const bucketStart = getBucketStart(new Date(movement.movementAt), granularity);
+      const point = bucketMap.get(bucketStart.toISOString());
+
+      if (!point) {
+        continue;
+      }
+
+      point.revenue = roundMoney(point.revenue + decimalToNumber(movement.amount));
+    }
+
+    for (const row of expenseRows) {
+      const bucketStart = getBucketStart(row.createdAt, granularity);
+      const point = bucketMap.get(bucketStart.toISOString());
+
+      if (!point) {
+        continue;
+      }
+
+      point.expense = roundMoney(point.expense + decimalToNumber(row.paidAmount));
+    }
+
+    return bucketStarts
+      .map((start) => bucketMap.get(start.toISOString()))
+      .filter((point): point is RevenueExpensePoint => Boolean(point));
   }
 
   const rows = await prisma.transaction.findMany({

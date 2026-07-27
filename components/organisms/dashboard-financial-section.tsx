@@ -7,6 +7,7 @@ import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
 import { MbokaKpiBoard, MbokaKpiBoardGroup } from "@/components/molecules/mboka-kpi-section";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
+import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
@@ -19,6 +20,7 @@ type DashboardFinancialSectionProps = {
   series: RevenueExpenseComparisonPoint[];
   kpiPeriod: DashboardKpiPeriod;
   kpiScope: DashboardKpiScope;
+  accountingMode: DashboardAccountingMode;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -33,6 +35,7 @@ export function DashboardFinancialSection({
   series,
   kpiPeriod,
   kpiScope,
+  accountingMode,
   granularity,
   categoryPeriod,
   occupancyPeriod,
@@ -56,6 +59,7 @@ export function DashboardFinancialSection({
             basePath={basePath}
             kpiPeriod={kpiPeriod}
             kpiScope={kpiScope}
+            accountingMode={accountingMode}
             granularity={granularity}
             categoryPeriod={categoryPeriod}
             occupancyPeriod={occupancyPeriod}
@@ -140,6 +144,7 @@ export function DashboardFinancialSection({
         basePath={basePath}
         kpiPeriod={kpiPeriod}
         kpiScope={kpiScope}
+        accountingMode={accountingMode}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
