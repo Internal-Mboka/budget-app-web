@@ -20,7 +20,7 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 const adapter = new PrismaNeon({ connectionString });
 
 // Bump when adapter setup changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 5;
+const PRISMA_CLIENT_VERSION = 6;
 
 const RETRYABLE_DB_ERROR_PATTERN =
   /fetch failed|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Connection terminated|NeonDbError|Error connecting to database/i;

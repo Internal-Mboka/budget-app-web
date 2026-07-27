@@ -19,6 +19,7 @@ type ExportsPageProps = {
     register?: string;
     page?: string;
     pageSize?: string;
+    closureError?: string;
   }>;
 };
 
@@ -74,6 +75,7 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
         exportRowCount={exportRowCount}
         periodClosure={periodClosure}
         canClosePeriod={canClosePeriod}
+        closureError={query.closureError ? decodeURIComponent(query.closureError) : undefined}
       />
     </div>
   );

@@ -166,11 +166,11 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Période</Text>
           <Text>{data.periodLabel}</Text>
-          <Text style={styles.rowMeta}>Clé période : {data.periodKey}</Text>
+          <Text style={styles.rowMeta}>Référence {data.documentCode}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activité enregistrée (engagement)</Text>
+          <Text style={styles.sectionTitle}>Synthèse du mois</Text>
           <SummaryRow
             label="Revenus"
             meta={`${data.revenueCount} opération(s)`}
@@ -181,7 +181,7 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
             meta={`${data.expenseCount} opération(s)`}
             value={data.expenseTotal}
           />
-          <SummaryRow label="Avoirs / régularisations" meta={`${data.creditCount} opération(s)`} value={data.creditTotal} />
+          <SummaryRow label="Avoirs" meta={`${data.creditCount} opération(s)`} value={data.creditTotal} />
           <View style={styles.totalRow}>
             <Text>Solde net période</Text>
             <Text>
@@ -191,7 +191,7 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trésorerie (encaissement)</Text>
+          <Text style={styles.sectionTitle}>Trésorerie</Text>
           <SummaryRow label="Encaissements revenus" value={data.paidRevenueTotal} />
           <SummaryRow label="Décaissements dépenses" value={data.paidExpenseTotal} />
           <View style={styles.totalRow}>
@@ -203,7 +203,7 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
         </View>
 
         <View style={styles.hashBox}>
-          <Text style={styles.hashLabel}>Empreinte d'intégrité SHA-256</Text>
+          <Text style={styles.hashLabel}>Empreinte de vérification</Text>
           <Text style={styles.hashValue}>{data.integrityHashDisplay}</Text>
         </View>
 

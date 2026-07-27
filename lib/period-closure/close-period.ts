@@ -9,8 +9,8 @@ import {
   buildPeriodBalanceSnapshotWithHash,
   loadPeriodBalanceMetrics,
   mapClosureSnapshotToPdfData,
-  type PeriodBalancePdfData,
 } from "@/lib/period-closure/load-period-balance";
+import type { PeriodBalancePdfData } from "@/lib/period-closure/pdf/types";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 

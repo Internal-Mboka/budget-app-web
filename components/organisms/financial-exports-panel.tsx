@@ -33,6 +33,7 @@ type FinancialExportsPanelProps = {
   exportRowCount: number;
   periodClosure: FinancialPeriodClosureRecord | null;
   canClosePeriod: boolean;
+  closureError?: string;
 };
 
 const REGISTER_OPTIONS: Array<{ value: FinancialExportRegister; label: string }> = [
@@ -62,6 +63,7 @@ export function FinancialExportsPanel({
   exportRowCount,
   periodClosure,
   canClosePeriod,
+  closureError,
 }: FinancialExportsPanelProps) {
   const router = useRouter();
   const registerLabel =
@@ -285,6 +287,16 @@ export function FinancialExportsPanel({
             {" : revenus, dépenses, avoirs et solde net."}
           </p>
 
+          {closureError ? (
+            <p
+              className="rounded-2xl border border-red-100 bg-red-50/80 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200"
+              data-testid="financial-export-period-balance-error"
+              role="alert"
+            >
+              {closureError}
+            </p>
+          ) : null}
+
           {periodClosure ? (
             <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
               <Lock className="size-4 shrink-0" />
@@ -325,6 +337,15 @@ export function FinancialExportsPanel({
                         "border-amber-200 text-amber-900 dark:border-amber-900 dark:text-amber-100"
                       )}
                       data-testid="financial-export-period-balance-close"
+                      onClick={(event) => {
+                        const confirmed = window.confirm(
+                          "Clôturer ce mois ? Les modifications rétroactives seront réservées au PDG."
+                        );
+
+                        if (!confirmed) {
+                          event.preventDefault();
+                        }
+                      }}
                     >
                       <Lock className="size-4" />
                       Clôturer le mois

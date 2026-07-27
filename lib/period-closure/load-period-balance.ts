@@ -10,6 +10,8 @@ import {
 } from "@/lib/period-closure/dates";
 import { computePeriodBalanceIntegrityHash, type PeriodBalanceSnapshot } from "@/lib/period-closure/integrity";
 import type { PeriodBalancePdfData } from "@/lib/period-closure/pdf/types";
+import { prisma } from "@/lib/prisma";
+import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
 const ACTIVE_REVENUE_WHERE: Prisma.TransactionWhereInput = {
   type: "REVENUE",
