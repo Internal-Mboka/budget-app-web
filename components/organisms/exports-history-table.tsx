@@ -100,7 +100,7 @@ export function ExportsHistoryTable({ exports: items, hasActiveFilters = false }
                 </p>
                 {exportKindUsesArchivedSnapshotOnly(item.kind) ? (
                   <p className="text-xs text-sky-700 dark:text-sky-300">
-                    Bilan figé à la clôture — seule la copie archivée fait foi.
+                    Bilan clôturé — pas de version à jour. Utilisez la copie archivée (fichier d&apos;origine).
                   </p>
                 ) : null}
               </div>

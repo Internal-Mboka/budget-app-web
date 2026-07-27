@@ -52,8 +52,9 @@ export function ExportsHistoryFilters({ from, to, kind }: ExportsHistoryFiltersP
             sans remplacer l&apos;archive.
           </p>
           <p>
-            <strong className="font-medium text-slate-700 dark:text-slate-200">Bilans clôturés</strong> — figés à la
-            clôture ; seule la copie archivée fait foi.
+            <strong className="font-medium text-slate-700 dark:text-slate-200">Bilans clôturés</strong> — une fois
+            clôturé, un bilan ne change plus. Il n&apos;y a pas de version à jour : gardez la copie archivée, c&apos;est
+            le fichier d&apos;origine enregistré à la date indiquée.
           </p>
         </MbokaInfoPopover>
       </header>
