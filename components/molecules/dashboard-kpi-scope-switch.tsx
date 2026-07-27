@@ -4,7 +4,6 @@ import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import { getKpiScopeLabel, type DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
-import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 

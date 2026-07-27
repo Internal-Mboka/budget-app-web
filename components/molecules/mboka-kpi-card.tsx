@@ -94,6 +94,9 @@ export function MbokaKpiCard({
             className="mt-1.5 text-[11px]"
           />
         ) : null}
+        {hint ? (
+          <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
+        ) : null}
         {breakdown && breakdown.length > 0 ? (
           <ul
             className="mt-2 space-y-0.5 border-t border-sky-100/80 pt-2 dark:border-sky-900/80"
@@ -112,9 +115,6 @@ export function MbokaKpiCard({
               </li>
             ))}
           </ul>
-        ) : null}
-        {hint ? (
-          <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
         ) : null}
       </article>
     );
