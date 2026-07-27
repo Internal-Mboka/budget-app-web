@@ -3,12 +3,14 @@ import { fr } from "date-fns/locale";
 
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
 import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-card";
+import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { DashboardKpis, RevenueExpensePoint } from "@/lib/dashboard/load-analytics";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 
 type DashboardFinancialSectionProps = {
   basePath: "/dashboard" | "/dashboard/financier";
   kpis: DashboardKpis;
+  comparison: DashboardKpiComparison;
   series: RevenueExpensePoint[];
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
@@ -19,6 +21,7 @@ type DashboardFinancialSectionProps = {
 export function DashboardFinancialSection({
   basePath,
   kpis,
+  comparison,
   series,
   kpiPeriod,
   granularity,
@@ -39,12 +42,22 @@ export function DashboardFinancialSection({
           value={kpis.revenueTotal}
           hint={kpis.periodLabel}
           testId="dashboard-kpi-revenue"
+          delta={{
+            percentChange: comparison.revenue.percentChange,
+            comparisonLabel: comparison.revenue.comparisonLabel,
+            polarity: "higher-is-better",
+          }}
         />
         <MbokaKpiCard
           label="Dépenses totales"
           value={kpis.expenseTotal}
           hint={kpis.periodLabel}
           testId="dashboard-kpi-expenses"
+          delta={{
+            percentChange: comparison.expenses.percentChange,
+            comparisonLabel: comparison.expenses.comparisonLabel,
+            polarity: "lower-is-better",
+          }}
         />
         <MbokaKpiCard
           label="Trésorerie nette"

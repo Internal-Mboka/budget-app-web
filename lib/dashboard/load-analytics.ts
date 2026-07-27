@@ -97,22 +97,9 @@ export async function loadDashboardKpis(
   reference = new Date()
 ): Promise<DashboardKpis> {
   const { from, to, label } = getKpiPeriodRange(kpiPeriod, reference);
+  const periodTotals = await loadPeriodFinancialTotals(from, to);
 
-  const [periodRevenues, periodExpenses, paidRevenues, paidExpenses, receivableRows] = await Promise.all([
-    prisma.transaction.findMany({
-      where: {
-        ...ACTIVE_REVENUE_WHERE,
-        createdAt: { gte: from, lte: to },
-      },
-      select: { totalAmount: true },
-    }),
-    prisma.transaction.findMany({
-      where: {
-        ...ACTIVE_EXPENSE_WHERE,
-        createdAt: { gte: from, lte: to },
-      },
-      select: { totalAmount: true },
-    }),
+  const [paidRevenues, paidExpenses, receivableRows] = await Promise.all([
     prisma.transaction.findMany({
       where: ACTIVE_REVENUE_WHERE,
       select: { paidAmount: true },
@@ -131,13 +118,37 @@ export async function loadDashboardKpis(
   ]);
 
   return {
-    revenueTotal: sumDecimal(periodRevenues, "totalAmount"),
-    expenseTotal: sumDecimal(periodExpenses, "totalAmount"),
+    revenueTotal: periodTotals.revenueTotal,
+    expenseTotal: periodTotals.expenseTotal,
     netTreasury: roundMoney(sumDecimal(paidRevenues, "paidAmount") - sumDecimal(paidExpenses, "paidAmount")),
     receivables: roundMoney(
       receivableRows.reduce((sum, row) => sum + decimalToNumber(row.remainingAmount), 0)
     ),
     periodLabel: label,
+  };
+}
+
+export async function loadPeriodFinancialTotals(from: Date, to: Date) {
+  const [periodRevenues, periodExpenses] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        ...ACTIVE_REVENUE_WHERE,
+        createdAt: { gte: from, lte: to },
+      },
+      select: { totalAmount: true },
+    }),
+    prisma.transaction.findMany({
+      where: {
+        ...ACTIVE_EXPENSE_WHERE,
+        createdAt: { gte: from, lte: to },
+      },
+      select: { totalAmount: true },
+    }),
+  ]);
+
+  return {
+    revenueTotal: sumDecimal(periodRevenues, "totalAmount"),
+    expenseTotal: sumDecimal(periodExpenses, "totalAmount"),
   };
 }
 

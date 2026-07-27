@@ -7,6 +7,7 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import {
   countOverdueReceivables,
   DASHBOARD_OVERDUE_PREVIEW_LIMIT,
@@ -45,9 +46,10 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [kpis, series, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
+  const [kpis, kpiComparison, series, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
       loadDashboardKpis(kpiPeriod),
+      loadDashboardKpiComparison(kpiPeriod),
       loadRevenueExpenseSeries(granularity),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
@@ -77,6 +79,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
       <DashboardFinancialSection
         basePath="/dashboard/financier"
         kpis={kpis}
+        comparison={kpiComparison}
         series={series}
         kpiPeriod={kpiPeriod}
         granularity={granularity}

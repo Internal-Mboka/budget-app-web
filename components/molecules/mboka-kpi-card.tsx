@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { MbokaKpiTrend, type KpiTrendDelta } from "@/components/molecules/mboka-kpi-trend";
 import { formatMoney } from "@/lib/currency";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ type MbokaKpiCardProps = {
   label: string;
   value: number;
   hint?: string;
+  delta?: KpiTrendDelta;
   testId?: string;
   className?: string;
   format?: "money" | "percent" | "hours" | "number";
@@ -17,6 +19,7 @@ export function MbokaKpiCard({
   label,
   value,
   hint,
+  delta,
   testId,
   className,
   format = "money",
@@ -40,6 +43,7 @@ export function MbokaKpiCard({
     >
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-3 text-2xl font-semibold text-[#10579F] dark:text-sky-50">{displayValue}</p>
+      {delta ? <MbokaKpiTrend delta={delta} testId={testId ? `${testId}-delta` : undefined} /> : null}
       {hint ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p> : null}
     </article>
   );

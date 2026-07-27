@@ -198,7 +198,7 @@
 | US-48 | Ventilation CA par activité | `[x]` |
 | US-49 | Taux d'occupation espaces studio | `[x]` |
 | US-50 | Créances & factures impayées | `[x]` |
-| US-51 | Comparatif performances N vs N-1 | `[ ]` |
+| US-51 | Comparatif performances N vs N-1 | `[x]` |
 | US-52 | Projection trésorerie & prévisions | `[ ]` |
 
 ### SPEC 8 — Archives, Exports & PWA

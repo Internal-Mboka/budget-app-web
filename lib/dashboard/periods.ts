@@ -1,4 +1,5 @@
 import {
+  addDays,
   differenceInCalendarDays,
   endOfDay,
   endOfMonth,
@@ -15,6 +16,7 @@ import {
   subMonths,
   subQuarters,
   subWeeks,
+  subYears,
 } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -96,6 +98,58 @@ export function getKpiPeriodRange(period: DashboardKpiPeriod, reference = new Da
         to: endOfDay(reference),
         label: "Mois en cours",
       };
+  }
+}
+
+export function getPreviousKpiPeriodRange(period: DashboardKpiPeriod, reference = new Date()) {
+  const current = getKpiPeriodRange(period, reference);
+  const elapsedDays = countDaysInclusive(current.from, current.to);
+
+  switch (period) {
+    case "quarter": {
+      const previousReference = subQuarters(reference, 1);
+      const from = startOfQuarter(previousReference);
+      const periodEnd = endOfQuarter(previousReference);
+
+      return {
+        from,
+        to: endOfDay(addDays(from, Math.min(elapsedDays, countDaysInclusive(from, periodEnd)) - 1)),
+        label: "Trimestre précédent",
+      };
+    }
+    case "year": {
+      const previousReference = subYears(reference, 1);
+      const from = startOfYear(previousReference);
+      const previousYearEnd = endOfYear(previousReference);
+
+      return {
+        from,
+        to: endOfDay(addDays(from, Math.min(elapsedDays, countDaysInclusive(from, previousYearEnd)) - 1)),
+        label: "Année précédente",
+      };
+    }
+    default: {
+      const previousReference = subMonths(reference, 1);
+      const from = startOfMonth(previousReference);
+      const previousMonthEnd = endOfMonth(previousReference);
+
+      return {
+        from,
+        to: endOfDay(addDays(from, Math.min(elapsedDays, countDaysInclusive(from, previousMonthEnd)) - 1)),
+        label: "Mois précédent",
+      };
+    }
+  }
+}
+
+export function getKpiComparisonLabel(period: DashboardKpiPeriod): string {
+  switch (period) {
+    case "quarter":
+      return "vs trimestre précédent";
+    case "year":
+      return "vs année précédente";
+    default:
+      return "vs mois précédent";
   }
 }
 

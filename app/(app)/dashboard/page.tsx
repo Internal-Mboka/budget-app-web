@@ -6,6 +6,7 @@ import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivab
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import {
   countOverdueReceivables,
   DASHBOARD_OVERDUE_PREVIEW_LIMIT,
@@ -45,9 +46,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, series, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
+  const [kpis, kpiComparison, series, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
     await Promise.all([
     loadDashboardKpis(kpiPeriod),
+    loadDashboardKpiComparison(kpiPeriod),
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
     loadStudioOccupancy(occupancyPeriod),
@@ -75,6 +77,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <DashboardFinancialSection
         basePath="/dashboard"
         kpis={kpis}
+        comparison={kpiComparison}
         series={series}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
