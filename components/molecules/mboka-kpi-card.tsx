@@ -14,6 +14,7 @@ type MbokaKpiCardProps = {
   testId?: string;
   className?: string;
   format?: "money" | "percent" | "hours" | "number";
+  size?: "default" | "compact";
 };
 
 export function MbokaKpiCard({
@@ -25,7 +26,10 @@ export function MbokaKpiCard({
   testId,
   className,
   format = "money",
+  size = "default",
 }: MbokaKpiCardProps) {
+  const isCompact = size === "compact";
+
   const displayValue =
     format === "percent"
       ? `${value.toLocaleString("fr-FR")} %`
@@ -38,17 +42,26 @@ export function MbokaKpiCard({
   return (
     <article
       className={cn(
-        "rounded-3xl border border-sky-100 bg-white/80 p-5 shadow-sm dark:border-sky-900 dark:bg-slate-900/70",
+        "rounded-2xl border border-sky-100/80 bg-sky-50/40 shadow-none dark:border-sky-900/80 dark:bg-slate-900/50",
+        isCompact ? "p-3.5 sm:p-4" : "rounded-3xl bg-white/80 p-5 shadow-sm dark:bg-slate-900/70",
         className
       )}
       data-testid={testId}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <p
+          className={cn(
+            "font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400",
+            isCompact ? "text-[10px]" : "text-xs"
+          )}
+        >
+          {label}
+        </p>
         {scope ? (
           <span
             className={cn(
-              "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              "inline-flex rounded-full font-semibold uppercase tracking-wide",
+              isCompact ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-0.5 text-[10px]",
               scope === "period"
                 ? "bg-sky-100 text-[#10579F] dark:bg-sky-950/60 dark:text-sky-200"
                 : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
@@ -59,9 +72,20 @@ export function MbokaKpiCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-3 text-2xl font-semibold text-[#10579F] dark:text-sky-50">{displayValue}</p>
+      <p
+        className={cn(
+          "font-semibold text-[#10579F] dark:text-sky-50",
+          isCompact ? "mt-2 text-lg sm:text-xl" : "mt-3 text-2xl"
+        )}
+      >
+        {displayValue}
+      </p>
       {delta ? <MbokaKpiTrend delta={delta} testId={testId ? `${testId}-delta` : undefined} /> : null}
-      {hint ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p> : null}
+      {hint ? (
+        <p className={cn("text-slate-500 dark:text-slate-400", isCompact ? "mt-1.5 text-[11px]" : "mt-2 text-xs")}>
+          {hint}
+        </p>
+      ) : null}
     </article>
   );
 }

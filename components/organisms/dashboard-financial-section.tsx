@@ -3,7 +3,7 @@ import { fr } from "date-fns/locale";
 
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
 import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
-import { MbokaKpiSection } from "@/components/molecules/mboka-kpi-section";
+import { MbokaKpiBoard, MbokaKpiSection } from "@/components/molecules/mboka-kpi-section";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
@@ -44,10 +44,10 @@ export function DashboardFinancialSection({
         Données calculées au {updatedLabel}
       </p>
 
-      <div className="space-y-6" data-testid="dashboard-kpi-grid">
+      <MbokaKpiBoard>
         <MbokaKpiSection
           title="Activité enregistrée"
-          description={`Montants saisis sur la période sélectionnée (${periodHint.toLowerCase()}). Basés sur la date d'enregistrement des transactions.`}
+          description={`Montants saisis sur la période (${periodHint.toLowerCase()}) — date d'enregistrement.`}
           testId="dashboard-kpi-section-activity"
         >
           <MbokaKpiCard
@@ -55,6 +55,7 @@ export function DashboardFinancialSection({
             value={kpis.revenueTotal}
             hint={periodHint}
             scope="period"
+            size="compact"
             testId="dashboard-kpi-revenue"
             delta={{
               percentChange: comparison.revenue.percentChange,
@@ -67,6 +68,7 @@ export function DashboardFinancialSection({
             value={kpis.expenseTotal}
             hint={periodHint}
             scope="period"
+            size="compact"
             testId="dashboard-kpi-expenses"
             delta={{
               percentChange: comparison.expenses.percentChange,
@@ -78,7 +80,7 @@ export function DashboardFinancialSection({
 
         <MbokaKpiSection
           title="Position de trésorerie"
-          description="Instantané global — toutes périodes confondues. Reflète la trésorerie réellement encaissée et les créances ouvertes."
+          description="Instantané global — encaissements payés et créances ouvertes."
           testId="dashboard-kpi-section-position"
         >
           <MbokaKpiCard
@@ -86,6 +88,7 @@ export function DashboardFinancialSection({
             value={kpis.netTreasury}
             hint="Encaissements payés − décaissements payés"
             scope="global"
+            size="compact"
             testId="dashboard-kpi-treasury"
           />
           <MbokaKpiCard
@@ -93,10 +96,11 @@ export function DashboardFinancialSection({
             value={kpis.receivables}
             hint="Soldes impayés clients"
             scope="global"
+            size="compact"
             testId="dashboard-kpi-receivables"
           />
         </MbokaKpiSection>
-      </div>
+      </MbokaKpiBoard>
 
       <DashboardAnalyticsPanel
         basePath={basePath}
