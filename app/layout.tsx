@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
@@ -18,9 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Mboka Budget",
-  description: "Plateforme de gestion financiere et operationnelle Mboka Studio",
+  description: "Plateforme de gestion financière et opérationnelle Mboka Studio",
   manifest: "/manifest.webmanifest",
-  themeColor: "#10579F",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -30,6 +29,16 @@ export const metadata: Metadata = {
     icon: "/icon?v=3",
     apple: "/apple-icon?v=3",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#10579F" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1628" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

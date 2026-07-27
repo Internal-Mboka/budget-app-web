@@ -208,6 +208,8 @@
 | US-53 | Export données comptables & factures | `[x]` |
 | US-54 | Webhooks & alertes événements critiques | `[x]` |
 | US-55 | Installation PWA & prompt contextuel | `[x]` |
+
+<!-- US-55 : manifest fr + start_url /dashboard, prompt contextuel (post-login, délai 1,8 s, dismiss 14 j), page /offline brandée, bandeau réseau offline, viewport themeColor. -->
 | US-56 | Mode hors-ligne partiel & sync | `[ ]` |
 | US-57 | Bilan financier périodique | `[x]` |
 | US-58 | Personnalisation alertes Push/Webhooks | `[ ]` |
