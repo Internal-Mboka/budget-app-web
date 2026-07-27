@@ -1,6 +1,7 @@
 "use client";
 
 import type { RevenueCategory } from "@prisma/client";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ import {
 } from "@/lib/revenues/status";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/transactions/payment-methods";
 import { parseMoneyInput } from "@/lib/transactions/decimal";
+import { enqueueRevenueForm, isOffline } from "@/lib/pwa/offline-sync-queue";
 import { cn } from "@/lib/utils";
 
 const categoryOptions = REVENUE_CATEGORY_OPTIONS.map((option) => ({
@@ -53,6 +55,7 @@ export function RevenueCreateForm({
   canApplyDiscount = false,
   defaultSessionDate,
 }: RevenueCreateFormProps) {
+  const router = useRouter();
   const handledStateRef = useRef<CreateRevenueFormState>(null);
   const [state, formAction] = useActionState(createRevenueFormAction, null);
   const [revenueCategory, setRevenueCategory] = useState<RevenueCategory>("STUDIO_SESSION");
@@ -121,6 +124,22 @@ export function RevenueCreateForm({
           if (!client) {
             event.preventDefault();
             toast.error("Veuillez sélectionner un client.");
+            return;
+          }
+
+          if (isOffline()) {
+            event.preventDefault();
+
+            void enqueueRevenueForm(event.currentTarget, client.name)
+              .then(() => {
+                toast.success(
+                  "Revenu enregistré sur cet appareil. Il sera envoyé automatiquement dès que la connexion reviendra."
+                );
+                router.push("/revenues");
+              })
+              .catch(() => {
+                toast.error("Impossible d'enregistrer la saisie en local. Réessayez dans un instant.");
+              });
           }
         }}
       >

@@ -212,7 +212,7 @@
 <!-- US-55 : manifest fr + start_url /dashboard, prompt contextuel (post-login, délai 1,8 s, dismiss 14 j), page /offline brandée, bandeau réseau offline, viewport themeColor. -->
 | US-56 | Mode hors-ligne partiel & sync | `[x]` |
 
-<!-- US-56 : cache SW pages essentielles (NetworkFirst), snapshot dashboard sessionStorage, bandeau offline/reconnecté + bouton Actualiser (`router.refresh`). US-60 = queue saisie offline. -->
+<!-- US-56 : cache SW pages essentielles (NetworkFirst), snapshot dashboard sessionStorage, bandeau offline/reconnecté + bouton Actualiser (`router.refresh`). US-60 = queue saisie revenu IndexedDB + sync auto. -->
 | US-57 | Bilan financier périodique | `[x]` |
 | US-58 | Personnalisation alertes Push/Webhooks | `[x]` |
 
@@ -220,7 +220,9 @@
 | US-59 | Historique exports & stockage | `[x]` |
 
 <!-- US-59 : GeneratedExport + storage/exports — historique /exports/history (PDG, DT, Comptable), téléchargement archive ou régénération. -->
-| US-60 | Queue sync hors-ligne transactions | `[ ]` |
+| US-60 | Queue sync hors-ligne transactions | `[x]` |
+
+<!-- US-60 : IndexedDB queue saisies revenu, POST /api/revenues, sync auto à la reconnexion + Background Sync SW, toasts confirmation. -->
 
 ### SPEC 9 — Ergonomie UX & Robustesse
 

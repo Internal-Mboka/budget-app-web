@@ -14,6 +14,7 @@ const withPWA = withPWAInit({
   },
   workboxOptions: {
     extendDefaultRuntimeCaching: true,
+    importScripts: ["/offline-sync-sw.js"],
     runtimeCaching: [
       {
         urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>

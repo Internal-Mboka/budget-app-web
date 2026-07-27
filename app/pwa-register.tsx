@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { PwaInstallPrompt } from "@/components/organisms/pwa-install-prompt";
+import { OfflineSyncBridge } from "@/components/molecules/offline-sync-bridge";
 import { PwaNetworkStatus } from "@/components/molecules/pwa-network-status";
 import {
   detectIosSafari,
@@ -120,6 +121,7 @@ export function PwaRegister() {
 
   return (
     <>
+      <OfflineSyncBridge />
       <PwaNetworkStatus />
       {installed || !showPrompt ? null : (
         <PwaInstallPrompt
