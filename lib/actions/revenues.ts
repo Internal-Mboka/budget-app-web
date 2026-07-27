@@ -19,6 +19,7 @@ import {
 } from "@/lib/revenues/payment-history";
 import { findRevenueBookingConflict } from "@/lib/revenues/conflicts";
 import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
+import { assertOpenFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { generateTransactionCode } from "@/lib/transactions/code";
 import { roundMoney } from "@/lib/transactions/decimal";
@@ -97,6 +98,11 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
 
   if (conflict) {
     return { success: false, error: conflict.message };
+  }
+
+  const fiscalPeriodLock = await assertOpenFiscalPeriodForFinancialWrite();
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   const cashDayLock = await assertTodayCashDayOpen();

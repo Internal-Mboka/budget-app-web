@@ -33,6 +33,16 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
     cy.location("search").should("include", "to=2026-01-31");
   });
 
+  it("met à jour le registre CSV immédiatement au changement", () => {
+    cy.visit("/exports?from=2026-07-01&to=2026-07-31&register=revenues");
+    cy.dismissPwaPrompt();
+
+    cy.pickMbokaSelect("register", "Registre des dépenses");
+
+    cy.location("search").should("include", "register=expenses");
+    cy.contains("Registre des dépenses").should("be.visible");
+  });
+
   it("télécharge un CSV registre revenus", () => {
     cy.visit("/exports?from=2026-01-01&to=2026-12-31&register=revenues");
     cy.dismissPwaPrompt();

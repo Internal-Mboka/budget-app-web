@@ -15,6 +15,7 @@ import {
   createInstallmentPaymentEntry,
 } from "@/lib/revenues/payment-history";
 import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
+import { assertOpenFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { withRevenueRealized, parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -107,6 +108,11 @@ export async function recordRevenuePaymentAction(
 
   if (transaction.status === "LITIGE_ANNULE") {
     return { success: false, error: "Impossible d'encaisser un revenu annulé." };
+  }
+
+  const fiscalPeriodLock = await assertOpenFiscalPeriodForFinancialWrite();
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   const cashDayLock = await assertTodayCashDayOpen();

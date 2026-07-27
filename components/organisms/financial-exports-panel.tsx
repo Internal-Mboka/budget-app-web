@@ -93,6 +93,22 @@ export function FinancialExportsPanel({
     return `/api/exports/period-balance/pdf?${params.toString()}`;
   }
 
+  function applyExportFilters(nextRegister?: FinancialExportRegister) {
+    const form = document.getElementById("financial-export-filters-form") as HTMLFormElement | null;
+    const formData = form ? new FormData(form) : null;
+    const params = new URLSearchParams();
+
+    const from = String(formData?.get("from") ?? filters.from).trim();
+    const to = String(formData?.get("to") ?? filters.to).trim();
+    const register = nextRegister ?? String(formData?.get("register") ?? filters.register).trim();
+
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    if (register) params.set("register", register);
+
+    router.push(`/exports?${params.toString()}`);
+  }
+
   return (
     <div className="space-y-6">
       <section className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")} data-testid="financial-export-filters">
@@ -102,6 +118,7 @@ export function FinancialExportsPanel({
         </div>
 
         <form
+          id="financial-export-filters-form"
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
@@ -149,20 +166,24 @@ export function FinancialExportsPanel({
             </Field>
             <Field className="sm:col-span-2 lg:col-span-1">
               <FieldLabel htmlFor="register" className={mbokaLabelClassName}>
-                Contenu à exporter
+                Registre CSV
               </FieldLabel>
               <MbokaSelect
                 id="register"
                 name="register"
                 defaultValue={filters.register}
                 options={REGISTER_OPTIONS}
+                onValueChange={(value) => applyExportFilters(value as FinancialExportRegister)}
               />
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Met à jour l&apos;export CSV ci-dessous. La liste PDF concerne toujours les revenus.
+              </p>
             </Field>
           </FieldGroup>
 
           <div className="flex flex-wrap gap-2">
             <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
-              Afficher
+              Appliquer les dates
             </button>
             <Link href="/exports" className={mbokaButtonOutlineClassName}>
               Réinitialiser
@@ -206,7 +227,7 @@ export function FinancialExportsPanel({
             {revenueDocumentsPagination.total.toLocaleString("fr-FR")}{" "}
             {revenueDocumentsPagination.total > 1 ? "revenus" : "revenu"}
           </span>
-          {" sur cette période — téléchargez la proforma ou le reçu de chaque opération."}
+          {" sur cette période — proformas et reçus (indépendamment du registre CSV)."}
         </p>
 
         {revenueDocuments.length === 0 ? (
@@ -308,10 +329,10 @@ export function FinancialExportsPanel({
               </span>
             </div>
           ) : (
-            <p className="text-sm text-amber-700 dark:text-amber-300">
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-900/80 dark:bg-amber-950/25 dark:text-amber-50">
               Ce mois n&apos;est pas encore clôturé. Après clôture, seuls le PDG et le DT pourront
               modifier les opérations passées.
-            </p>
+            </div>
           )}
 
           <div className="flex flex-wrap gap-2">
@@ -333,8 +354,8 @@ export function FinancialExportsPanel({
                     <button
                       type="submit"
                       className={cn(
-                        mbokaButtonPrimaryClassName,
-                        "border-amber-200 text-amber-900 dark:border-amber-900 dark:text-amber-100"
+                        mbokaButtonOutlineClassName,
+                        "border-amber-300 bg-amber-600 font-semibold text-white shadow-sm hover:bg-amber-700 dark:border-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
                       )}
                       data-testid="financial-export-period-balance-close"
                       onClick={(event) => {
