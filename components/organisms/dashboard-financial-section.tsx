@@ -43,10 +43,6 @@ export function DashboardFinancialSection({
   const activityScope = kpiScope === "global" ? "global" : "period";
   const showActivityDelta = kpiScope === "period";
   const periodLabelLower = kpis.periodLabel.toLowerCase();
-  const boardSubtitle =
-    kpiScope === "global"
-      ? "Cumul des enregistrements · position trésorerie instantanée"
-      : `Enregistrements · ${periodLabelLower} · trésorerie instantanée`;
   const activityGroupLabel = kpiScope === "global" ? "Activité cumulée" : "Activité sur la période";
   const activityGroupDescription =
     kpiScope === "global"
@@ -60,7 +56,6 @@ export function DashboardFinancialSection({
       </p>
 
       <MbokaKpiBoard
-        subtitle={boardSubtitle}
         headerAction={
           <DashboardKpiScopeSwitch
             basePath={basePath}

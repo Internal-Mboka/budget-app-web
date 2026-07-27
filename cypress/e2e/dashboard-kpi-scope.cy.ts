@@ -32,7 +32,8 @@ describe("Mboka Budget — SPEC 10 US-68 Toggle portée KPI", () => {
     cy.get('[data-testid="dashboard-kpi-treasury-scope"]').should("contain.text", "Global");
     cy.get('[data-testid="dashboard-kpi-revenue-delta"]').should("not.exist");
     cy.get('[data-testid="dashboard-kpi-expenses-delta"]').should("not.exist");
-    cy.contains("Cumul des enregistrements").should("be.visible");
+    cy.contains("Activité cumulée").should("be.visible");
+    cy.contains("Total historique des montants enregistrés").should("be.visible");
   });
 
   it("préserve kpiScope lors d'un changement de période graphique", () => {

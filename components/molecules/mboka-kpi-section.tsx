@@ -6,7 +6,6 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type MbokaKpiBoardProps = {
-  subtitle: string;
   children: ReactNode;
   headerAction?: ReactNode;
   testId?: string;
@@ -15,7 +14,6 @@ type MbokaKpiBoardProps = {
 
 /** Carte mère unique — grille KPI dashboard financier (SPEC 10). */
 export function MbokaKpiBoard({
-  subtitle,
   children,
   headerAction,
   testId = "dashboard-kpi-grid",
@@ -27,11 +25,8 @@ export function MbokaKpiBoard({
       data-testid={testId}
       aria-label="Indicateurs financiers"
     >
-      <header className="mb-5 flex flex-col gap-4 border-b border-sky-100 pb-4 dark:border-sky-900 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-1">
-          <h2 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
-        </div>
+      <header className="mb-5 flex flex-col gap-4 border-b border-sky-100 pb-4 dark:border-sky-900 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
 
         <div className="flex flex-wrap items-center gap-3">
           {headerAction}
