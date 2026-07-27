@@ -2,20 +2,21 @@ import { notFound } from "next/navigation";
 
 import { CashClosingDetailPanel } from "@/components/organisms/cash-closing-detail-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
-import { requirePermission } from "@/lib/auth/session";
+import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
 
 type CashClosingDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{ created?: string; reviewApproved?: string; reviewResolved?: string }>;
 };
 
 export default async function CashClosingDetailPage({ params, searchParams }: CashClosingDetailPageProps) {
-  await requirePermission(PERMISSIONS.CASH_CLOSE);
+  const session = await requirePermission(PERMISSIONS.CASH_CLOSE);
   const { id } = await params;
   const query = await searchParams;
+  const canReview = hasPermission(session.user.permissions, PERMISSIONS.CASH_APPROVE_CLOSING);
 
   const closing = await prisma.cashClosing.findUnique({
     where: { id },
@@ -31,6 +32,14 @@ export default async function CashClosingDetailPage({ params, searchParams }: Ca
       gapAmount: true,
       hasDiscrepancy: true,
       notes: true,
+      reviewStatus: true,
+      reviewerInstruction: true,
+      reviewedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
       operator: {
         select: {
           firstName: true,
@@ -44,6 +53,10 @@ export default async function CashClosingDetailPage({ params, searchParams }: Ca
   if (!closing) {
     notFound();
   }
+
+  const reviewerName = closing.reviewedBy
+    ? `${closing.reviewedBy.firstName} ${closing.reviewedBy.lastName}`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -66,9 +79,17 @@ export default async function CashClosingDetailPage({ params, searchParams }: Ca
           gapAmount: decimalToNumber(closing.gapAmount),
           hasDiscrepancy: closing.hasDiscrepancy,
           notes: closing.notes,
+          reviewStatus: closing.reviewStatus,
+          reviewerInstruction: closing.reviewerInstruction,
           operator: closing.operator,
         }}
-        flash={{ created: query.created === "1" }}
+        canReview={canReview}
+        reviewerName={reviewerName}
+        flash={{
+          created: query.created === "1",
+          reviewApproved: query.reviewApproved === "1",
+          reviewResolved: query.reviewResolved === "1",
+        }}
       />
     </div>
   );

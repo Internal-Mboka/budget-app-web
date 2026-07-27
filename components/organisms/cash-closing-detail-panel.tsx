@@ -9,12 +9,16 @@ import { toast } from "sonner";
 
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
 import { CashClosingPdfActions } from "@/components/molecules/cash-closing-pdf-actions";
+import { CashClosingReviewSection } from "@/components/organisms/cash-closing-review-section";
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
 import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
+import { getClosingReviewStatusLabel, isClosingReviewPending } from "@/lib/cash-closing/review";
 import { formatMoney } from "@/lib/currency";
 import { mbokaLabelClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+
+import type { ClosingReviewStatus } from "@prisma/client";
 
 type CashClosingDetailPanelProps = {
   closing: {
@@ -29,23 +33,41 @@ type CashClosingDetailPanelProps = {
     gapAmount: number;
     hasDiscrepancy: boolean;
     notes?: string | null;
+    reviewStatus: ClosingReviewStatus;
+    reviewerInstruction?: string | null;
     operator: {
       firstName: string;
       lastName: string;
       avatarUrl: string | null;
     };
   };
+  canReview: boolean;
+  reviewerName?: string | null;
   flash?: {
     created?: boolean;
+    reviewApproved?: boolean;
+    reviewResolved?: boolean;
   };
 };
 
-export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPanelProps) {
+export function CashClosingDetailPanel({ closing, canReview, reviewerName, flash }: CashClosingDetailPanelProps) {
   useEffect(() => {
     if (flash?.created) {
-      toast.success("Clôture enregistrée — imprimez le ticket Z si besoin.");
+      toast.success(
+        closing.hasDiscrepancy
+          ? "Clôture enregistrée — transmise au PDG pour revue de l'écart."
+          : "Clôture enregistrée — imprimez le ticket Z si besoin."
+      );
     }
-  }, [flash?.created]);
+
+    if (flash?.reviewApproved) {
+      toast.success("Clôture validée — écart analysé par la direction.");
+    }
+
+    if (flash?.reviewResolved) {
+      toast.success("Clôture marquée comme régularisée.");
+    }
+  }, [flash?.created, flash?.reviewApproved, flash?.reviewResolved, closing.hasDiscrepancy]);
 
   const closingDateLabel = format(new Date(closing.date), "d MMMM yyyy", { locale: fr });
   const expected = computeExpectedClosingBalances({
@@ -106,6 +128,19 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
               Tout correspond
             </span>
           )}
+          {closing.hasDiscrepancy ? (
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-1 text-xs font-medium",
+                isClosingReviewPending(closing.reviewStatus)
+                  ? "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
+                  : "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+              )}
+              data-testid="cash-closing-review-badge"
+            >
+              {getClosingReviewStatusLabel(closing.reviewStatus)}
+            </span>
+          ) : null}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -182,7 +217,9 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
               className="mt-3 text-sm text-amber-700 dark:text-amber-300"
               data-testid="cash-closing-detail-gap"
             >
-              Différence signalée pour revue.
+              {isClosingReviewPending(closing.reviewStatus)
+                ? "Différence signalée — en attente de revue PDG."
+                : getClosingReviewStatusLabel(closing.reviewStatus)}
             </p>
           ) : (
             <p
@@ -206,6 +243,16 @@ export function CashClosingDetailPanel({ closing, flash }: CashClosingDetailPane
           </div>
         ) : null}
       </section>
+
+      {closing.hasDiscrepancy ? (
+        <CashClosingReviewSection
+          closingId={closing.id}
+          reviewStatus={closing.reviewStatus}
+          reviewerInstruction={closing.reviewerInstruction}
+          reviewerName={reviewerName}
+          canReview={canReview}
+        />
+      ) : null}
     </div>
   );
 }

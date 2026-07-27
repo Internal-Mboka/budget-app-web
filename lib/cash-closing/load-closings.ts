@@ -9,6 +9,7 @@ export type CashClosingHistoryItem = {
   date: string;
   gapAmount: number;
   hasDiscrepancy: boolean;
+  reviewStatus: "APPROVED" | "PENDING_REVIEW" | "RESOLVED";
   createdAt: string;
   operator: {
     firstName: string;
@@ -29,6 +30,7 @@ const closingSelect = {
   date: true,
   gapAmount: true,
   hasDiscrepancy: true,
+  reviewStatus: true,
   createdAt: true,
   operator: {
     select: {
@@ -44,6 +46,7 @@ function mapClosingRow(row: {
   date: Date;
   gapAmount: Prisma.Decimal;
   hasDiscrepancy: boolean;
+  reviewStatus: CashClosingHistoryItem["reviewStatus"];
   createdAt: Date;
   operator: CashClosingHistoryItem["operator"];
 }): CashClosingHistoryItem {
@@ -52,6 +55,7 @@ function mapClosingRow(row: {
     date: row.date.toISOString(),
     gapAmount: decimalToNumber(row.gapAmount),
     hasDiscrepancy: row.hasDiscrepancy,
+    reviewStatus: row.reviewStatus,
     createdAt: row.createdAt.toISOString(),
     operator: row.operator,
   };

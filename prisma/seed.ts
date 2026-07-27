@@ -10,6 +10,7 @@ const PERMISSIONS = [
   { slug: "finance:approve-expense", description: "Approbation des dépenses à seuil élevé" },
   { slug: "finance:validate-payment", description: "Validation des encaissements" },
   { slug: "cash:close", description: "Clôture de caisse" },
+  { slug: "cash:approve-closing", description: "Approbation des clôtures à écart" },
   { slug: "finance:cancel-adjustment", description: "Annulation et avoirs" },
   { slug: "finance:archive-transaction", description: "Archivage des transactions" },
   { slug: "users:manage", description: "Gestion des utilisateurs (IAM)" },

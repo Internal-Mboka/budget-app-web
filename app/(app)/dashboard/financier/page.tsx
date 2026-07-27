@@ -1,4 +1,5 @@
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
+import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
@@ -7,6 +8,10 @@ import {
   countPendingExpenseApprovals,
   loadPendingExpenseApprovals,
 } from "@/lib/expenses/load-pending-approvals";
+import {
+  countPendingCashClosingReviews,
+  loadPendingCashClosingReviews,
+} from "@/lib/cash-closing/load-pending-reviews";
 import { countPendingRecurringDues, loadPendingRecurringDues } from "@/lib/expenses/load-recurring-dues";
 import { PERMISSIONS } from "@/lib/permissions";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
@@ -15,6 +20,7 @@ import { cn } from "@/lib/utils";
 export default async function FinancialDashboardPage() {
   const session = await requirePermission(PERMISSIONS.DASHBOARD_FINANCIAL);
   const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
+  const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
 
   await ensureRecurringExpenseDuesSynced();
 
@@ -36,6 +42,19 @@ export default async function FinancialDashboardPage() {
             totalPending={totalPending}
             approvalThreshold={getExpenseApprovalThreshold()}
           />
+        );
+      })()
+    : null;
+
+  const pendingClosingReviewsPanel = canApproveClosings
+    ? await (async () => {
+        const [items, totalPending] = await Promise.all([
+          loadPendingCashClosingReviews(5),
+          countPendingCashClosingReviews(),
+        ]);
+
+        return (
+          <CashClosingPendingReviewsPanel items={items} totalPending={totalPending} />
         );
       })()
     : null;
@@ -70,6 +89,7 @@ export default async function FinancialDashboardPage() {
       ) : null}
 
       {pendingPanel}
+      {pendingClosingReviewsPanel}
     </section>
   );
 }

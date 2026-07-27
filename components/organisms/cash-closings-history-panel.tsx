@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { CashClosingOperatorCard } from "@/components/molecules/cash-closing-operator-card";
 import { formatMoney } from "@/lib/currency";
 import type { CashClosingHistoryItem } from "@/lib/cash-closing/load-closings";
+import { getClosingReviewStatusLabel, isClosingReviewPending } from "@/lib/cash-closing/review";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +91,11 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                       Conforme
                     </span>
                   )}
+                  {closing.hasDiscrepancy && isClosingReviewPending(closing.reviewStatus) ? (
+                    <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+                      Revue PDG
+                    </span>
+                  ) : null}
                 </div>
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
                   {closing.hasDiscrepancy ? formatMoney(closing.gapAmount) : "OK"}
@@ -103,7 +109,9 @@ export function CashClosingsHistoryPanel({ closings }: CashClosingsHistoryPanelP
                   emphasized={closing.hasDiscrepancy}
                   subtitle={
                     closing.hasDiscrepancy
-                      ? "Responsable identifié — différence constatée ce jour-là"
+                      ? isClosingReviewPending(closing.reviewStatus)
+                        ? "Responsable identifié — revue PDG en cours"
+                        : getClosingReviewStatusLabel(closing.reviewStatus)
                       : "Clôture validée — tout correspondait"
                   }
                   className="border-0 bg-transparent shadow-none"

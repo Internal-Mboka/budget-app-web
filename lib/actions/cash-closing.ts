@@ -153,6 +153,9 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
     });
 
     revalidatePath("/cash-closing");
+    revalidatePath("/cash-closing/approvals");
+    revalidatePath("/cash-closing/history");
+
     revalidatePath(`/cash-closing/${closing.id}`);
     revalidatePath("/dashboard/financier");
 

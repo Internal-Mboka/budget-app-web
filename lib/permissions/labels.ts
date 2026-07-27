@@ -6,6 +6,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "finance:approve-expense": "Approbation des dépenses à seuil élevé",
   "finance:validate-payment": "Validation des encaissements",
   "cash:close": "Clôture de caisse",
+  "cash:approve-closing": "Approbation des clôtures à écart",
   "finance:cancel-adjustment": "Annulation et avoirs",
   "finance:archive-transaction": "Archivage des transactions",
   "users:manage": "Gestion des utilisateurs (IAM)",
@@ -27,6 +28,8 @@ export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
     "Valider et confirmer les encaissements avant enregistrement définitif.",
   "cash:close":
     "Effectuer la clôture de caisse en fin de journée ou de période.",
+  "cash:approve-closing":
+    "Valider ou régulariser les clôtures de caisse présentant un écart.",
   "finance:cancel-adjustment":
     "Créer des avoirs, annulations et régularisations sur les transactions.",
   "finance:archive-transaction":
@@ -75,6 +78,7 @@ const PERMISSION_CATEGORY_BY_SLUG: Record<string, PermissionCategoryId> = {
   "finance:approve-expense": "finance",
   "finance:validate-payment": "finance",
   "cash:close": "finance",
+  "cash:approve-closing": "finance",
   "finance:cancel-adjustment": "finance",
   "finance:archive-transaction": "finance",
   "dashboard:full": "dashboard",

@@ -6,6 +6,7 @@ export const PERMISSIONS = {
   FINANCE_APPROVE_EXPENSE: "finance:approve-expense",
   FINANCE_VALIDATE_PAYMENT: "finance:validate-payment",
   CASH_CLOSE: "cash:close",
+  CASH_APPROVE_CLOSING: "cash:approve-closing",
   FINANCE_CANCEL_ADJUSTMENT: "finance:cancel-adjustment",
   FINANCE_ARCHIVE_TRANSACTION: "finance:archive-transaction",
   USERS_MANAGE: "users:manage",
