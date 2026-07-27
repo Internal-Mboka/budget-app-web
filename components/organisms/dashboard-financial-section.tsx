@@ -42,6 +42,16 @@ export function DashboardFinancialSection({
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
   const activityScope = kpiScope === "global" ? "global" : "period";
   const showActivityDelta = kpiScope === "period";
+  const periodLabelLower = kpis.periodLabel.toLowerCase();
+  const boardSubtitle =
+    kpiScope === "global"
+      ? "Cumul des enregistrements · position trésorerie instantanée"
+      : `Enregistrements · ${periodLabelLower} · trésorerie instantanée`;
+  const activityGroupLabel = kpiScope === "global" ? "Activité cumulée" : "Activité sur la période";
+  const activityGroupDescription =
+    kpiScope === "global"
+      ? "Total historique des montants enregistrés (date de saisie)"
+      : `Montants enregistrés · ${periodLabelLower}`;
 
   return (
     <>
@@ -50,7 +60,7 @@ export function DashboardFinancialSection({
       </p>
 
       <MbokaKpiBoard
-        periodLabel={kpis.periodLabel}
+        subtitle={boardSubtitle}
         headerAction={
           <DashboardKpiScopeSwitch
             basePath={basePath}
@@ -65,7 +75,8 @@ export function DashboardFinancialSection({
         }
       >
         <MbokaKpiBoardGroup
-          label="Activité"
+          label={activityGroupLabel}
+          description={activityGroupDescription}
           scope={activityScope}
           testId="dashboard-kpi-section-activity"
         >
@@ -103,7 +114,12 @@ export function DashboardFinancialSection({
           />
         </MbokaKpiBoardGroup>
 
-        <MbokaKpiBoardGroup label="Trésorerie" scope="global" testId="dashboard-kpi-section-position">
+        <MbokaKpiBoardGroup
+          label="Position trésorerie"
+          description="Solde instantané · toutes périodes confondues"
+          scope="global"
+          testId="dashboard-kpi-section-position"
+        >
           <MbokaKpiCard
             label="Trésorerie nette"
             value={kpis.netTreasury}
@@ -113,9 +129,9 @@ export function DashboardFinancialSection({
             testId="dashboard-kpi-treasury"
           />
           <MbokaKpiCard
-            label="Créances restant dues"
+            label="Créances clients ouvertes"
             value={kpis.receivables}
-            hint="Soldes impayés clients"
+            hint="Soldes impayés restant dus"
             scope="global"
             size="stat"
             testId="dashboard-kpi-receivables"

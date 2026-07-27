@@ -6,7 +6,7 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type MbokaKpiBoardProps = {
-  periodLabel: string;
+  subtitle: string;
   children: ReactNode;
   headerAction?: ReactNode;
   testId?: string;
@@ -15,7 +15,7 @@ type MbokaKpiBoardProps = {
 
 /** Carte mère unique — grille KPI dashboard financier (SPEC 10). */
 export function MbokaKpiBoard({
-  periodLabel,
+  subtitle,
   children,
   headerAction,
   testId = "dashboard-kpi-grid",
@@ -30,23 +30,25 @@ export function MbokaKpiBoard({
       <header className="mb-5 flex flex-col gap-4 border-b border-sky-100 pb-4 dark:border-sky-900 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h2 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Vue d&apos;ensemble · {periodLabel.toLowerCase()}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {headerAction}
-          <MbokaInfoPopover title="Comment lire ces indicateurs ?" testId="dashboard-kpi-info-popover">
+          <MbokaInfoPopover title="Activité vs position trésorerie" testId="dashboard-kpi-info-popover">
             <p>
-              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité · Période</strong> — montants
-              enregistrés sur la période filtrée (date de saisie).
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité sur la période</strong> —
+              chiffre d&apos;affaires et dépenses <em>enregistrés</em> sur la période filtrée (date de saisie). Comparatif
+              N/N-1 disponible.
             </p>
             <p>
-              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité · Global</strong> — cumul
-              historique de tous les montants enregistrés (date de saisie), toutes périodes confondues.
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité cumulée</strong> — total
+              historique des montants enregistrés, toutes périodes confondues. Bascule via le switch « CA &amp;
+              dépenses ».
             </p>
             <p>
-              <strong className="font-medium text-slate-700 dark:text-slate-200">Trésorerie · Global</strong> — position
-              instantanée toutes périodes (encaissements payés et créances ouvertes).
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Position trésorerie</strong> — solde net
+              encaissé et créances ouvertes <em>à l&apos;instant T</em>, indépendamment de la période filtrée.
             </p>
           </MbokaInfoPopover>
         </div>
@@ -59,6 +61,7 @@ export function MbokaKpiBoard({
 
 type MbokaKpiBoardGroupProps = {
   label: string;
+  description?: string;
   scope: "period" | "global";
   testId: string;
   children: ReactNode;
@@ -70,7 +73,7 @@ const groupScopeIcon = {
   global: Globe2,
 } as const;
 
-export function MbokaKpiBoardGroup({ label, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
+export function MbokaKpiBoardGroup({ label, description, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
   const headingId = `${testId}-heading`;
   const ScopeIcon = groupScopeIcon[scope];
 
@@ -81,14 +84,19 @@ export function MbokaKpiBoardGroup({ label, scope, testId, children, className }
       data-scope={scope}
       aria-labelledby={headingId}
     >
-      <div className="flex items-center gap-1.5">
-        <ScopeIcon className="size-3.5 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
-        <p
-          id={headingId}
-          className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-400 dark:text-sky-500"
-        >
-          {label}
-        </p>
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-1.5">
+          <ScopeIcon className="size-3.5 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
+          <p
+            id={headingId}
+            className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-400 dark:text-sky-500"
+          >
+            {label}
+          </p>
+        </div>
+        {description ? (
+          <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">{description}</p>
+        ) : null}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">{children}</div>
     </div>

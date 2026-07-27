@@ -31,7 +31,7 @@ export function DashboardKpiScopeSwitch({
 }: DashboardKpiScopeSwitchProps) {
   return (
     <MbokaPeriodSwitch
-      label="Portée Activité"
+      label="CA & dépenses"
       testId="dashboard-kpi-scope-switch"
       value={kpiScope}
       options={KPI_SCOPE_OPTIONS.map((value) => ({
