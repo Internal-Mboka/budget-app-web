@@ -62,7 +62,7 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
       return;
     }
 
-    toast.success(result.message ?? "Ping envoyé.");
+    toast.success(result.message ?? "Test envoyé.");
     setIsPinging(false);
     router.refresh();
   }
@@ -75,9 +75,10 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
             <BellRing className="size-5" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Intégrations alertes</h2>
+            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Paramètres de notification</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Canaux de notification pour les événements critiques (caisse, seuils, clôtures trimestrielles).
+              Définissez comment alerter la direction en cas d&apos;événement critique (caisse, seuils, clôtures
+              trimestrielles).
             </p>
             {updatedLabel ? (
               <p className="text-xs text-slate-400">Dernière mise à jour : {updatedLabel}</p>
@@ -89,26 +90,26 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
           <div className="grid gap-3 sm:grid-cols-3">
             <ToggleField
               name="alertsEnabled"
-              label="Alertes actives"
-              description="Coupe global des notifications critiques."
+              label="Notifications actives"
+              description="Active ou coupe toutes les alertes critiques."
               defaultChecked={settings.alertsEnabled}
               testId="alert-settings-enabled"
             />
             <ToggleField
               name="emailEnabled"
-              label="Email (Brevo)"
+              label="Par email"
               description={
                 settings.emailProviderConfigured
-                  ? "Expéditeur configuré via BREVO_API_KEY."
-                  : "Mode dev : logs console sans clé Brevo."
+                  ? "Envoi par email opérationnel."
+                  : "Mode test : aucun email réel n'est envoyé pour l'instant."
               }
               defaultChecked={settings.emailEnabled}
               testId="alert-settings-email"
             />
             <ToggleField
               name="webhookEnabled"
-              label="Webhook"
-              description="Discord, Slack ou endpoint custom."
+              label="Messagerie d'équipe"
+              description="Discord, Slack ou autre canal de discussion."
               defaultChecked={settings.webhookEnabled}
               testId="alert-settings-webhook"
             />
@@ -117,42 +118,43 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="webhookUrl" className={mbokaLabelClassName}>
-                URL webhook
+                Lien du canal
               </label>
               <input
                 id="webhookUrl"
                 name="webhookUrl"
                 type="url"
                 defaultValue={settings.webhookUrl ?? ""}
-                placeholder="https://discord.com/api/webhooks/..."
+                placeholder="Coller le lien fourni par Discord ou Slack…"
                 className={mbokaFieldClassName}
                 data-testid="alert-settings-webhook-url"
               />
               {settings.envFallbackActive ? (
                 <p className="mt-1 text-xs text-slate-500">
-                  Fallback actif depuis la variable d&apos;environnement ALERT_WEBHOOK_URL.
+                  Une adresse est déjà configurée côté serveur — laissez vide pour l&apos;utiliser.
                 </p>
               ) : null}
             </div>
 
             <div>
               <label htmlFor="webhookSecret" className={mbokaLabelClassName}>
-                Secret webhook
+                Clé de sécurité du canal
               </label>
               <input
                 id="webhookSecret"
                 name="webhookSecret"
                 type="password"
                 placeholder={
-                  settings.webhookSecretConfigured ? "Laisser vide pour conserver le secret actuel" : "Optionnel"
+                  settings.webhookSecretConfigured ? "Laisser vide pour conserver la clé actuelle" : "Optionnel"
                 }
                 className={mbokaFieldClassName}
                 autoComplete="new-password"
                 data-testid="alert-settings-webhook-secret"
               />
               <p className="mt-1 text-xs text-slate-500">
-                En-tête <code className="text-[11px]">X-Mboka-Alert-Secret</code> —{" "}
-                {settings.webhookSecretConfigured ? "secret enregistré" : "non configuré"}
+                {settings.webhookSecretConfigured
+                  ? "Clé enregistrée — protège les messages envoyés vers votre canal."
+                  : "Optionnel — sécurise les messages envoyés vers votre canal."}
               </p>
             </div>
           </div>
@@ -174,9 +176,9 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
           </div>
 
           <fieldset className="space-y-3">
-            <legend className={mbokaLabelClassName}>Types d&apos;alertes désactivés</legend>
+            <legend className={mbokaLabelClassName}>Événements à ne pas notifier</legend>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Cochez pour ignorer un type d&apos;événement (les autres restent actifs).
+              Cochez les alertes à ignorer ; les autres continueront d&apos;être envoyées.
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {CRITICAL_ALERT_TYPES.map((type) => (
@@ -216,7 +218,7 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
               data-testid="alert-settings-ping"
             >
               {isPinging ? <Loader2 className="size-4 animate-spin" /> : <Radio className="size-4" />}
-              Envoyer un ping test
+              Tester les notifications
             </button>
           </div>
         </form>
@@ -225,11 +227,11 @@ export function AlertSettingsPanel({ settings }: AlertSettingsPanelProps) {
       <section className={cn(mbokaPanelClassName, "space-y-3 p-5 sm:p-6")} data-testid="alert-settings-push-soon">
         <div className="flex items-center gap-2 text-sm font-semibold text-[#10579F] dark:text-sky-50">
           <Webhook className="size-4" />
-          Notifications Push Web
+          Notifications dans le navigateur
         </div>
         <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-          Les notifications push navigateur arriveront dans une prochaine version. Email et webhook couvrent déjà les
-          alertes critiques pour la direction.
+          Bientôt disponibles. L&apos;email et la messagerie d&apos;équipe couvrent déjà les alertes critiques pour
+          la direction.
         </p>
       </section>
     </div>

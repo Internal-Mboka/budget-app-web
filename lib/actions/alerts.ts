@@ -130,14 +130,14 @@ export async function sendAlertPingAction(): Promise<AlertSettingsActionResult> 
   }
 
   if (result.webhookSent) {
-    parts.push("webhook");
+    parts.push("messagerie");
   }
 
   return {
     success: true,
     message:
       parts.length > 0
-        ? `Ping envoyé (${parts.join(" + ")}) vers ${result.recipientCount} destinataire(s).`
-        : `Ping enregistré pour ${result.recipientCount} destinataire(s).`,
+        ? `Test envoyé (${parts.join(" + ")}) vers ${result.recipientCount} destinataire(s).`
+        : `Test enregistré pour ${result.recipientCount} destinataire(s).`,
   };
 }

@@ -14,7 +14,7 @@ export const updateAlertSettingsSchema = z.object({
     .transform((value) => value || null)
     .nullable()
     .refine((value) => !value || /^https?:\/\/.+/i.test(value), {
-      message: "URL webhook invalide (http ou https requis).",
+      message: "URL invalide (adresse http ou https requise).",
     }),
   webhookSecret: z.string().trim().optional(),
   adjustmentThresholdUsd: z.coerce

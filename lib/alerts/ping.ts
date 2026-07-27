@@ -127,15 +127,15 @@ Horodatage : ${timestamp}
   }
 
   if (!config.emailEnabled && !(config.webhookEnabled && config.webhookUrl)) {
-    return { success: false, error: "Activez au moins un canal (email ou webhook) pour envoyer un ping." };
+    return { success: false, error: "Activez au moins un canal (email ou messagerie) pour lancer le test." };
   }
 
   if (config.emailEnabled && config.emailProviderConfigured && !emailSent) {
-    return { success: false, error: "L'envoi email a échoué. Vérifiez la configuration Brevo." };
+    return { success: false, error: "L'envoi par email a échoué. Vérifiez la configuration du serveur mail." };
   }
 
   if (config.webhookEnabled && config.webhookUrl && !webhookSent) {
-    return { success: false, error: "Le webhook a rejeté le ping ou est injoignable." };
+    return { success: false, error: "Le canal messagerie n'a pas répondu ou a refusé le message." };
   }
 
   await writeAuditLog({

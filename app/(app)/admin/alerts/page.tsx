@@ -11,8 +11,8 @@ export default async function AdminAlertsPage() {
     <div className="space-y-8">
       <MbokaPageHeader
         eyebrow="Administration"
-        title="Alertes & webhooks"
-        description="Configurez les canaux de notification et testez les intégrations Discord/Slack ou email."
+        title="Alertes & notifications"
+        description="Choisissez comment prévenir la direction lors d'un événement important, puis testez l'envoi."
       />
 
       <AlertSettingsPanel settings={settings} />

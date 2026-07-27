@@ -30,6 +30,6 @@ describe("Mboka Budget — SPEC 8 US-58 Alertes & webhooks", () => {
     cy.contains("Configuration des alertes enregistrée", { timeout: 10000 }).should("be.visible");
 
     cy.get('[data-testid="alert-settings-ping"]').click();
-    cy.contains("Ping", { timeout: 15000 }).should("be.visible");
+    cy.contains("Test envoyé", { timeout: 15000 }).should("be.visible");
   });
 });
