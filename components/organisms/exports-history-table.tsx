@@ -42,7 +42,7 @@ export function ExportsHistoryTable({ exports: items, hasActiveFilters = false }
         <div
           className={cn(
             mbokaPanelClassName,
-            "mx-auto flex max-w-lg flex-col items-center justify-center px-6 py-16 text-center"
+            "flex flex-col items-center justify-center px-6 py-16 text-center sm:px-10"
           )}
           data-testid="exports-history-empty"
         >

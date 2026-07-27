@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Filter } from "lucide-react";
 
+import { MbokaInfoPopover } from "@/components/molecules/mboka-info-popover";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -30,10 +31,32 @@ export function ExportsHistoryFilters({ from, to, kind }: ExportsHistoryFiltersP
       className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")}
       data-testid="exports-history-filters"
     >
-      <div className="flex items-center gap-2">
-        <Filter className="size-4 text-sky-600 dark:text-sky-400" />
-        <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Affiner la liste</p>
-      </div>
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="size-4 text-sky-600 dark:text-sky-400" />
+          <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Affiner la liste</p>
+        </div>
+
+        <MbokaInfoPopover title="Comment lire cette page" testId="exports-history-info-popover">
+          <p>
+            Ici sont listés tous les fichiers déjà exportés — registres, récaps de dépenses, bilans PDF, etc. Vous
+            pouvez les retélécharger à tout moment.
+          </p>
+          <p>
+            <strong className="font-medium text-slate-700 dark:text-slate-200">Copie archivée</strong> — le fichier
+            exact produit à la date indiquée. C&apos;est la référence à conserver pour un audit ou un contrôle.
+          </p>
+          <p>
+            <strong className="font-medium text-slate-700 dark:text-slate-200">Version à jour</strong> — disponible
+            seulement pour les registres CSV et récaps de dépenses : recalcule les chiffres avec les données actuelles,
+            sans remplacer l&apos;archive.
+          </p>
+          <p>
+            <strong className="font-medium text-slate-700 dark:text-slate-200">Bilans clôturés</strong> — figés à la
+            clôture ; seule la copie archivée fait foi.
+          </p>
+        </MbokaInfoPopover>
+      </header>
 
       <form
         className="space-y-4"
