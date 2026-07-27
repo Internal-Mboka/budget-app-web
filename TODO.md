@@ -105,7 +105,7 @@
 - [x] Middleware RBAC Next.js (`middleware.ts` + config Edge séparée)
 - [x] Design System : tokens Mboka + **Dark Mode** (`ThemeToggle`)
 - [x] Layout principal (`components/templates/app-shell.tsx`)
-- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24), `expenses.cy.ts` (US-25), `expense-adjustments.cy.ts` (US-26), `expense-attachments.cy.ts` (US-27), `expense-staff-payroll.cy.ts` (US-28), `expense-approval.cy.ts` (US-29), `expense-recurring.cy.ts` (US-30), `cash-closing-approval.cy.ts` (US-38)
+- [x] **Cypress** — specs `auth.cy.ts`, `users.cy.ts`, `password.cy.ts`, `roles.cy.ts`, `sessions.cy.ts`, `two-factor.cy.ts`, `clients.cy.ts` (US-09), `client-detail.cy.ts` (US-10), `client-search.cy.ts` (US-11), `client-edit.cy.ts` (US-12), `client-import-export.cy.ts` (US-13), `client-tags.cy.ts` (US-14), `client-interactions.cy.ts` (US-15), `revenues.cy.ts` (US-16), `revenue-anti-doublon.cy.ts` (US-17), `revenue-payments.cy.ts` (US-18), `revenue-cancellation.cy.ts` (US-19), `revenue-pdf.cy.ts` (US-20), `revenue-payment-history.cy.ts` (US-21), `revenue-planning.cy.ts` (US-22), `revenue-discount.cy.ts` (US-23), `revenue-conflicts.cy.ts` (US-24), `expenses.cy.ts` (US-25), `expense-adjustments.cy.ts` (US-26), `expense-attachments.cy.ts` (US-27), `expense-staff-payroll.cy.ts` (US-28), `expense-approval.cy.ts` (US-29), `expense-recurring.cy.ts` (US-30), `cash-closing-approval.cy.ts` (US-38), `audit-logs.cy.ts` (US-39–45)
 - [x] Page de login (`/login`) avec redirection dashboard par rôle
 
 ---
@@ -181,13 +181,13 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-39 | Enregistrement automatique actions critiques | `[ ]` |
-| US-40 | Consultation restreinte journaux d'audit | `[ ]` |
-| US-41 | Capture IP & User-Agent | `[ ]` |
-| US-42 | Inspection visuelle Diff Avant/Après | `[ ]` |
-| US-43 | Export journaux d'audit | `[ ]` |
-| US-44 | Alertes tentatives d'accès suspectes | `[ ]` |
-| US-45 | Politique de conservation des logs | `[ ]` |
+| US-39 | Enregistrement automatique actions critiques | `[x]` |
+| US-40 | Consultation restreinte journaux d'audit | `[x]` |
+| US-41 | Capture IP & User-Agent | `[x]` |
+| US-42 | Inspection visuelle Diff Avant/Après | `[x]` |
+| US-43 | Export journaux d'audit | `[x]` |
+| US-44 | Alertes tentatives d'accès suspectes | `[x]` |
+| US-45 | Politique de conservation des logs | `[x]` |
 
 ### SPEC 7 — Dashboard Analytics
 

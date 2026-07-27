@@ -18,6 +18,7 @@ export function AppShell({ user, children }: AppShellProps) {
   const canManageClients = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
   const canManageExpenses = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_EXPENSE);
   const canCloseCash = hasPermission(user.permissions, PERMISSIONS.CASH_CLOSE);
+  const canViewAudit = hasPermission(user.permissions, PERMISSIONS.AUDIT_VIEW);
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden", mbokaPageClassName)}>
@@ -29,6 +30,7 @@ export function AppShell({ user, children }: AppShellProps) {
         canManageClients={canManageClients}
         canManageExpenses={canManageExpenses}
         canCloseCash={canCloseCash}
+        canViewAudit={canViewAudit}
       />
 
       <div className="flex min-h-0 flex-1 flex-col lg:pl-72">

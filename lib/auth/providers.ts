@@ -6,6 +6,7 @@ import {
   toAuthUser,
   validateUserCredentials,
 } from "@/lib/auth/credentials";
+import { recordFailedLoginAttempt } from "@/lib/audit/failed-login";
 import { verifyTwoFactorChallenge } from "@/lib/two-factor/challenge";
 
 const credentialsSchema = z.object({
@@ -54,6 +55,7 @@ export const credentialsProvider = Credentials({
       const user = await validateUserCredentials(email, password);
 
       if (!user) {
+        await recordFailedLoginAttempt(email);
         return null;
       }
 

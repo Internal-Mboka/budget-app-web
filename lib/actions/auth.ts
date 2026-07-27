@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
 
 import { revokeCurrentSessionOnLogout } from "@/lib/actions/sessions";
+import { recordFailedLoginAttempt } from "@/lib/audit/failed-login";
 import { signIn, signOut } from "@/lib/auth/instance";
 import { validateUserCredentials } from "@/lib/auth/credentials";
 import { prisma } from "@/lib/prisma";
@@ -30,6 +31,7 @@ export async function loginAction(formData: FormData): Promise<LoginActionResult
     const user = await validateUserCredentials(email, password);
 
     if (!user) {
+      await recordFailedLoginAttempt(email);
       return { error: "invalid-credentials" };
     }
 
@@ -118,6 +120,7 @@ export async function completeTwoFactorLoginAction(
   }
 
   if (!verifyTotpCode(parsed.data.code, user.twoFactorSecret)) {
+    await recordFailedLoginAttempt(user.email);
     return { error: "invalid-code" };
   }
 
@@ -136,16 +139,14 @@ export async function completeTwoFactorLoginAction(
       return { error: "challenge-expired" };
     }
 
-    await prisma.auditLog.create({
-      data: {
-        action: "USER_LOGIN_2FA",
-        entity: "User",
-        entityId: user.id,
-        userId: user.id,
-        details: {
-          email: user.email,
-          role: user.role.name,
-        },
+    await writeAuditLog({
+      action: "USER_LOGIN_2FA",
+      entity: "User",
+      entityId: user.id,
+      userId: user.id,
+      details: {
+        email: user.email,
+        role: user.role.name,
       },
     });
 

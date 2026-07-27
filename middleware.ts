@@ -49,6 +49,7 @@ export default auth((request) => {
   if (
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/admin") ||
+      pathname.startsWith("/audit") ||
       pathname.startsWith("/clients") ||
       pathname.startsWith("/revenues") ||
       pathname.startsWith("/expenses")) &&

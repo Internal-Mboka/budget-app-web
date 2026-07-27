@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import { headers } from "next/headers";
 
-import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
+import { readAuditRequestMeta } from "@/lib/audit/request-context";
 import {
   createUserSession,
   isUserSessionActive,
@@ -100,17 +101,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       try {
-        await prisma.auditLog.create({
-          data: {
-            action: "USER_LOGIN",
-            entity: "User",
-            entityId: user.id,
-            userId: user.id,
-            details: {
-              email: user.email,
-              role: user.roleName,
-            },
+        const meta = await readAuditRequestMeta();
+
+        await writeAuditLog({
+          action: "USER_LOGIN",
+          entity: "User",
+          entityId: user.id,
+          userId: user.id,
+          details: {
+            email: user.email,
+            role: user.roleName,
+            deviceType: meta.deviceType,
+            browser: meta.browser,
           },
+          ipAddress: meta.ipAddress,
+          userAgent: meta.userAgent,
+          captureRequest: false,
         });
       } catch (error) {
         console.error("Login audit log failed", error);

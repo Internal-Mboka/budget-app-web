@@ -9,6 +9,7 @@ import {
   Menu,
   MonitorSmartphone,
   Receipt,
+  ScrollText,
   ShieldCheck,
   Users,
   UsersRound,
@@ -45,6 +46,7 @@ type AppSidebarProps = {
   canManageClients: boolean;
   canManageExpenses: boolean;
   canCloseCash: boolean;
+  canViewAudit: boolean;
 };
 
 function getInitials(name: string): string {
@@ -77,6 +79,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/audit") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -100,6 +106,7 @@ export function AppSidebar({
   canManageClients,
   canManageExpenses,
   canCloseCash,
+  canViewAudit,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -146,13 +153,25 @@ export function AppSidebar({
         { href: "/account/two-factor", label: "2FA", icon: Fingerprint, testId: "nav-two-factor" },
       ],
     },
-    ...(canManageUsers
+    ...(canManageUsers || canViewAudit
       ? [
           {
             title: "Administration",
             items: [
-              { href: "/admin/users", label: "Utilisateurs", icon: Users, testId: "nav-utilisateurs" },
-              { href: "/admin/roles", label: "Permissions", icon: ShieldCheck, testId: "nav-permissions" },
+              ...(canManageUsers
+                ? [
+                    { href: "/admin/users", label: "Utilisateurs", icon: Users, testId: "nav-utilisateurs" },
+                    {
+                      href: "/admin/roles",
+                      label: "Permissions",
+                      icon: ShieldCheck,
+                      testId: "nav-permissions",
+                    },
+                  ]
+                : []),
+              ...(canViewAudit
+                ? [{ href: "/audit", label: "Journaux d'audit", icon: ScrollText, testId: "nav-audit" }]
+                : []),
             ],
           } satisfies NavSection,
         ]
