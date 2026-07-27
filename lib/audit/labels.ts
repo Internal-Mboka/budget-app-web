@@ -58,7 +58,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 const AUDIT_ENTITY_LABELS: Record<string, string> = {
   User: "Utilisateur",
   Client: "Client",
-  Transaction: "Transaction",
+  Transaction: "Revenu ou dépense",
   CashClosing: "Clôture de caisse",
   Role: "Rôle",
   AuditLog: "Journal d'audit",

@@ -172,7 +172,7 @@ export function ClientDetailPanel({
               Coordonnées & notes
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Les modifications n&apos;impactent pas les transactions déjà enregistrées.
+              Les modifications n&apos;impactent pas les revenus et dépenses déjà enregistrés.
             </p>
           </div>
 
@@ -221,7 +221,7 @@ export function ClientDetailPanel({
 
         <article className={cn(mbokaPanelClassName, "p-5")} data-testid="client-stat-transactions">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Transactions
+            Revenus et dépenses
           </p>
           <p className="mt-2 text-2xl font-semibold text-[#10579F] dark:text-sky-50">
             {stats.transactionCount}
@@ -233,7 +233,7 @@ export function ClientDetailPanel({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-              Historique des transactions
+              Historique financier
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Filtrez par statut de paiement pour analyser les encours et factures soldées.
@@ -257,8 +257,8 @@ export function ClientDetailPanel({
         {filteredTransactions.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="client-transactions-empty">
             {transactionsPagination.total > 0 && statusFilter !== "ALL"
-              ? "Aucune transaction ne correspond à ce filtre sur cette page."
-              : "Aucune transaction enregistrée pour ce client."}
+              ? "Aucun revenu ni dépense ne correspond à ce filtre sur cette page."
+              : "Aucun revenu ni dépense enregistré pour ce client."}
           </p>
         ) : (
           <div className="space-y-3" data-testid="client-transactions-list">

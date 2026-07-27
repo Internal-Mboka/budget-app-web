@@ -106,7 +106,7 @@ export async function recordRevenuePaymentAction(
   }
 
   if (transaction.status === "LITIGE_ANNULE") {
-    return { success: false, error: "Impossible d'encaisser une transaction annulée." };
+    return { success: false, error: "Impossible d'encaisser un revenu annulé." };
   }
 
   const cashDayLock = await assertTodayCashDayOpen();
@@ -255,7 +255,7 @@ export async function markRevenueRealizedAction(
   }
 
   if (transaction.status === "LITIGE_ANNULE") {
-    return { success: false, error: "Impossible de marquer une transaction annulée." };
+    return { success: false, error: "Impossible de marquer un revenu annulé." };
   }
 
   const fulfillment = parseRevenueFulfillment(transaction.metadata);

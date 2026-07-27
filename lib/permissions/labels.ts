@@ -8,7 +8,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "cash:close": "Clôture de caisse",
   "cash:approve-closing": "Approbation des clôtures à écart",
   "finance:cancel-adjustment": "Annulation et avoirs",
-  "finance:archive-transaction": "Archivage des transactions",
+  "finance:archive-transaction": "Archivage des revenus et dépenses",
   "users:manage": "Gestion des utilisateurs (IAM)",
   "audit:view": "Consultation des journaux d'audit",
   "dashboard:full": "Dashboard complet macro/micro",
@@ -31,9 +31,9 @@ export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "cash:approve-closing":
     "Valider ou régulariser les clôtures de caisse présentant un écart.",
   "finance:cancel-adjustment":
-    "Créer des avoirs, annulations et régularisations sur les transactions.",
+    "Créer des avoirs, annulations et régularisations sur les revenus et dépenses.",
   "finance:archive-transaction":
-    "Archiver les transactions anciennes tout en conservant la traçabilité.",
+    "Archiver les anciens revenus et dépenses tout en conservant la traçabilité.",
   "users:manage":
     "Créer, modifier, bloquer des comptes et gérer les rôles et permissions.",
   "audit:view":

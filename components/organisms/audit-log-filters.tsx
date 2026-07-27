@@ -7,7 +7,7 @@ import { Filter } from "lucide-react";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { AUDIT_ACTION_OPTIONS } from "@/lib/audit/labels";
+import { AUDIT_ACTION_OPTIONS, getAuditEntityLabel } from "@/lib/audit/labels";
 import type { AuditLogFilters } from "@/lib/audit/load-logs";
 import {
   mbokaButtonOutlineClassName,
@@ -22,14 +22,11 @@ type AuditLogFiltersPanelProps = {
   actors: Array<{ id: string; label: string; email: string }>;
 };
 
+const ENTITY_VALUES = ["User", "Client", "Transaction", "CashClosing", "Role", "AuditLog"] as const;
+
 const ENTITY_OPTIONS = [
   { value: "", label: "Tous les types" },
-  { value: "User", label: "Utilisateur" },
-  { value: "Client", label: "Client" },
-  { value: "Transaction", label: "Transaction" },
-  { value: "CashClosing", label: "Clôture de caisse" },
-  { value: "Role", label: "Rôle" },
-  { value: "AuditLog", label: "Journal d'audit" },
+  ...ENTITY_VALUES.map((value) => ({ value, label: getAuditEntityLabel(value) })),
 ];
 
 export function AuditLogFiltersPanel({ filters, actors }: AuditLogFiltersPanelProps) {

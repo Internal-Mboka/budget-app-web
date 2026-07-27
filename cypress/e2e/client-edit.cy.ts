@@ -67,7 +67,7 @@ describe("Mboka Budget — US-12 Mise à jour fiche client", () => {
     cy.contains(updatedNotes).scrollIntoView().should("be.visible");
     cy.get('[data-testid="client-transactions-empty"]').should(
       "contain.text",
-      "Aucune transaction enregistrée"
+      "Aucun revenu ni dépense enregistré"
     );
   });
 });

@@ -11,7 +11,7 @@ const moneySchema = z
   .refine((value) => Number.isFinite(value), { message: "Montant invalide." });
 
 export const cancelRevenueSchema = z.object({
-  transactionId: z.string().trim().min(1, "Transaction invalide."),
+  transactionId: z.string().trim().min(1, "Revenu introuvable."),
   reason: z.string().trim().min(3, "Le motif doit contenir au moins 3 caractères.").max(2000),
   penaltyMode: penaltyModeSchema,
   customPenaltyAmount: moneySchema.optional(),

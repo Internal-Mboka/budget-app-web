@@ -99,7 +99,7 @@ export function TransactionAdjustmentsSection({
             Avoirs & régularisations
           </h3>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Corrigez une erreur financière sans supprimer la transaction d&apos;origine ({parentCode}).
+            Corrigez une erreur financière sans supprimer l&apos;enregistrement d&apos;origine ({parentCode}).
             Chaque avoir crée une écriture liée immuable.
           </p>
         </div>

@@ -74,7 +74,7 @@ const FIELD_LABELS: Record<string, string> = {
   targetRole: "Rôle du compte",
   staffPayroll: "Paie / cachet staff",
   adjustmentType: "Type d'ajustement",
-  originalTransactionCode: "Transaction d'origine",
+  originalTransactionCode: "Référence d'origine",
   cancellationReason: "Motif d'annulation",
   frequency: "Fréquence",
   nextDueDate: "Prochaine échéance",

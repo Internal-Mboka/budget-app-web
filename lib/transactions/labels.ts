@@ -1,5 +1,9 @@
 import type { PaymentStatus } from "@prisma/client";
 
+/** Libellé utilisateur pour le modèle interne Transaction (revenus + dépenses). */
+export const FINANCE_RECORD_LABEL = "Revenu ou dépense";
+export const FINANCE_RECORD_LABEL_PLURAL = "Revenus et dépenses";
+
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   DEVIS_PROFORMA: "Devis / Pro-forma",
   RESERVE_ACOMPTE_REQUIS: "Réservé — acompte requis",

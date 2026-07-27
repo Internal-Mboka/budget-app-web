@@ -37,7 +37,7 @@ describe("Mboka Budget — US-10 Fiche client", () => {
     cy.get('[data-testid="client-stat-balance-due"]').should("contain.text", "Solde restant dû");
     cy.get('[data-testid="client-transactions-empty"]').should(
       "contain.text",
-      "Aucune transaction enregistrée"
+      "Aucun revenu ni dépense enregistré"
     );
 
     cy.get('[data-testid="statusFilter-trigger"]').scrollIntoView();

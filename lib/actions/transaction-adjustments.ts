@@ -111,7 +111,7 @@ export async function createTransactionAdjustmentAction(
   });
 
   if (!parent) {
-    return { success: false, error: "Transaction introuvable ou déjà régularisée." };
+    return { success: false, error: "Enregistrement introuvable ou déjà régularisé." };
   }
 
   const existingAdjustments = await prisma.transaction.findMany({
@@ -126,7 +126,7 @@ export async function createTransactionAdjustmentAction(
   );
 
   if (remainingAdjustable <= 0) {
-    return { success: false, error: "Cette transaction est déjà entièrement régularisée." };
+    return { success: false, error: "Cet enregistrement est déjà entièrement régularisé." };
   }
 
   const mode = parsed.mode as AdjustmentKind;

@@ -15,7 +15,7 @@ export const CLIENT_EXPORT_HEADERS = [
   "Statut compte",
   "Chiffre d'affaires cumulé",
   "Solde restant dû",
-  "Nombre de transactions",
+  "Nombre de revenus et dépenses",
 ] as const;
 
 export async function buildClientsExportRows() {
@@ -59,7 +59,7 @@ export async function buildClientsExportRows() {
       "Statut compte": getClientAccountStatus(stats),
       "Chiffre d'affaires cumulé": stats.totalSpent.toFixed(2),
       "Solde restant dû": stats.balanceDue.toFixed(2),
-      "Nombre de transactions": String(stats.transactionCount),
+      "Nombre de revenus et dépenses": String(stats.transactionCount),
     };
   });
 }

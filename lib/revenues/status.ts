@@ -43,14 +43,14 @@ export function getPaymentStatusPreviewHint(totalAmount: number, paidAmount: num
   }
 
   if (remainingAmount <= 0) {
-    return "Acompte égal ou supérieur au total : la transaction sera soldée.";
+    return "Acompte égal ou supérieur au total : le revenu sera soldé.";
   }
 
   if (paidAmount > 0) {
     return `Reste à payer : ${remainingAmount.toFixed(2)} — statut « Réservé — acompte requis ».`;
   }
 
-  return "Aucun acompte : la transaction restera en devis / pro-forma.";
+  return "Aucun acompte : le revenu restera en devis / pro-forma.";
 }
 
 export type RevenueStatusBadge = {

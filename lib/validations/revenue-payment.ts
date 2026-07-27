@@ -11,7 +11,7 @@ const moneySchema = z
 const paymentMethodSchema = z.enum(["CASH", "MOBILE_MONEY", "VIREMENT_BANCAIRE", "AUTRE"]);
 
 export const recordRevenuePaymentSchema = z.object({
-  transactionId: z.string().trim().min(1, "Transaction invalide."),
+  transactionId: z.string().trim().min(1, "Revenu introuvable."),
   paymentAmount: moneySchema.refine((value) => value > 0, {
     message: "Le montant du paiement doit être supérieur à 0.",
   }),
@@ -33,7 +33,7 @@ export function parseRecordRevenuePaymentFormData(formData: FormData): RecordRev
 }
 
 export const markRevenueRealizedSchema = z.object({
-  transactionId: z.string().trim().min(1, "Transaction invalide."),
+  transactionId: z.string().trim().min(1, "Revenu introuvable."),
 });
 
 export function parseMarkRevenueRealizedFormData(formData: FormData) {

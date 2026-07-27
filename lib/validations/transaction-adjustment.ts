@@ -10,7 +10,7 @@ const moneySchema = z
   .refine((value) => Number.isFinite(value), { message: "Montant invalide." });
 
 export const createTransactionAdjustmentFormSchema = z.object({
-  transactionId: z.string().trim().min(1, "Transaction introuvable."),
+  transactionId: z.string().trim().min(1, "Enregistrement introuvable."),
   mode: adjustmentModeSchema,
   amount: moneySchema.optional(),
   reason: z.string().trim().min(3, "Indiquez un motif d'au moins 3 caractères."),
