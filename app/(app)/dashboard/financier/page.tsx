@@ -85,6 +85,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         items={overdueReceivables}
         totalOverdue={overdueCount}
         totalAmount={overdueTotal}
+        showViewAllLink
       />
 
       {recurringDueCount > 0 ? (

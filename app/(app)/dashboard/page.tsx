@@ -103,6 +103,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         items={overdueReceivables}
         totalOverdue={overdueCount}
         totalAmount={overdueTotal}
+        showViewAllLink
       />
 
       {pendingApprovals ? (

@@ -21,6 +21,7 @@ type OverdueReceivablesPanelProps = {
   totalOverdue: number;
   totalAmount: number;
   showQuickActions?: boolean;
+  showViewAllLink?: boolean;
   title?: string;
   description?: string;
 };
@@ -74,9 +75,12 @@ export function OverdueReceivablesPanel({
   totalOverdue,
   totalAmount,
   showQuickActions = true,
+  showViewAllLink = false,
   title = "Créances en souffrance",
   description,
 }: OverdueReceivablesPanelProps) {
+  const shouldShowViewAll = showViewAllLink ? totalOverdue > 0 : totalOverdue > items.length;
+
   return (
     <section
       className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}
@@ -154,13 +158,13 @@ export function OverdueReceivablesPanel({
         </div>
       )}
 
-      {totalOverdue > items.length ? (
+      {shouldShowViewAll ? (
         <Link
           href="/dashboard/creances"
           className="inline-flex text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
           data-testid="overdue-receivables-view-all"
         >
-          Voir toutes les créances ({totalOverdue})
+          Voir toutes les créances ({totalOverdue}) →
         </Link>
       ) : null}
     </section>

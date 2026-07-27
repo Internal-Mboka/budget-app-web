@@ -122,6 +122,11 @@ describe("Mboka Budget — SPEC 7 US-50 Créances en souffrance", () => {
 
     cy.get('[data-testid="overdue-receivables-panel"]').should("be.visible");
     cy.get('[data-testid="overdue-receivables-empty"], [data-testid="overdue-receivables-list"]').should("exist");
+    cy.get("body").then(($body) => {
+      if ($body.find('[data-testid="overdue-receivables-list"]').length) {
+        cy.get('[data-testid="overdue-receivables-view-all"]').should("be.visible");
+      }
+    });
   });
 
   it("permet d'ouvrir la page complète des créances", () => {
