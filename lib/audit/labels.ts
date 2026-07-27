@@ -62,6 +62,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   FINANCIAL_REGISTER_EXPORTED: "Export registre comptable",
   FINANCIAL_PERIOD_CLOSED: "Clôture mensuelle — bilan périodique",
   CRITICAL_ALERT_DISPATCHED: "Alerte critique envoyée",
+  ALERT_SETTINGS_UPDATED: "Configuration alertes modifiée",
+  ALERT_INTEGRATION_PING_SENT: "Ping test alertes envoyé",
   AUDIT_LOG_EXPORTED: "Export des journaux d'audit",
 };
 

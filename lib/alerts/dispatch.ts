@@ -2,12 +2,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 import {
-  areCriticalAlertsEnabled,
-  getAlertWebhookSecret,
-  getAlertWebhookUrl,
   getCriticalAlertTypeLabel,
   type CriticalAlertType,
 } from "@/lib/alerts/config";
+import { loadAlertRuntimeConfig } from "@/lib/alerts/load-settings";
 import {
   loadFiscalPeriodClosingOutcomeRecipients,
   loadFiscalPeriodClosingPendingRecipients,
@@ -29,14 +27,18 @@ export type CriticalAlertPayload = {
   recipients?: string[];
 };
 
-async function postAlertWebhook(payload: CriticalAlertPayload, recipients: string[]): Promise<boolean> {
-  const url = getAlertWebhookUrl();
+async function postAlertWebhook(
+  payload: CriticalAlertPayload,
+  recipients: string[],
+  config: Awaited<ReturnType<typeof loadAlertRuntimeConfig>>
+): Promise<boolean> {
+  const url = config.webhookUrl;
 
-  if (!url) {
+  if (!url || !config.webhookEnabled) {
     return false;
   }
 
-  const secret = getAlertWebhookSecret();
+  const secret = config.webhookSecret;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -78,7 +80,13 @@ async function postAlertWebhook(payload: CriticalAlertPayload, recipients: strin
 
 /** Dispatch email + webhook — n'interrompt jamais le flux métier appelant. */
 export async function dispatchCriticalAlert(payload: CriticalAlertPayload): Promise<void> {
-  if (!areCriticalAlertsEnabled()) {
+  const config = await loadAlertRuntimeConfig();
+
+  if (!config.alertsEnabled) {
+    return;
+  }
+
+  if (config.disabledAlertTypes.includes(payload.type)) {
     return;
   }
 
@@ -107,8 +115,10 @@ ${payload.entityId ? `Référence : ${payload.entityId}` : ""}
 — Mboka Budget`;
 
     const [emailSent, webhookSent] = await Promise.all([
-      sendTransactionalEmail({ to: recipients, subject, text }),
-      postAlertWebhook(payload, recipients),
+      config.emailEnabled
+        ? sendTransactionalEmail({ to: recipients, subject, text })
+        : Promise.resolve(false),
+      postAlertWebhook(payload, recipients, config),
     ]);
 
     if (payload.triggeredByUserId) {

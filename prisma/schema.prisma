@@ -33,6 +33,7 @@ model User {
   financialPeriodClosures FinancialPeriodClosure[] @relation("FinancialPeriodCloser")
   clientNotes        ClientNote[]
   auditLogs          AuditLog[] @relation("UserAuditLogs")
+  alertSettingsUpdates AlertSettings[] @relation("AlertSettingsUpdater")
   passwordResetTokens PasswordResetToken[]
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -312,6 +313,24 @@ model FinancialPeriodClosure {
 
   @@index([startDate, endDate])
   @@index([closedAt])
+}
+
+// ==========================================
+// 4.d INTÉGRATIONS ALERTES (SPEC 8 US-58)
+// ==========================================
+
+model AlertSettings {
+  id                     String   @id @default("default")
+  alertsEnabled          Boolean  @default(true)
+  emailEnabled           Boolean  @default(true)
+  webhookEnabled         Boolean  @default(true)
+  webhookUrl             String?
+  webhookSecret          String?
+  adjustmentThresholdUsd Decimal? @db.Decimal(12, 2)
+  disabledAlertTypes     Json     @default("[]")
+  updatedAt              DateTime @updatedAt
+  updatedByUserId        String?
+  updatedBy              User?    @relation("AlertSettingsUpdater", fields: [updatedByUserId], references: [id])
 }
 
 // ==========================================

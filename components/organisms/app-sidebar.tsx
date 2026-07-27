@@ -2,6 +2,7 @@
 
 import {
   CalendarRange,
+  BellRing,
   Download,
   Fingerprint,
   KeyRound,
@@ -112,6 +113,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href;
   }
 
+  if (href === "/admin/alerts") {
+    return pathname === href;
+  }
+
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -211,6 +216,12 @@ export function AppSidebar({
                       label: "Permissions",
                       icon: ShieldCheck,
                       testId: "nav-permissions",
+                    },
+                    {
+                      href: "/admin/alerts",
+                      label: "Alertes",
+                      icon: BellRing,
+                      testId: "nav-alertes",
                     },
                   ]
                 : []),

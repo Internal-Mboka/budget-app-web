@@ -9,6 +9,16 @@ export type CriticalAlertType =
   | "FISCAL_PERIOD_CLOSING_APPROVED"
   | "FISCAL_PERIOD_OPENED";
 
+export const CRITICAL_ALERT_TYPES: CriticalAlertType[] = [
+  "CASH_CLOSING_DISCREPANCY",
+  "EXPENSE_THRESHOLD_EXCEEDED",
+  "HIGH_VALUE_ADJUSTMENT",
+  "FISCAL_PERIOD_CLOSING_PENDING",
+  "FISCAL_PERIOD_CLOSING_ACCOUNTANT_VISA",
+  "FISCAL_PERIOD_CLOSING_APPROVED",
+  "FISCAL_PERIOD_OPENED",
+];
+
 export function areCriticalAlertsEnabled(): boolean {
   const raw = process.env.ALERTS_ENABLED?.trim().toLowerCase();
 

@@ -214,7 +214,9 @@
 
 <!-- US-56 : cache SW pages essentielles (NetworkFirst), snapshot dashboard sessionStorage, bandeau offline/reconnecté + bouton Actualiser (`router.refresh`). US-60 = queue saisie offline. -->
 | US-57 | Bilan financier périodique | `[x]` |
-| US-58 | Personnalisation alertes Push/Webhooks | `[ ]` |
+| US-58 | Personnalisation alertes Push/Webhooks | `[x]` |
+
+<!-- US-58 : /admin/alerts — toggles canaux, webhook URL/secret, seuil régularisation, types désactivables, ping test. Push web = prochaine version. -->
 | US-59 | Historique exports & stockage | `[ ]` |
 | US-60 | Queue sync hors-ligne transactions | `[ ]` |
 
