@@ -20,7 +20,7 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 const adapter = new PrismaNeon({ connectionString });
 
 // Bump when schema/adapter changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 10;
+const PRISMA_CLIENT_VERSION = 11;
 
 /** Models that must exist on the cached client (guards stale webpack/global singletons). */
 const REQUIRED_DELEGATES = ["alertSettings", "generatedExport"] as const;
@@ -111,8 +111,23 @@ function resolvePrismaClient() {
   return client;
 }
 
-export const prisma = resolvePrismaClient();
+/** Proxy so HMR never keeps a stale delegate (e.g. generatedExport) on a cached import. */
+export const prisma: ReturnType<typeof createPrismaClient> = new Proxy(
+  {} as ReturnType<typeof createPrismaClient>,
+  {
+    get(_target, prop) {
+      const client = resolvePrismaClient();
+      const value = client[prop as keyof typeof client];
+
+      if (typeof value === "function") {
+        return value.bind(client);
+      }
+
+      return value;
+    },
+  }
+);
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = resolvePrismaClient();
 }
