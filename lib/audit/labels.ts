@@ -57,6 +57,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   FISCAL_PERIOD_CLOSING_REQUESTED: "Clôture trimestrielle demandée",
   FISCAL_PERIOD_CLOSING_APPROVED: "Clôture trimestrielle validée",
   FINANCIAL_REGISTER_EXPORTED: "Export registre comptable",
+  CRITICAL_ALERT_DISPATCHED: "Alerte critique envoyée",
   AUDIT_LOG_EXPORTED: "Export des journaux d'audit",
 };
 

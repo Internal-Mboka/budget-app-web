@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
+import { notifyCashClosingDiscrepancy } from "@/lib/alerts/dispatch";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getClosingDayRange } from "@/lib/cash-closing/day-range";
@@ -162,6 +163,16 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
 
     revalidatePath(`/cash-closing/${closing.id}`);
     revalidatePath("/dashboard/financier");
+
+    if (hasDiscrepancy) {
+      void notifyCashClosingDiscrepancy({
+        closingId: closing.id,
+        closingDate: closingDateInput,
+        gapAmount,
+        operatorEmail: session.user.email ?? "",
+        triggeredByUserId: session.user.id,
+      });
+    }
 
     return { success: true, closingId: closing.id };
   } catch (error) {

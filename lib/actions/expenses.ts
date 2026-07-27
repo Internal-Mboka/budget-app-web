@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
+import { notifyExpenseThresholdExceeded } from "@/lib/alerts/dispatch";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
@@ -164,6 +165,18 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
     revalidatePath("/expenses/approvals");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/financier");
+
+    if (requiresExpenseApproval(totalAmount)) {
+      void notifyExpenseThresholdExceeded({
+        transactionId: created.id,
+        code: created.code,
+        totalAmount,
+        expenseCategoryLabel: getExpenseCategoryLabel(created.expenseCategory!),
+        creatorEmail: session.user.email ?? "",
+        approvalPending: approval.approvalStatus === "PENDING",
+        triggeredByUserId: session.user.id,
+      });
+    }
 
     return {
       success: true,

@@ -1,3 +1,5 @@
+import { sendTransactionalEmail } from "@/lib/email/send-transactional";
+
 type ReceivableReminderEmailInput = {
   clientEmail: string;
   clientName: string;
@@ -17,14 +19,5 @@ Merci de nous contacter pour finaliser votre règlement.
 
 — Mboka Budget`;
 
-  if (process.env.BREVO_API_KEY) {
-    console.info("[email:brevo-pending]", { to: input.clientEmail, subject });
-    return;
-  }
-
-  console.info("[email:dev]", {
-    to: input.clientEmail,
-    subject,
-    body,
-  });
+  await sendTransactionalEmail({ to: input.clientEmail, subject, text: body });
 }

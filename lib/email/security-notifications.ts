@@ -1,3 +1,5 @@
+import { sendTransactionalEmail } from "@/lib/email/send-transactional";
+
 type PasswordChangedNotificationInput = {
   email: string;
   firstName: string;
@@ -14,13 +16,7 @@ Si vous n'êtes pas à l'origine de cette action, contactez immédiatement un ad
 
 — Mboka Budget`;
 
-  if (process.env.BREVO_API_KEY) {
-    // Intégration Brevo prévue en US-54.
-    console.info("[email:brevo-pending]", { to: input.email, subject });
-    return;
-  }
-
-  console.info("[email:dev]", { to: input.email, subject, body });
+  await sendTransactionalEmail({ to: input.email, subject, text: body });
 }
 
 export async function notifyPasswordResetRequested(email: string, resetUrl: string) {
@@ -33,10 +29,5 @@ Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.
 
 — Mboka Budget`;
 
-  if (process.env.BREVO_API_KEY) {
-    console.info("[email:brevo-pending]", { to: email, subject });
-    return;
-  }
-
-  console.info("[email:dev]", { to: email, subject, body, resetUrl });
+  await sendTransactionalEmail({ to: email, subject, text: body });
 }

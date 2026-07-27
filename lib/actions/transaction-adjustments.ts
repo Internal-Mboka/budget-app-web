@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { captureAuditRequestContext, writeAuditLog, buildAuditChangeDetails } from "@/lib/audit";
+import { notifyHighValueAdjustment } from "@/lib/alerts/dispatch";
+import { getHighValueAdjustmentThreshold } from "@/lib/alerts/config";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
@@ -237,6 +239,18 @@ export async function createTransactionAdjustmentAction(
     revalidatePath(parent.type === "REVENUE" ? "/revenues" : "/expenses");
     if (parent.clientId) {
       revalidatePath(`/clients/${parent.clientId}`);
+    }
+
+    if (amount >= getHighValueAdjustmentThreshold()) {
+      void notifyHighValueAdjustment({
+        adjustmentId: created.id,
+        adjustmentCode: created.code,
+        parentCode: parent.code,
+        amount,
+        reason: parsed.reason,
+        performerEmail: session.user.email ?? "",
+        triggeredByUserId: session.user.id,
+      });
     }
 
     return {

@@ -206,7 +206,7 @@
 | US | Titre | Statut |
 |----|-------|--------|
 | US-53 | Export données comptables & factures | `[x]` |
-| US-54 | Webhooks & alertes événements critiques | `[ ]` |
+| US-54 | Webhooks & alertes événements critiques | `[x]` |
 | US-55 | Installation PWA & prompt contextuel | `[ ]` |
 | US-56 | Mode hors-ligne partiel & sync | `[ ]` |
 | US-57 | Bilan financier périodique | `[ ]` |
@@ -234,7 +234,8 @@
 | PostgreSQL / Neon | `DATABASE_URL` | Étape 4 |
 | Seuil approbation dépenses | `EXPENSE_APPROVAL_THRESHOLD_USD` (défaut : 500) | US-29 |
 | NextAuth | `AUTH_SECRET`, `AUTH_URL` | Étape 5 |
-| Brevo (emails) | `BREVO_API_KEY` | US-54, US-58 |
+| Brevo (emails) | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | US-54, US-58 |
+| Alertes webhooks | `ALERT_WEBHOOK_URL`, `ALERT_WEBHOOK_SECRET`, `ALERTS_ENABLED`, `ALERT_ADJUSTMENT_THRESHOLD_USD` | US-54 |
 | Stockage fichiers (S3/R2) | `*` | US-27 *(si cloud storage)* |
 
 ---
