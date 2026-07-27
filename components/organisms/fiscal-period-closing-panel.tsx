@@ -16,6 +16,7 @@ import {
 import { isPdgSoloFiscalClosingEnabled } from "@/lib/fiscal-period/closing-config";
 import {
   canApproveFiscalPeriodClosingAsPdg,
+  canViewFiscalPeriodClosingPage,
   canVisaFiscalPeriodClosingAsAccountant,
   getFiscalPeriodClosingWorkflowLabel,
 } from "@/lib/fiscal-period/closing-workflow";
@@ -103,7 +104,9 @@ export function FiscalPeriodClosingPanel({
 }: FiscalPeriodClosingPanelProps) {
   const pdgSolo = isPdgSoloFiscalClosingEnabled();
   const canVisa = canVisaFiscalPeriodClosingAsAccountant(roleName);
-  const canApprovePdg = canApproveFiscalPeriodClosingAsPdg(roleName);
+  const canValidatePdg = canApproveFiscalPeriodClosingAsPdg(roleName);
+  const canView = canViewFiscalPeriodClosingPage(roleName);
+  const isReadOnlyViewer = canView && !canVisa && !canValidatePdg;
 
   return (
     <section
@@ -122,7 +125,7 @@ export function FiscalPeriodClosingPanel({
             {totalPending > 0
               ? `${totalPending} trimestre${totalPending > 1 ? "s" : ""} en attente de validation.`
               : "Aucun trimestre en clôture pour le moment."}
-            {pdgSolo ? " Mode PDG seul activé (visa comptable optionnel)." : " Double validation : Comptable puis PDG/DT."}
+            {pdgSolo ? " Mode PDG seul activé (visa comptable optionnel)." : " Double validation : Comptable puis PDG."}
           </p>
         </div>
       </div>
@@ -174,7 +177,7 @@ export function FiscalPeriodClosingPanel({
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs uppercase tracking-wide text-slate-400">Validation PDG/DT</dt>
+                    <dt className="text-xs uppercase tracking-wide text-slate-400">Validation PDG</dt>
                     <dd className="text-slate-700 dark:text-slate-200">
                       {item.validatedByPdgName ?? "En attente"}
                     </dd>
@@ -198,7 +201,7 @@ export function FiscalPeriodClosingPanel({
                       />
                     ) : null}
 
-                    {canApprovePdg && item.workflowStep === "pending_pdg" ? (
+                    {canValidatePdg && item.workflowStep === "pending_pdg" ? (
                       <ClosingActionForm
                         periodId={item.id}
                         action={approveFiscalPeriodClosingFormAction}
@@ -209,7 +212,22 @@ export function FiscalPeriodClosingPanel({
                       />
                     ) : null}
 
-                    {!canVisa && !canApprovePdg ? (
+                    {isReadOnlyViewer && item.workflowStep === "pending_accountant" ? (
+                      <p className="text-sm text-slate-600 dark:text-slate-300">
+                        En attente du visa comptable.
+                      </p>
+                    ) : null}
+
+                    {isReadOnlyViewer && item.workflowStep === "pending_pdg" ? (
+                      <p
+                        className="text-sm text-slate-600 dark:text-slate-300"
+                        data-testid="fiscal-period-closing-readonly-notice"
+                      >
+                        Validation réservée au PDG pour des raisons de sécurité financière.
+                      </p>
+                    ) : null}
+
+                    {!canVisa && !canValidatePdg && !isReadOnlyViewer ? (
                       <Link href="/dashboard" className={cn(mbokaButtonOutlineClassName, "no-underline")}>
                         Retour au tableau de bord
                       </Link>

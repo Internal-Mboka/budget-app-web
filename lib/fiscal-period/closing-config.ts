@@ -1,4 +1,4 @@
-/** US-78 : si true, le PDG/DT peut valider seul sans visa comptable préalable. */
+/** US-78 : si true, le PDG peut valider seul sans visa comptable préalable. */
 export function isPdgSoloFiscalClosingEnabled(): boolean {
   const raw = process.env.FISCAL_PERIOD_PDG_SOLO_CLOSING?.trim().toLowerCase();
 

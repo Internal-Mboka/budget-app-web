@@ -27,14 +27,20 @@ export function canVisaFiscalPeriodClosingAsAccountant(roleName: RoleName): bool
 }
 
 export function canApproveFiscalPeriodClosingAsPdg(roleName: RoleName): boolean {
-  return roleName === ROLES.PDG || roleName === ROLES.DIRECTEUR_TECHNIQUE;
+  return roleName === ROLES.PDG;
 }
 
-export function canAccessFiscalPeriodClosingPage(roleName: RoleName): boolean {
+export function canViewFiscalPeriodClosingPage(roleName: RoleName): boolean {
   return (
     canVisaFiscalPeriodClosingAsAccountant(roleName) ||
-    canApproveFiscalPeriodClosingAsPdg(roleName)
+    canApproveFiscalPeriodClosingAsPdg(roleName) ||
+    roleName === ROLES.DIRECTEUR_TECHNIQUE
   );
+}
+
+/** @deprecated Préférer canViewFiscalPeriodClosingPage */
+export function canAccessFiscalPeriodClosingPage(roleName: RoleName): boolean {
+  return canViewFiscalPeriodClosingPage(roleName);
 }
 
 export function getFiscalPeriodClosingWorkflowLabel(step: FiscalPeriodClosingWorkflowStep): string {

@@ -98,7 +98,7 @@ export async function approveFiscalPeriodClosingAsPdgAction(
   }
 
   if (!canApproveFiscalPeriodClosingAsPdg(session.user.roleName)) {
-    return { success: false, error: "Validation finale réservée au PDG ou au Directeur Technique." };
+    return { success: false, error: "Validation finale réservée au PDG." };
   }
 
   const period = await loadFiscalPeriodClosingById(periodId);
@@ -197,7 +197,7 @@ export async function approveFiscalPeriodClosingFormAction(
   const result = await approveFiscalPeriodClosingAsPdgAction(periodId);
 
   if (result.success) {
-    redirect(`${CLOSING_PATH}?approved=1`);
+    redirect(`${CLOSING_PATH}?approved=1&periodId=${encodeURIComponent(periodId)}`);
   }
 
   return result;
