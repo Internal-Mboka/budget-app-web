@@ -73,7 +73,7 @@
 **PWA & Notifications**
 - [x] `@ducanh2912/next-pwa` *(corrigé depuis typo pilote `@ducanh27012`)*
 - [x] `sonner`
-- [ ] Brevo *(SDK + clé API — reporté à US-54)*
+- [x] Brevo *(SDK fetch API + clé API — US-54, rappels créances & alertes trimestre)*
 
 **Utilitaires**
 - [x] `date-fns`
