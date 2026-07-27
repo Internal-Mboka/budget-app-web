@@ -2,9 +2,15 @@ import { DashboardFinancialSection } from "@/components/organisms/dashboard-fina
 import { DashboardRevenueBreakdownPanel } from "@/components/organisms/dashboard-revenue-breakdown-panel";
 import { DashboardStudioOccupancyPanel } from "@/components/organisms/dashboard-studio-occupancy-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
+import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import {
+  countOverdueReceivables,
+  getOverdueReceivablesTotal,
+  loadOverdueReceivables,
+} from "@/lib/dashboard/load-overdue-receivables";
 import { loadRevenueByCategory } from "@/lib/dashboard/load-revenue-by-category";
 import { loadStudioOccupancy } from "@/lib/dashboard/load-studio-occupancy";
 import {
@@ -38,11 +44,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, series, revenueBreakdown, studioOccupancy, pendingApprovals] = await Promise.all([
+  const [kpis, series, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
+    await Promise.all([
     loadDashboardKpis(kpiPeriod),
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
     loadStudioOccupancy(occupancyPeriod),
+    loadOverdueReceivables(5),
+    countOverdueReceivables(),
+    getOverdueReceivablesTotal(),
     canApproveExpenses
       ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
           ([items, totalPending]) => ({
@@ -87,6 +97,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         snapshot={studioOccupancy}
+      />
+
+      <OverdueReceivablesPanel
+        items={overdueReceivables}
+        totalOverdue={overdueCount}
+        totalAmount={overdueTotal}
       />
 
       {pendingApprovals ? (

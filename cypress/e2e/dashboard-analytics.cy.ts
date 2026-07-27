@@ -104,6 +104,35 @@ describe("Mboka Budget — SPEC 7 US-49 Occupation espaces studio", () => {
   });
 });
 
+describe("Mboka Budget — SPEC 7 US-50 Créances en souffrance", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("affiche le panneau créances en souffrance sur le dashboard", () => {
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="overdue-receivables-panel"]').should("be.visible");
+    cy.get('[data-testid="overdue-receivables-empty"], [data-testid="overdue-receivables-list"]').should("exist");
+  });
+
+  it("permet d'ouvrir la page complète des créances", () => {
+    cy.visit("/dashboard/creances");
+    cy.dismissPwaPrompt();
+
+    cy.contains("Créances en souffrance").should("be.visible");
+    cy.get('[data-testid="overdue-receivables-panel"]').should("be.visible");
+  });
+});
+
 describe("Mboka Budget — SPEC 7 US-47 Vue macro Observateur", () => {
   beforeEach(function () {
     const email = Cypress.env("OBSERVATEUR_EMAIL");

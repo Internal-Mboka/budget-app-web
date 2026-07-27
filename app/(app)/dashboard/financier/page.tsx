@@ -1,11 +1,17 @@
 import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
+import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import {
+  countOverdueReceivables,
+  getOverdueReceivablesTotal,
+  loadOverdueReceivables,
+} from "@/lib/dashboard/load-overdue-receivables";
 import {
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
@@ -38,12 +44,15 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [kpis, series, recurringDues, recurringDueCount, pendingApprovals, pendingClosingReviews] =
+  const [kpis, series, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
       loadDashboardKpis(kpiPeriod),
       loadRevenueExpenseSeries(granularity),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
+      loadOverdueReceivables(5),
+      countOverdueReceivables(),
+      getOverdueReceivablesTotal(),
       canApproveExpenses
         ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
             ([items, totalPending]) => ({ items, totalPending })
@@ -70,6 +79,12 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         series={series}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
+      />
+
+      <OverdueReceivablesPanel
+        items={overdueReceivables}
+        totalOverdue={overdueCount}
+        totalAmount={overdueTotal}
       />
 
       {recurringDueCount > 0 ? (

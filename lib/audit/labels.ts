@@ -25,6 +25,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   CLIENT_NOTE_CREATED: "Note client ajoutée",
   REVENUE_CREATED: "Revenu enregistré",
   REVENUE_PAYMENT_RECORDED: "Encaissement enregistré",
+  RECEIVABLE_REMINDER_SENT: "Rappel de créance envoyé",
   REVENUE_CANCELLED: "Revenu annulé",
   EXPENSE_CREATED: "Dépense enregistrée",
   EXPENSE_APPROVED: "Dépense approuvée",
