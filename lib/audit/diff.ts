@@ -1,3 +1,5 @@
+import { formatAuditDetailValue } from "./detail-format";
+
 export type AuditDiffEntry = {
   key: string;
   before: unknown;
@@ -59,14 +61,6 @@ export function buildAuditDiffView(details: unknown): AuditDiffView | null {
   };
 }
 
-export function formatAuditValue(value: unknown): string {
-  if (value === null || value === undefined) {
-    return "—";
-  }
-
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-
-  return JSON.stringify(value, null, 2);
+export function formatAuditValue(value: unknown, key = ""): string {
+  return formatAuditDetailValue(key, value);
 }
