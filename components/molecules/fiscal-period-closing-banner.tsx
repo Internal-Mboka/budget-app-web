@@ -28,7 +28,8 @@ export function FiscalPeriodClosingBanner({ period }: FiscalPeriodClosingBannerP
             Trimestre {period.label} · {statusLabel}
           </p>
           <p className="text-amber-900/90 dark:text-amber-100/90">
-            Période {rangeLabel}. Les saisies financières sont figées en attente de validation comptable.
+            Échéance du trimestre atteinte ({rangeLabel}). Les saisies financières sont figées en
+            attente de validation comptable.
           </p>
         </div>
       </div>

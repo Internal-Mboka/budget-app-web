@@ -132,7 +132,14 @@ export async function hasAnyFiscalPeriod(): Promise<boolean> {
 
 export async function requiresFiscalPeriodSetup(): Promise<boolean> {
   const openPeriod = await loadOpenFiscalPeriod();
-  return openPeriod === null;
+
+  if (openPeriod) {
+    return false;
+  }
+
+  const activePeriod = await loadActiveFiscalPeriod();
+
+  return activePeriod === null;
 }
 
 export type CreateDevOpenFiscalPeriodInput = {
