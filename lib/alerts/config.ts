@@ -5,6 +5,7 @@ export type CriticalAlertType =
   | "EXPENSE_THRESHOLD_EXCEEDED"
   | "HIGH_VALUE_ADJUSTMENT"
   | "FISCAL_PERIOD_CLOSING_PENDING"
+  | "FISCAL_PERIOD_CLOSING_ACCOUNTANT_VISA"
   | "FISCAL_PERIOD_CLOSING_APPROVED"
   | "FISCAL_PERIOD_OPENED";
 
@@ -51,6 +52,8 @@ export function getCriticalAlertTypeLabel(type: CriticalAlertType): string {
       return "Régularisation de montant élevé";
     case "FISCAL_PERIOD_CLOSING_PENDING":
       return "Clôture trimestrielle en attente";
+    case "FISCAL_PERIOD_CLOSING_ACCOUNTANT_VISA":
+      return "Visa comptable enregistré";
     case "FISCAL_PERIOD_CLOSING_APPROVED":
       return "Clôture trimestrielle validée";
     case "FISCAL_PERIOD_OPENED":

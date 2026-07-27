@@ -8,7 +8,12 @@ import {
   getCriticalAlertTypeLabel,
   type CriticalAlertType,
 } from "@/lib/alerts/config";
-import { loadLeadershipAlertRecipients } from "@/lib/alerts/recipients";
+import {
+  loadFiscalPeriodClosingOutcomeRecipients,
+  loadFiscalPeriodClosingPendingRecipients,
+  loadFiscalPeriodClosingPdgRecipients,
+  loadLeadershipAlertRecipients,
+} from "@/lib/alerts/recipients";
 import { writeAuditLog } from "@/lib/audit";
 import { sendTransactionalEmail } from "@/lib/email/send-transactional";
 
@@ -20,6 +25,8 @@ export type CriticalAlertPayload = {
   entityId?: string;
   details?: Record<string, unknown>;
   triggeredByUserId?: string;
+  /** Si absent, destinataires direction (PDG/DT). */
+  recipients?: string[];
 };
 
 async function postAlertWebhook(payload: CriticalAlertPayload, recipients: string[]): Promise<boolean> {
@@ -76,7 +83,10 @@ export async function dispatchCriticalAlert(payload: CriticalAlertPayload): Prom
   }
 
   try {
-    const recipients = await loadLeadershipAlertRecipients();
+    const recipients =
+      payload.recipients && payload.recipients.length > 0
+        ? payload.recipients
+        : await loadLeadershipAlertRecipients();
 
     if (recipients.length === 0) {
       console.warn("[alert:no-recipients]", payload.type);
@@ -200,15 +210,41 @@ export async function notifyFiscalPeriodClosingPending(input: {
   endDate: string;
   triggeredByUserId: string;
 }): Promise<void> {
+  const recipients = await loadFiscalPeriodClosingPendingRecipients();
+
   await dispatchCriticalAlert({
     type: "FISCAL_PERIOD_CLOSING_PENDING",
     title: `Clôture ${input.periodLabel} — action requise`,
     message: `Le trimestre ${input.periodLabel} est en clôture. Visa comptable puis validation PDG attendus.`,
     entity: "FiscalPeriod",
     entityId: input.periodId,
+    recipients,
     details: {
       periodLabel: input.periodLabel,
       endDate: input.endDate,
+    },
+    triggeredByUserId: input.triggeredByUserId,
+  });
+}
+
+export async function notifyFiscalPeriodClosingAccountantVisa(input: {
+  periodId: string;
+  periodLabel: string;
+  performerEmail: string;
+  triggeredByUserId: string;
+}): Promise<void> {
+  const recipients = await loadFiscalPeriodClosingPdgRecipients();
+
+  await dispatchCriticalAlert({
+    type: "FISCAL_PERIOD_CLOSING_ACCOUNTANT_VISA",
+    title: `Clôture ${input.periodLabel} — validation PDG requise`,
+    message: `Le visa comptable a été enregistré par ${input.performerEmail}. Validation PDG attendue pour finaliser la clôture.`,
+    entity: "FiscalPeriod",
+    entityId: input.periodId,
+    recipients,
+    details: {
+      periodLabel: input.periodLabel,
+      performerEmail: input.performerEmail,
     },
     triggeredByUserId: input.triggeredByUserId,
   });
@@ -220,12 +256,15 @@ export async function notifyFiscalPeriodClosingApproved(input: {
   performerEmail: string;
   triggeredByUserId: string;
 }): Promise<void> {
+  const recipients = await loadFiscalPeriodClosingOutcomeRecipients();
+
   await dispatchCriticalAlert({
     type: "FISCAL_PERIOD_CLOSING_APPROVED",
     title: `Clôture ${input.periodLabel} validée`,
     message: `Le trimestre ${input.periodLabel} a été validé par ${input.performerEmail}. Ouverture automatique du trimestre suivant.`,
     entity: "FiscalPeriod",
     entityId: input.periodId,
+    recipients,
     details: {
       periodLabel: input.periodLabel,
       performerEmail: input.performerEmail,
@@ -240,12 +279,15 @@ export async function notifyFiscalPeriodOpened(input: {
   nextPeriodLabel: string;
   triggeredByUserId: string;
 }): Promise<void> {
+  const recipients = await loadFiscalPeriodClosingOutcomeRecipients();
+
   await dispatchCriticalAlert({
     type: "FISCAL_PERIOD_OPENED",
     title: `${input.nextPeriodLabel} ouvert`,
     message: `Le trimestre ${input.closedPeriodLabel} est clôturé. ${input.nextPeriodLabel} est maintenant ouvert aux saisies.`,
     entity: "FiscalPeriod",
     entityId: input.nextPeriodId,
+    recipients,
     details: {
       closedPeriodLabel: input.closedPeriodLabel,
       nextPeriodLabel: input.nextPeriodLabel,

@@ -162,6 +162,7 @@ export default defineConfig({
 
           return period.id;
         },
+        async syncExpiredFiscalPeriods() {
           const { syncExpiredFiscalPeriodsToClosing } = await import(
             "./lib/fiscal-period/sync-expired-periods"
           );

@@ -66,6 +66,9 @@ function ClosingRecapCard({
         {validatedByPdgName ? (
           <p className="text-xs text-slate-500 dark:text-slate-400">Validé par {validatedByPdgName}</p>
         ) : null}
+        {documentCode ? (
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Réf. {documentCode}</p>
+        ) : null}
       </div>
 
       <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

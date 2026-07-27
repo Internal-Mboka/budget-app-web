@@ -207,7 +207,7 @@
 |----|-------|--------|
 | US-53 | Export données comptables & factures | `[x]` |
 | US-54 | Webhooks & alertes événements critiques | `[x]` |
-| US-55 | Installation PWA & prompt contextuel | `[ ]` |
+| US-55 | Installation PWA & prompt contextuel | `[x]` |
 | US-56 | Mode hors-ligne partiel & sync | `[ ]` |
 | US-57 | Bilan financier périodique | `[x]` |
 | US-58 | Personnalisation alertes Push/Webhooks | `[ ]` |
@@ -364,11 +364,13 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 
 ### Dépendances inter-SPEC restantes
 
-| US existante | Lien avec SPEC 10 |
-|--------------|-------------------|
-| US-54 | Emails clôture trimestre (US-78), rappels créances |
-| US-36 | Verrou caisse **journalier** — reste complémentaire au verrou **trimestriel** (US-76) |
-| US-46–52 | Dashboard analytics — étendus par US-67–73 et US-80, non remplacés |
+| US existante | Lien avec SPEC 10 | Statut |
+|--------------|-------------------|--------|
+| US-54 | Emails clôture trimestre (visa → PDG, clôture → équipe) + rappels créances Brevo | `[x]` |
+| US-36 | Verrou caisse **journalier** — reste complémentaire au verrou **trimestriel** (US-76) | — |
+| US-46–52 | Dashboard analytics — étendus par US-67–73 et US-80, non remplacés | — |
+
+<!-- US-54 trimestre : CLOSING → Comptable+PDG+DT ; visa comptable → PDG ; clôture/T+1 → Comptable+PDG+DT. Rappels créances client via `sendReceivableReminderFormAction`. -->
 
 ---
 

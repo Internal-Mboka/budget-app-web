@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
-import { notifyFiscalPeriodClosingApproved } from "@/lib/alerts/dispatch";
+import { notifyFiscalPeriodClosingAccountantVisa, notifyFiscalPeriodClosingApproved } from "@/lib/alerts/dispatch";
 import { getSession } from "@/lib/auth/get-session";
 import { isPdgSoloFiscalClosingEnabled } from "@/lib/fiscal-period/closing-config";
 import {
@@ -78,6 +78,13 @@ export async function visaFiscalPeriodClosingAsAccountantAction(
           validatedBy: session.user.email,
         },
       });
+    });
+
+    void notifyFiscalPeriodClosingAccountantVisa({
+      periodId: period.id,
+      periodLabel: period.label,
+      performerEmail: session.user.email ?? "",
+      triggeredByUserId: session.user.id,
     });
 
     revalidateClosingSurfaces();

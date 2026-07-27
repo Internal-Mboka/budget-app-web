@@ -3,7 +3,10 @@ import {
   type FiscalPeriodClosingSnapshot,
 } from "@/lib/fiscal-period/load-fiscal-period-metrics";
 import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
-import { loadFinancialPeriodClosureByFiscalPeriodId } from "@/lib/period-closure/load-closures";
+import {
+  loadFinancialPeriodClosureByFiscalPeriodId,
+  type FinancialPeriodClosureRecord,
+} from "@/lib/period-closure/load-closures";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -63,6 +66,41 @@ export type FiscalPeriodClosingRecap = {
   documentCode: string | null;
 };
 
+function mapArchivedClosureToSnapshot(
+  period: FiscalPeriodRecord,
+  closure: FinancialPeriodClosureRecord
+): FiscalPeriodClosingSnapshot {
+  return {
+    fiscalPeriodId: period.id,
+    label: period.label,
+    startDate: period.startDate,
+    endDate: period.endDate,
+    revenueTotal: closure.revenueTotal,
+    expenseTotal: closure.expenseTotal,
+    creditTotal: closure.creditTotal,
+    netBalance: closure.netBalance,
+    paidRevenueTotal: closure.paidRevenueTotal,
+    paidExpenseTotal: closure.paidExpenseTotal,
+    netCashFlow: closure.netCashFlow,
+    revenueCount: closure.revenueCount,
+    expenseCount: closure.expenseCount,
+    creditCount: closure.creditCount,
+    receivableOutstandingTotal: closure.receivableOutstandingTotal ?? 0,
+    receivableCount: closure.receivableCount ?? 0,
+  };
+}
+
+async function loadRecapSnapshot(
+  period: FiscalPeriodRecord,
+  closure: FinancialPeriodClosureRecord | null
+): Promise<FiscalPeriodClosingSnapshot> {
+  if (closure) {
+    return mapArchivedClosureToSnapshot(period, closure);
+  }
+
+  return loadFiscalPeriodClosingSnapshot(period);
+}
+
 export async function loadFiscalPeriodClosingRecaps(limit = 3): Promise<FiscalPeriodClosingRecap[]> {
   const rows = await prisma.fiscalPeriod.findMany({
     where: { status: "CLOSED" },
@@ -78,11 +116,12 @@ export async function loadFiscalPeriodClosingRecaps(limit = 3): Promise<FiscalPe
 
   for (const row of rows) {
     const period = mapFiscalPeriodRow(row);
-    const snapshot = await loadFiscalPeriodClosingSnapshot(period);
+    const closure = await loadFinancialPeriodClosureByFiscalPeriodId(period.id);
+    const snapshot = await loadRecapSnapshot(period, closure);
+
     const validatedByPdgName = row.validatedByPdg
       ? `${row.validatedByPdg.firstName} ${row.validatedByPdg.lastName}`.trim()
       : null;
-    const closure = await loadFinancialPeriodClosureByFiscalPeriodId(period.id);
 
     recaps.push({
       period,
@@ -111,8 +150,8 @@ export async function loadFiscalPeriodClosingRecapById(
   }
 
   const period = mapFiscalPeriodRow(row);
-  const snapshot = await loadFiscalPeriodClosingSnapshot(period);
   const closure = await loadFinancialPeriodClosureByFiscalPeriodId(period.id);
+  const snapshot = await loadRecapSnapshot(period, closure);
 
   return {
     period,
