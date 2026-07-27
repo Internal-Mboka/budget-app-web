@@ -44,12 +44,7 @@ export function DashboardFinancialSection({
       </p>
 
       <MbokaKpiBoard periodLabel={kpis.periodLabel}>
-        <MbokaKpiBoardGroup
-          label="Activité"
-          scope="period"
-          scopeLabel="Période"
-          testId="dashboard-kpi-section-activity"
-        >
+        <MbokaKpiBoardGroup label="Activité" scope="period" testId="dashboard-kpi-section-activity">
           <MbokaKpiCard
             label="Chiffre d'affaires"
             value={kpis.revenueTotal}
@@ -76,12 +71,7 @@ export function DashboardFinancialSection({
           />
         </MbokaKpiBoardGroup>
 
-        <MbokaKpiBoardGroup
-          label="Trésorerie"
-          scope="global"
-          scopeLabel="Global"
-          testId="dashboard-kpi-section-position"
-        >
+        <MbokaKpiBoardGroup label="Trésorerie" scope="global" testId="dashboard-kpi-section-position">
           <MbokaKpiCard
             label="Trésorerie nette"
             value={kpis.netTreasury}

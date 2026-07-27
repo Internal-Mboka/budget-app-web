@@ -43,9 +43,7 @@ export function MbokaKpiBoard({
         </MbokaInfoPopover>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 lg:divide-x lg:divide-sky-100 dark:lg:divide-sky-900">
-        {children}
-      </div>
+      <div className="grid gap-8 lg:grid-cols-2">{children}</div>
     </section>
   );
 }
@@ -53,42 +51,28 @@ export function MbokaKpiBoard({
 type MbokaKpiBoardGroupProps = {
   label: string;
   scope: "period" | "global";
-  scopeLabel: string;
   testId: string;
   children: ReactNode;
   className?: string;
 };
 
-const groupScopeClassName = {
-  period: {
-    pill: "bg-sky-100 text-[#10579F] dark:bg-sky-950/60 dark:text-sky-200",
-    icon: CalendarRange,
-  },
-  global: {
-    pill: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-    icon: Globe2,
-  },
+const groupScopeIcon = {
+  period: CalendarRange,
+  global: Globe2,
 } as const;
 
-export function MbokaKpiBoardGroup({
-  label,
-  scope,
-  scopeLabel,
-  testId,
-  children,
-  className,
-}: MbokaKpiBoardGroupProps) {
+export function MbokaKpiBoardGroup({ label, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
   const headingId = `${testId}-heading`;
-  const ScopeIcon = groupScopeClassName[scope].icon;
+  const ScopeIcon = groupScopeIcon[scope];
 
   return (
     <div
-      className={cn("min-w-0 space-y-3 lg:pr-4 last:lg:pl-4 last:lg:pr-0", className)}
+      className={cn("min-w-0 space-y-3", className)}
       data-testid={testId}
       data-scope={scope}
       aria-labelledby={headingId}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <ScopeIcon className="size-3.5 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
         <p
           id={headingId}
@@ -96,15 +80,6 @@ export function MbokaKpiBoardGroup({
         >
           {label}
         </p>
-        <span
-          className={cn(
-            "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            groupScopeClassName[scope].pill
-          )}
-          data-testid={`${testId}-scope`}
-        >
-          {scopeLabel}
-        </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">{children}</div>
     </div>
