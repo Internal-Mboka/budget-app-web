@@ -183,8 +183,7 @@ export function FiscalPeriodClosingPanel({
 
                 {item.workflowStep === "approved" ? (
                   <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                    Clôture validée — l&apos;ouverture du trimestre suivant sera traitée à l&apos;étape
-                    suivante (US-79).
+                    Clôture validée — finalisation et ouverture du trimestre suivant en cours.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">

@@ -10,11 +10,13 @@ import {
   requiresFiscalPeriodSetup,
 } from "@/lib/fiscal-period/load-fiscal-periods";
 import { syncExpiredFiscalPeriodsToClosing } from "@/lib/fiscal-period/sync-expired-periods";
+import { syncApprovedFiscalPeriodClosings } from "@/lib/fiscal-period/finalize-closing";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
 
   await syncExpiredFiscalPeriodsToClosing({ actorUserId: session.user.id });
+  await syncApprovedFiscalPeriodClosings({ actorUserId: session.user.id });
 
   const [needsFiscalPeriodSetup, closingPeriod] = await Promise.all([
     requiresFiscalPeriodSetup(),

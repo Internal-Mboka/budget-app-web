@@ -28,7 +28,8 @@ export default async function FiscalPeriodClosingPage({ searchParams }: FiscalPe
   let successMessage: string | undefined;
 
   if (query.approved === "1") {
-    successMessage = "Clôture trimestrielle validée. Une notification a été envoyée à la direction.";
+    successMessage =
+      "Clôture trimestrielle finalisée. Le trimestre suivant est ouvert aux saisies financières.";
   } else if (query.visa === "1") {
     successMessage = "Visa comptable enregistré. En attente de la validation PDG/DT.";
   }

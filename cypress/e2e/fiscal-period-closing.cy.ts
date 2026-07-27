@@ -43,7 +43,53 @@ describe("Mboka Budget — SPEC 10 US-78 Validation clôture trimestrielle", () 
 
     cy.location("search", { timeout: 20000 }).should("include", "approved=1");
     cy.get('[data-testid="fiscal-period-closing-success"]').should("be.visible");
-    cy.contains("Clôture validée").should("be.visible");
+    cy.contains("trimestre suivant").should("be.visible");
+    cy.get('[data-testid="fiscal-period-closing-empty"]').should("be.visible");
+
+    cy.task("getFiscalPeriodStatusCounts").should("deep.equal", {
+      open: 1,
+      closing: 0,
+      closed: 1,
+    });
+
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+    cy.get('[data-testid="fiscal-period-closing-banner"]').should("not.exist");
+    cy.get('[data-testid="nav-fiscal-period-closing"]').should("not.exist");
+  });
+});
+
+describe("Mboka Budget — SPEC 10 US-79 Finalisation clôture et T+1", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.task("resetFiscalPeriodOpen");
+    cy.loginAsDt();
+  });
+
+  afterEach(() => {
+    cy.task("resetFiscalPeriodOpen");
+  });
+
+  it("ouvre automatiquement le trimestre suivant après validation PDG/DT", () => {
+    cy.task("setFiscalPeriodStatus", "CLOSING");
+    cy.task("setFiscalPeriodAccountantVisa");
+
+    cy.visit("/dashboard/cloture-trimestre");
+    cy.dismissPwaPrompt();
+    cy.get('[data-testid^="fiscal-period-closing-approve-"]').first().click();
+    cy.get('[data-testid="fiscal-period-closing-success"]').should("be.visible");
+
+    cy.task("getFiscalPeriodStatusCounts").should("deep.equal", {
+      open: 1,
+      closing: 0,
+      closed: 1,
+    });
   });
 });
 

@@ -12,6 +12,7 @@ import {
   canVisaFiscalPeriodClosingAsAccountant,
   getFiscalPeriodClosingWorkflowStep,
 } from "@/lib/fiscal-period/closing-workflow";
+import { finalizeApprovedFiscalPeriodClosing } from "@/lib/fiscal-period/finalize-closing";
 import { loadFiscalPeriodClosingById } from "@/lib/fiscal-period/load-closing-queue";
 import { prisma } from "@/lib/prisma";
 
@@ -154,6 +155,15 @@ export async function approveFiscalPeriodClosingAsPdgAction(
       triggeredByUserId: session.user.id,
       performerEmail: session.user.email ?? "",
     });
+
+    const finalized = await finalizeApprovedFiscalPeriodClosing({
+      periodId: period.id,
+      actorUserId: session.user.id,
+    });
+
+    if (!finalized) {
+      return { success: false, error: "Impossible de finaliser la clôture trimestrielle." };
+    }
 
     revalidateClosingSurfaces();
     return { success: true };

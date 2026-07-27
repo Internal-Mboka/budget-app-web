@@ -223,12 +223,32 @@ export async function notifyFiscalPeriodClosingApproved(input: {
   await dispatchCriticalAlert({
     type: "FISCAL_PERIOD_CLOSING_APPROVED",
     title: `Clôture ${input.periodLabel} validée`,
-    message: `Le trimestre ${input.periodLabel} a été validé par ${input.performerEmail}. Finalisation T+1 à venir.`,
+    message: `Le trimestre ${input.periodLabel} a été validé par ${input.performerEmail}. Ouverture automatique du trimestre suivant.`,
     entity: "FiscalPeriod",
     entityId: input.periodId,
     details: {
       periodLabel: input.periodLabel,
       performerEmail: input.performerEmail,
+    },
+    triggeredByUserId: input.triggeredByUserId,
+  });
+}
+
+export async function notifyFiscalPeriodOpened(input: {
+  closedPeriodLabel: string;
+  nextPeriodId: string;
+  nextPeriodLabel: string;
+  triggeredByUserId: string;
+}): Promise<void> {
+  await dispatchCriticalAlert({
+    type: "FISCAL_PERIOD_OPENED",
+    title: `${input.nextPeriodLabel} ouvert`,
+    message: `Le trimestre ${input.closedPeriodLabel} est clôturé. ${input.nextPeriodLabel} est maintenant ouvert aux saisies.`,
+    entity: "FiscalPeriod",
+    entityId: input.nextPeriodId,
+    details: {
+      closedPeriodLabel: input.closedPeriodLabel,
+      nextPeriodLabel: input.nextPeriodLabel,
     },
     triggeredByUserId: input.triggeredByUserId,
   });

@@ -41,25 +41,50 @@ export default defineConfig({
           );
 
           const periods = await prisma.fiscalPeriod.findMany({
+            orderBy: { startDate: "asc" },
             select: { id: true, startDate: true },
           });
 
-          for (const period of periods) {
-            const endDate = normalizeFiscalPeriodEndDate(computeFiscalPeriodEndDate(period.startDate));
+          if (periods.length === 0) {
+            await prisma.$disconnect();
+            return null;
+          }
 
-            await prisma.fiscalPeriod.update({
-              where: { id: period.id },
-              data: {
-                status: "OPEN",
-                endDate,
-                validatedByAccountantId: null,
-                validatedByPdgId: null,
-              },
+          const [keep, ...extras] = periods;
+
+          if (extras.length > 0) {
+            await prisma.fiscalPeriod.deleteMany({
+              where: { id: { in: extras.map((period) => period.id) } },
             });
           }
 
+          const endDate = normalizeFiscalPeriodEndDate(computeFiscalPeriodEndDate(keep.startDate));
+
+          await prisma.fiscalPeriod.update({
+            where: { id: keep.id },
+            data: {
+              status: "OPEN",
+              endDate,
+              closedAt: null,
+              validatedByAccountantId: null,
+              validatedByPdgId: null,
+            },
+          });
+
           await prisma.$disconnect();
           return null;
+        },
+        async getFiscalPeriodStatusCounts() {
+          const { prisma } = await import("./lib/prisma");
+
+          const [open, closing, closed] = await Promise.all([
+            prisma.fiscalPeriod.count({ where: { status: "OPEN" } }),
+            prisma.fiscalPeriod.count({ where: { status: "CLOSING" } }),
+            prisma.fiscalPeriod.count({ where: { status: "CLOSED" } }),
+          ]);
+
+          await prisma.$disconnect();
+          return { open, closing, closed };
         },
         async setFiscalPeriodAccountantVisa() {
           const { prisma } = await import("./lib/prisma");

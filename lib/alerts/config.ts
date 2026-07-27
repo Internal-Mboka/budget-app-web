@@ -5,7 +5,8 @@ export type CriticalAlertType =
   | "EXPENSE_THRESHOLD_EXCEEDED"
   | "HIGH_VALUE_ADJUSTMENT"
   | "FISCAL_PERIOD_CLOSING_PENDING"
-  | "FISCAL_PERIOD_CLOSING_APPROVED";
+  | "FISCAL_PERIOD_CLOSING_APPROVED"
+  | "FISCAL_PERIOD_OPENED";
 
 export function areCriticalAlertsEnabled(): boolean {
   const raw = process.env.ALERTS_ENABLED?.trim().toLowerCase();
@@ -52,6 +53,8 @@ export function getCriticalAlertTypeLabel(type: CriticalAlertType): string {
       return "Clôture trimestrielle en attente";
     case "FISCAL_PERIOD_CLOSING_APPROVED":
       return "Clôture trimestrielle validée";
+    case "FISCAL_PERIOD_OPENED":
+      return "Nouveau trimestre comptable ouvert";
     default:
       return type;
   }
