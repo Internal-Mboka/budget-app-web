@@ -43,6 +43,10 @@
   --mboka-gradient: linear-gradient(180deg, #eff8ff 0%, #f8fbff 48%, #ffffff 100%);
   --mboka-card-shadow: 0 20px 60px rgba(16, 87, 159, 0.1);
   --mboka-logo-filter: brightness(0) saturate(100%) invert(25%) sepia(94%) saturate(1320%) hue-rotate(179deg) brightness(92%) contrast(92%);
+  --scrollbar-size: 6px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: color-mix(in srgb, var(--primary) 28%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 48%, transparent);
 }
 
 .dark {
@@ -83,6 +87,8 @@
   --mboka-gradient: linear-gradient(180deg, #0a1628 0%, #0f1d32 48%, #0a1628 100%);
   --mboka-card-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --mboka-logo-filter: brightness(0) invert(1);
+  --scrollbar-thumb: color-mix(in srgb, var(--primary) 35%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
 @theme inline {
@@ -144,4 +150,40 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Scrollbar — design system Mboka */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
