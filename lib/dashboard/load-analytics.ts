@@ -10,6 +10,7 @@ import {
   startOfWeek,
 } from "date-fns";
 
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { formatChartBucketLabel, getChartRange, getKpiPeriodRange } from "@/lib/dashboard/periods";
 import { prisma } from "@/lib/prisma";
@@ -107,12 +108,34 @@ function getBucketStart(date: Date, granularity: DashboardChartGranularity) {
   return startOfMonth(date);
 }
 
+export async function loadGlobalFinancialTotals() {
+  const [allRevenues, allExpenses] = await Promise.all([
+    prisma.transaction.findMany({
+      where: ACTIVE_REVENUE_WHERE,
+      select: { totalAmount: true },
+    }),
+    prisma.transaction.findMany({
+      where: ACTIVE_EXPENSE_WHERE,
+      select: { totalAmount: true },
+    }),
+  ]);
+
+  return {
+    revenueTotal: sumDecimal(allRevenues, "totalAmount"),
+    expenseTotal: sumDecimal(allExpenses, "totalAmount"),
+  };
+}
+
 export async function loadDashboardKpis(
   kpiPeriod: DashboardKpiPeriod = "month",
-  reference = new Date()
+  reference = new Date(),
+  kpiScope: DashboardKpiScope = "period"
 ): Promise<DashboardKpis> {
   const { from, to, label } = getKpiPeriodRange(kpiPeriod, reference);
-  const periodTotals = await loadPeriodFinancialTotals(from, to);
+  const financialTotals =
+    kpiScope === "global"
+      ? await loadGlobalFinancialTotals()
+      : await loadPeriodFinancialTotals(from, to);
 
   const [netTreasury, receivableRows] = await Promise.all([
     loadCurrentNetTreasury(),
@@ -126,13 +149,13 @@ export async function loadDashboardKpis(
   ]);
 
   return {
-    revenueTotal: periodTotals.revenueTotal,
-    expenseTotal: periodTotals.expenseTotal,
+    revenueTotal: financialTotals.revenueTotal,
+    expenseTotal: financialTotals.expenseTotal,
     netTreasury,
     receivables: roundMoney(
       receivableRows.reduce((sum, row) => sum + decimalToNumber(row.remainingAmount), 0)
     ),
-    periodLabel: label,
+    periodLabel: kpiScope === "global" ? "Cumul global" : label,
   };
 }
 

@@ -29,6 +29,7 @@ describe("Mboka Budget — SPEC 7 US-46 Dashboard financier global", () => {
     cy.get('[data-testid="dashboard-kpi-receivables"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-revenue-delta"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-expenses-delta"]').should("be.visible");
+    cy.get('[data-testid="dashboard-kpi-scope-switch"]').should("be.visible");
     cy.get('[data-testid="dashboard-category-total-delta"]').should("be.visible");
     cy.get('[data-testid="dashboard-occupancy-kpi-rate-delta"]').should("be.visible");
     cy.get('[data-testid="dashboard-revenue-expense-chart"]').should("be.visible");

@@ -17,6 +17,7 @@ import {
   getOverdueReceivablesTotal,
   loadOverdueReceivables,
 } from "@/lib/dashboard/load-overdue-receivables";
+import { parseDashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import {
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
@@ -38,13 +39,14 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type FinancialDashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; projectionPeriod?: string; projectionScenario?: string }>;
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; kpiScope?: string; projectionPeriod?: string; projectionScenario?: string }>;
 };
 
 export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
   const session = await requirePermission(PERMISSIONS.DASHBOARD_FINANCIAL);
   const query = await searchParams;
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
+  const kpiScope = parseDashboardKpiScope(query.kpiScope);
   const granularity = parseDashboardChartGranularity(query.granularity);
   const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
   const projectionScenario = parseProjectionScenario(query.projectionScenario);
@@ -55,7 +57,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
-      loadDashboardKpis(kpiPeriod),
+      loadDashboardKpis(kpiPeriod, undefined, kpiScope),
       loadDashboardKpiComparison(kpiPeriod),
       loadRevenueExpenseSeries(granularity),
       loadTreasuryProjection(projectionPeriod, projectionScenario),
@@ -92,6 +94,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         comparison={kpiComparison}
         series={series}
         kpiPeriod={kpiPeriod}
+        kpiScope={kpiScope}
         granularity={granularity}
         projectionPeriod={projectionPeriod}
         projectionScenario={projectionScenario}
@@ -102,6 +105,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         projectionPeriod={projectionPeriod}
         projectionScenario={projectionScenario}
         kpiPeriod={kpiPeriod}
+        kpiScope={kpiScope}
         granularity={granularity}
         snapshot={treasuryProjection}
         audienceLabel="Comptable"

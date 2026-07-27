@@ -22,6 +22,13 @@ const scopeSurfaceClassName = {
   global: "bg-slate-50/80 dark:bg-slate-800/35",
 } as const;
 
+const scopeBadgeClassName = {
+  period:
+    "rounded-xl border border-sky-100 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#10579F] shadow-sm ring-1 ring-sky-100 dark:border-sky-900 dark:bg-slate-800 dark:text-sky-100 dark:ring-sky-900",
+  global:
+    "rounded-xl border border-sky-100 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm ring-1 ring-slate-100 dark:border-sky-900 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-800",
+} as const;
+
 export function MbokaKpiCard({
   label,
   value,
@@ -62,12 +69,7 @@ export function MbokaKpiCard({
           </p>
           {scope ? (
             <span
-              className={cn(
-                "inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
-                scope === "period"
-                  ? "bg-sky-100 text-[#10579F] dark:bg-sky-900/60 dark:text-sky-200"
-                  : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-              )}
+              className={scopeBadgeClassName[scope]}
               data-testid={testId ? `${testId}-scope` : undefined}
             >
               {scope === "period" ? "Période" : "Global"}

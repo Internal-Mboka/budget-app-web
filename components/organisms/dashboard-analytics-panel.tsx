@@ -3,6 +3,7 @@
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { RevenueExpenseChart } from "@/components/molecules/revenue-expense-chart";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getGranularityLabel, getKpiPeriodLabel } from "@/lib/dashboard/periods";
@@ -11,6 +12,7 @@ import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projec
 type DashboardAnalyticsPanelProps = {
   basePath: "/dashboard" | "/dashboard/financier";
   kpiPeriod: DashboardKpiPeriod;
+  kpiScope: DashboardKpiScope;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -25,6 +27,7 @@ const CHART_GRANULARITY_OPTIONS: DashboardChartGranularity[] = ["day", "week", "
 export function DashboardAnalyticsPanel({
   basePath,
   kpiPeriod,
+  kpiScope,
   granularity,
   categoryPeriod,
   occupancyPeriod,
@@ -46,6 +49,7 @@ export function DashboardAnalyticsPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref(basePath, {
               kpiPeriod: value,
+              kpiScope,
               granularity,
               categoryPeriod,
               occupancyPeriod,
@@ -66,6 +70,7 @@ export function DashboardAnalyticsPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref(basePath, {
               kpiPeriod,
+              kpiScope,
               granularity: value,
               categoryPeriod,
               occupancyPeriod,

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 type MbokaKpiBoardProps = {
   periodLabel: string;
   children: ReactNode;
+  headerAction?: ReactNode;
   testId?: string;
   className?: string;
 };
@@ -16,6 +17,7 @@ type MbokaKpiBoardProps = {
 export function MbokaKpiBoard({
   periodLabel,
   children,
+  headerAction,
   testId = "dashboard-kpi-grid",
   className,
 }: MbokaKpiBoardProps) {
@@ -25,22 +27,29 @@ export function MbokaKpiBoard({
       data-testid={testId}
       aria-label="Indicateurs financiers"
     >
-      <header className="mb-5 flex items-start justify-between gap-3 border-b border-sky-100 pb-4 dark:border-sky-900">
+      <header className="mb-5 flex flex-col gap-4 border-b border-sky-100 pb-4 dark:border-sky-900 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h2 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">Vue d&apos;ensemble · {periodLabel.toLowerCase()}</p>
         </div>
 
-        <MbokaInfoPopover title="Comment lire ces indicateurs ?" testId="dashboard-kpi-info-popover">
-          <p>
-            <strong className="font-medium text-slate-700 dark:text-slate-200">Activité · Période</strong> — montants
-            enregistrés sur la période filtrée (date de saisie).
-          </p>
-          <p>
-            <strong className="font-medium text-slate-700 dark:text-slate-200">Trésorerie · Global</strong> — position
-            instantanée toutes périodes (encaissements payés et créances ouvertes).
-          </p>
-        </MbokaInfoPopover>
+        <div className="flex flex-wrap items-center gap-3">
+          {headerAction}
+          <MbokaInfoPopover title="Comment lire ces indicateurs ?" testId="dashboard-kpi-info-popover">
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité · Période</strong> — montants
+              enregistrés sur la période filtrée (date de saisie).
+            </p>
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Activité · Global</strong> — cumul
+              historique de tous les montants enregistrés (date de saisie), toutes périodes confondues.
+            </p>
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Trésorerie · Global</strong> — position
+              instantanée toutes périodes (encaissements payés et créances ouvertes).
+            </p>
+          </MbokaInfoPopover>
+        </div>
       </header>
 
       <div className="grid gap-8 lg:grid-cols-2">{children}</div>

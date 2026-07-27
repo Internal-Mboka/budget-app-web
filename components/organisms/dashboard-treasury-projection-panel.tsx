@@ -3,6 +3,7 @@
 import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-card";
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { TreasuryProjectionChart } from "@/components/molecules/treasury-projection-chart";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { TreasuryProjectionSnapshot } from "@/lib/dashboard/load-treasury-projection";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
@@ -21,6 +22,7 @@ type DashboardTreasuryProjectionPanelProps = {
   projectionPeriod: DashboardKpiPeriod;
   projectionScenario: TreasuryProjectionScenario;
   kpiPeriod: DashboardKpiPeriod;
+  kpiScope: DashboardKpiScope;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
@@ -36,6 +38,7 @@ export function DashboardTreasuryProjectionPanel({
   projectionPeriod,
   projectionScenario,
   kpiPeriod,
+  kpiScope,
   granularity,
   categoryPeriod,
   occupancyPeriod,
@@ -64,6 +67,7 @@ export function DashboardTreasuryProjectionPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref(basePath, {
               kpiPeriod,
+              kpiScope,
               granularity,
               categoryPeriod,
               occupancyPeriod,
@@ -84,6 +88,7 @@ export function DashboardTreasuryProjectionPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref(basePath, {
               kpiPeriod,
+              kpiScope,
               granularity,
               categoryPeriod,
               occupancyPeriod,

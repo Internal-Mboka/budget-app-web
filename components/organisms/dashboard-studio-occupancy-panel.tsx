@@ -4,6 +4,7 @@ import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-car
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { StudioOccupancyChart } from "@/components/molecules/studio-occupancy-chart";
 import type { StudioOccupancySnapshot } from "@/lib/dashboard/load-studio-occupancy";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiPeriodLabel } from "@/lib/dashboard/periods";
@@ -12,6 +13,7 @@ import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projec
 type DashboardStudioOccupancyPanelProps = {
   occupancyPeriod: DashboardKpiPeriod;
   kpiPeriod: DashboardKpiPeriod;
+  kpiScope: DashboardKpiScope;
   granularity: DashboardChartGranularity;
   categoryPeriod: DashboardKpiPeriod;
   projectionPeriod: DashboardKpiPeriod;
@@ -24,6 +26,7 @@ const OCCUPANCY_PERIOD_OPTIONS: DashboardKpiPeriod[] = ["month", "quarter", "yea
 export function DashboardStudioOccupancyPanel({
   occupancyPeriod,
   kpiPeriod,
+  kpiScope,
   granularity,
   categoryPeriod,
   projectionPeriod,
@@ -44,6 +47,7 @@ export function DashboardStudioOccupancyPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref("/dashboard", {
               kpiPeriod,
+              kpiScope,
               granularity,
               categoryPeriod,
               occupancyPeriod: value,

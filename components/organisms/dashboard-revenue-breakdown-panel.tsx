@@ -3,6 +3,7 @@
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { RevenueByCategoryChart } from "@/components/molecules/revenue-by-category-chart";
 import type { RevenueCategoryBreakdownPoint } from "@/lib/dashboard/load-revenue-by-category";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiPeriodLabel } from "@/lib/dashboard/periods";
@@ -11,6 +12,7 @@ import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projec
 type DashboardRevenueBreakdownPanelProps = {
   categoryPeriod: DashboardKpiPeriod;
   kpiPeriod: DashboardKpiPeriod;
+  kpiScope: DashboardKpiScope;
   granularity: DashboardChartGranularity;
   occupancyPeriod: DashboardKpiPeriod;
   projectionPeriod: DashboardKpiPeriod;
@@ -27,6 +29,7 @@ const CATEGORY_PERIOD_OPTIONS: DashboardKpiPeriod[] = ["month", "quarter", "year
 export function DashboardRevenueBreakdownPanel({
   categoryPeriod,
   kpiPeriod,
+  kpiScope,
   granularity,
   occupancyPeriod,
   projectionPeriod,
@@ -51,6 +54,7 @@ export function DashboardRevenueBreakdownPanel({
           buildHref={(value) =>
             buildFinancialDashboardHref("/dashboard", {
               kpiPeriod,
+              kpiScope,
               granularity,
               categoryPeriod: value,
               occupancyPeriod,
