@@ -53,6 +53,9 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   CASH_CLOSING_CREATED: "Clôture de caisse",
   CASH_CLOSING_REVIEW_APPROVED: "Clôture validée (PDG)",
   CASH_CLOSING_REVIEW_RESOLVED: "Clôture régularisée (PDG)",
+  FISCAL_PERIOD_INITIALIZED: "Trimestre comptable initialisé",
+  FISCAL_PERIOD_CLOSING_REQUESTED: "Clôture trimestrielle demandée",
+  FISCAL_PERIOD_CLOSING_APPROVED: "Clôture trimestrielle validée",
   AUDIT_LOG_EXPORTED: "Export des journaux d'audit",
 };
 
@@ -61,6 +64,7 @@ const AUDIT_ENTITY_LABELS: Record<string, string> = {
   Client: "Client",
   Transaction: "Revenu ou dépense",
   CashClosing: "Clôture de caisse",
+  FiscalPeriod: "Trimestre comptable",
   Role: "Rôle",
   AuditLog: "Journal d'audit",
   UserSession: "Session",

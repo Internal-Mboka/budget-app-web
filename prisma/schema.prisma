@@ -28,6 +28,8 @@ model User {
   transactionsApproved Transaction[] @relation("TransactionApprover")
   cashClosings       CashClosing[] @relation("CashClosingOperator")
   cashClosingsReviewed CashClosing[] @relation("CashClosingReviewer")
+  fiscalPeriodsValidatedAsPdg FiscalPeriod[] @relation("FiscalPeriodPdgValidator")
+  fiscalPeriodsValidatedAsAccountant FiscalPeriod[] @relation("FiscalPeriodAccountantValidator")
   clientNotes        ClientNote[]
   auditLogs          AuditLog[] @relation("UserAuditLogs")
   passwordResetTokens PasswordResetToken[]
@@ -240,6 +242,39 @@ model CashClosing {
 
   @@index([operatorId])
   @@index([date])
+}
+
+// ==========================================
+// 4.b PÉRIODE COMPTABLE TRIMESTRIELLE (SPEC 10)
+// ==========================================
+
+enum FiscalPeriodStatus {
+  PENDING_SETUP
+  OPEN
+  CLOSING
+  CLOSED
+}
+
+model FiscalPeriod {
+  id                        String             @id @default(cuid())
+  label                     String
+  startDate                 DateTime
+  endDate                   DateTime
+  status                    FiscalPeriodStatus @default(PENDING_SETUP)
+  closedAt                  DateTime?
+  openingBalanceCash        Decimal?           @db.Decimal(12, 2)
+  openingBalanceMobile      Decimal?           @db.Decimal(12, 2)
+  openingBalanceBank        Decimal?           @db.Decimal(12, 2)
+  skipOpeningBalance        Boolean            @default(false)
+  validatedByPdgId          String?
+  validatedByPdg            User?              @relation("FiscalPeriodPdgValidator", fields: [validatedByPdgId], references: [id], onDelete: SetNull)
+  validatedByAccountantId   String?
+  validatedByAccountant     User?              @relation("FiscalPeriodAccountantValidator", fields: [validatedByAccountantId], references: [id], onDelete: SetNull)
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+
+  @@index([status])
+  @@index([startDate, endDate])
 }
 
 // ==========================================

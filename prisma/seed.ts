@@ -3,6 +3,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "../lib/prisma";
+import { createDevOpenFiscalPeriod } from "../lib/fiscal-period/load-fiscal-periods";
 
 const PERMISSIONS = [
   { slug: "finance:create-revenue", description: "Saisie des entrées d'argent" },
@@ -140,6 +141,20 @@ async function main() {
       },
     },
   });
+
+  if (process.env.SEED_FISCAL_PERIOD === "open") {
+    const existingOpen = await prisma.fiscalPeriod.findFirst({
+      where: { status: "OPEN" },
+      select: { id: true, label: true },
+    });
+
+    if (!existingOpen) {
+      const period = await createDevOpenFiscalPeriod({ skipOpeningBalance: true });
+      console.log(`   → Trimestre comptable : ${period.label} (OPEN, bypass onboarding)`);
+    } else {
+      console.log(`   → Trimestre comptable : ${existingOpen.label} (déjà OPEN)`);
+    }
+  }
 
   console.log("✅ Seed terminé.");
   console.log(`   → Directeur Technique : ${dtUser.firstName} ${dtUser.lastName}`);
