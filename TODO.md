@@ -260,3 +260,116 @@
 | 2026-07-26 | US-15 (Historique interactions & notes client) | *En attente* | — |
 | 2026-07-26 | US-16 (Saisie entrée d'argent) | *En attente* | — |
 | 2026-07-26 | US-17 (Anti-doublon saisie financière) | *En attente* | — |
+
+---
+
+## SPEC 10 — Pilotage financier avancé & Périodes comptables trimestrielles
+
+> **Origine :** retour d'expérience post-SPEC 7 (dashboard) + benchmark flux financiers vs `conception.md`.
+> **Objectif :** clarifier les KPI (période vs global), offrir deux modes comptables, enrichir la trésorerie par canal, et introduire un **trimestre métier Mboka** (distinct du filtre calendaire dashboard actuel).
+> **Principe d'intégration :** extension additive — ne pas supprimer les filtres `kpiPeriod` / `granularity` existants ; les compléter par de nouveaux paramètres URL et loaders dédiés. Réutiliser `paymentHistory`, clôture caisse (SPEC 5), audit (SPEC 6) et notifications (US-54).
+
+### Vue d'ensemble — ordre d'implémentation recommandé
+
+```
+Phase A (Dashboard KPI)     → US-67 → US-68 → US-69 → US-70 → US-71 → US-72 → US-73
+Phase B (Période comptable) → US-74 → US-75 → US-76 → US-77 → US-78 → US-79 → US-80
+Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur FiscalPeriod (US-74)
+```
+
+| État système | Saisies financières | Dashboard |
+|--------------|---------------------|-----------|
+| Aucune `FiscalPeriod` | Bloquées sauf onboarding T1 (US-75) | Bandeau « Initialiser le 1er trimestre » |
+| `OPEN` | Autorisées (période courante) | « Trimestre comptable Tn » + filtres calendaires inchangés |
+| `CLOSING` | Bloquées — attente validation | Bandeau + file de clôture PDG/Comptable |
+| `CLOSED` | Lecture seule ; régularisations sur période **ouverte** uniquement | Historique archivé |
+
+---
+
+### Bloc A — Clarification KPI dashboard (feedbacks 1.A, 1.B, 1.C, 1.F)
+
+| US | Titre | Statut |
+|----|-------|--------|
+| US-67 | Segmentation visuelle KPI : « Activité (période) » vs « Position (global) » | `[ ]` |
+| US-68 | Toggle Période / Global sur les cartes KPI principales | `[ ]` |
+| US-69 | Carte « Encaissements réels sur la période » | `[ ]` |
+| US-70 | Mode comptable : Engagement vs Encaissement | `[ ]` |
+| US-71 | Propagation mode comptable aux graphiques & comparatifs N/N-1 | `[ ]` |
+| US-72 | KPI « Solde caisse ouvert » (clôture + mouvements du jour) | `[ ]` |
+| US-73 | Trésorerie globale ventilée par canal de paiement | `[ ]` |
+
+<!-- US-67 : Aujourd'hui CA/Dépenses = période (createdAt) alors que Trésorerie/Créances = global → confusion UX (capture dashboard juillet 2026). Deux sous-grilles ou séparateurs visuels dans `dashboard-financial-section` sans changer les calculs. -->
+
+<!-- US-68 : Switch « Période | Global » (URL `kpiScope=period|global`, défaut `period`). En global : CA = Σ totalAmount, Dépenses = Σ totalAmount, Trésorerie/Créances inchangés. En période : comportement actuel. Permet de recoller mentalement les chiffres sans dupliquer toute la page. -->
+
+<!-- US-69 : 5ᵉ carte (ou remplacement dynamique selon scope) : Σ paidAmount revenus sur la période, date = entrées `paymentHistory.recordedAt` (fallback createdAt legacy). Hint explicite « Encaissements réels · [période] ». -->
+
+<!-- US-70 : Param URL `accountingMode=accrual|cash` (défaut `accrual` = engagement/saisie actuelle). Mode encaissement : KPI CA, graphique Revenus vs Dépenses et ventilation CA basés sur dates de paiement. Lib loaders `lib/dashboard/` — pas de breaking change : mode engagement reste le défaut. -->
+
+<!-- US-71 : Étendre `loadPeriodFinancialTotals`, `loadRevenueExpenseSeries`, `loadRevenueByCategory`, `loadDashboardKpiComparison` pour accepter `accountingMode`. Comparatif N/N-1 cohérent avec le mode actif. Macro observateur : engagement uniquement (pas de détail opérationnel). -->
+
+<!-- US-72 : Nouveau KPI distinct de trésorerie nette : dernière `CashClosing` validée (opening + theoretical du jour) + mouvements espèces/Mobile Money du jour non clôturé. Réutilise `lib/cash-closing/`. Complète le verrou journalier US-36 sans le remplacer. -->
+
+<!-- US-73 : Trésorerie nette globale décomposée : Espèces, Mobile Money, Virement bancaire, Autre — via `paymentMethod` revenus/dépenses et `paymentHistory`. Tooltip ou sous-lignes sous la carte Trésorerie. -->
+
+<!-- 1.F : Comparatif N/A en démarrage = comportement conservé. Projection scénarios (US-52) inchangée. Multi-devises : documenter limite USD agrégé si pas de conversion dans cette SPEC. -->
+
+---
+
+### Bloc B — Module période comptable trimestrielle (feedbacks 2, 3, 4, 1.D, 1.E)
+
+| US | Titre | Statut |
+|----|-------|--------|
+| US-74 | Modèle Prisma `FiscalPeriod` & soldes d'ouverture optionnels | `[ ]` |
+| US-75 | Onboarding : initialisation manuelle du 1er trimestre (T1) | `[ ]` |
+| US-76 | Verrous métier selon état période (OPEN / CLOSING / CLOSED) | `[ ]` |
+| US-77 | Passage automatique OPEN → CLOSING à l'échéance trimestrielle | `[ ]` |
+| US-78 | Workflow validation clôture (PDG + Comptable) & notifications | `[ ]` |
+| US-79 | Ouverture automatique T+1 après validation & report créances | `[ ]` |
+| US-80 | Affichage dashboard « Trimestre comptable Mboka » | `[ ]` |
+
+<!-- US-74 : Tables suggérées — `FiscalPeriod` (id, label T1/T2…, startDate, endDate, status: PENDING_SETUP|OPEN|CLOSING|CLOSED, closedAt, validatedByPdgId, validatedByAccountantId, openingBalanceCash?, openingBalanceMobile?, openingBalanceBank?, skipOpeningBalance boolean). Index sur status + dates. Migration additive. -->
+
+<!-- US-75 : Écran `/dashboard/setup` ou wizard modal (PDG uniquement) si aucune période OPEN. Saisie date début T1 (fin = +3 mois − 1 jour). Soldes d'ouverture par canal OPTIONNELS (case « Nouveau départ — sans solde initial »). Débloque revenus/dépenses/paiements. Audit `FISCAL_PERIOD_INITIALIZED`. -->
+
+<!-- US-76 : `lib/fiscal-period/lock.ts` — complète `assertTodayCashDayOpen` (SPEC 5, journalier). CLOSING/CLOSED : bloquer create/update transactions sur la période ; régularisations autorisées uniquement sur période OPEN (vigilance 4). Pas de DELETE. Secrétaire/Comptable/DT/PDG soumis au même verrou période. -->
+
+<!-- US-77 : Job au démarrage app + middleware layout `(app)` : si `endDate < today` et status OPEN → passer CLOSING, figer saisies, audit log. Bandeau UI tous rôles financiers. -->
+
+<!-- US-78 : Page `/dashboard/cloture-trimestre` — file d'attente CLOSING. Visa Comptable puis validation PDG (ou PDG seul configurable). Notification email stub → branchera US-54 (Brevo). Audit `FISCAL_PERIOD_CLOSING_REQUESTED|APPROVED`. Double validation = vigilance 4. -->
+
+<!-- US-79 : Après double validation : status CLOSED, snapshot agrégats trimestre, création auto `FiscalPeriod` T+1 en OPEN (dates enchaînées). `remainingAmount` créances reportées implicitement (pas de perte). -->
+
+<!-- US-80 : Bandeau KPI header : « Trimestre comptable : T2 2026 (15 mar – 14 jun) · OPEN ». Distinct du label « Trimestre en cours » calendaire (`getKpiPeriodRange`). Filtres dashboard existants conservés pour analyse calendaire parallèle. -->
+
+<!-- 1.D : Soldes d'ouverture intégrés à US-74/75 — optionnels. -->
+<!-- 1.E : Clôture mensuelle / bilan PDF infalsifiable = US-57 (SPEC 8). US-74 prépare le modèle ; US-57 consommera `FiscalPeriod` pour génération PDF et blocage ajustements rétroactifs mensuels/trimestriels. Ne pas dupliquer ici. -->
+
+---
+
+### Bloc C — Dépendances inter-SPEC (non implémentées ici)
+
+| US existante | Lien avec SPEC 10 |
+|--------------|-------------------|
+| US-54 | Emails clôture trimestre (US-78), rappels créances |
+| US-57 | Bilan PDF période — s'appuie sur `FiscalPeriod` (US-74) |
+| US-36 | Verrou caisse **journalier** — reste complémentaire au verrou **trimestriel** (US-76) |
+| US-46–52 | Dashboard analytics — étendus par US-67–73 et US-80, non remplacés |
+
+---
+
+### Notes techniques d'intégration (éviter les régressions)
+
+1. **Loaders dashboard** : extraire une factory `getDashboardMetrics({ kpiPeriod, kpiScope, accountingMode, reference })` plutôt que dupliquer Prisma dans chaque fichier.
+2. **URL searchParams** : ajouter `kpiScope`, `accountingMode` à `buildFinancialDashboardHref` (comme `projectionPeriod`) — tous les panneaux dashboard préservent les params existants.
+3. **Période comptable** : vérification centralisée dans les Server Actions revenus/dépenses/paiements (`lib/actions/`) + message UI explicite si CLOSING.
+4. **Tests Cypress** : specs dédiées `dashboard-kpi-scope.cy.ts`, `fiscal-period.cy.ts` — ne pas modifier les specs US-46–52 existantes sauf assertions additive.
+5. **Seed dev** : option `SEED_FISCAL_PERIOD=open` pour bypass onboarding en local/E2E.
+
+---
+
+### SPEC 10 — Journal des validations
+
+| Date | US | Validé par | Commit |
+|------|-----|------------|--------|
+| — | SPEC 10 (planification) | Retour client juillet 2026 | — |
