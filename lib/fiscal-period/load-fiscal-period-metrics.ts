@@ -95,7 +95,7 @@ export async function loadFiscalPeriodClosingSnapshot(
     revenueTotal,
     expenseTotal,
     creditTotal,
-    netBalance: roundMoney(revenueTotal - expenseTotal + creditTotal),
+    netBalance: roundMoney(revenueTotal - expenseTotal - creditTotal),
     paidRevenueTotal,
     paidExpenseTotal,
     netCashFlow: roundMoney(paidRevenueTotal - paidExpenseTotal),

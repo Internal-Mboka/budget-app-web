@@ -3,6 +3,7 @@ import {
   type FiscalPeriodClosingSnapshot,
 } from "@/lib/fiscal-period/load-fiscal-period-metrics";
 import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
+import { loadFinancialPeriodClosureByFiscalPeriodId } from "@/lib/period-closure/load-closures";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -59,6 +60,7 @@ export type FiscalPeriodClosingRecap = {
   period: FiscalPeriodRecord;
   snapshot: FiscalPeriodClosingSnapshot;
   validatedByPdgName: string | null;
+  documentCode: string | null;
 };
 
 export async function loadFiscalPeriodClosingRecaps(limit = 3): Promise<FiscalPeriodClosingRecap[]> {
@@ -80,8 +82,14 @@ export async function loadFiscalPeriodClosingRecaps(limit = 3): Promise<FiscalPe
     const validatedByPdgName = row.validatedByPdg
       ? `${row.validatedByPdg.firstName} ${row.validatedByPdg.lastName}`.trim()
       : null;
+    const closure = await loadFinancialPeriodClosureByFiscalPeriodId(period.id);
 
-    recaps.push({ period, snapshot, validatedByPdgName });
+    recaps.push({
+      period,
+      snapshot,
+      validatedByPdgName,
+      documentCode: closure?.documentCode ?? null,
+    });
   }
 
   return recaps;
@@ -104,6 +112,7 @@ export async function loadFiscalPeriodClosingRecapById(
 
   const period = mapFiscalPeriodRow(row);
   const snapshot = await loadFiscalPeriodClosingSnapshot(period);
+  const closure = await loadFinancialPeriodClosureByFiscalPeriodId(period.id);
 
   return {
     period,
@@ -111,5 +120,6 @@ export async function loadFiscalPeriodClosingRecapById(
     validatedByPdgName: row.validatedByPdg
       ? `${row.validatedByPdg.firstName} ${row.validatedByPdg.lastName}`.trim()
       : null,
+    documentCode: closure?.documentCode ?? null,
   };
 }

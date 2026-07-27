@@ -20,6 +20,9 @@ export type PeriodBalancePdfData = {
   revenueCount: number;
   expenseCount: number;
   creditCount: number;
+  receivableOutstandingTotal?: number | null;
+  receivableCount?: number | null;
+  summaryTitle: string;
   integrityHash: string;
   integrityHashDisplay: string;
   issuedAt: string;

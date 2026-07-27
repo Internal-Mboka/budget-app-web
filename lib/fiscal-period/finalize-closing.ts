@@ -1,4 +1,5 @@
 import { writeAuditLog } from "@/lib/audit";
+import { archiveFiscalPeriodBalanceClosure } from "@/lib/period-closure/archive-fiscal-period-closure";
 import { notifyFiscalPeriodOpened } from "@/lib/alerts/dispatch";
 import {
   buildSequentialFiscalPeriodLabel,
@@ -173,6 +174,28 @@ export async function finalizeApprovedFiscalPeriodClosing(input: {
         snapshot: result.snapshot,
       },
     });
+
+    const archived = await archiveFiscalPeriodBalanceClosure({
+      period: result.closedPeriod,
+      snapshot: result.snapshot,
+      closedByUserId: input.actorUserId,
+      closedAt,
+    });
+
+    if (archived) {
+      await writeAuditLog({
+        action: "FINANCIAL_PERIOD_CLOSED",
+        entity: "FinancialPeriodClosure",
+        entityId: archived.closureId,
+        userId: input.actorUserId,
+        captureRequest: false,
+        details: {
+          fiscalPeriodLabel: period.label,
+          documentCode: archived.documentCode,
+          trigger: "fiscal_period_finalize",
+        },
+      });
+    }
 
     if (createdNextPeriod && result.nextPeriod) {
       await writeAuditLog({

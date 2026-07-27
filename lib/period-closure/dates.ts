@@ -14,6 +14,18 @@ export function buildPeriodDocumentCode(periodKey: string): string {
   return `BP-${periodKey}`;
 }
 
+export function buildFiscalPeriodKey(label: string): string {
+  return label.trim().replace(/\s+/g, "-");
+}
+
+export function buildFiscalPeriodDocumentCode(label: string): string {
+  return `BQ-${buildFiscalPeriodKey(label)}`;
+}
+
+export function buildFiscalPeriodBalanceLabel(startDate: string, endDate: string): string {
+  return buildPeriodLabel(startDate.slice(0, 10), endDate.slice(0, 10));
+}
+
 export function buildPeriodLabel(from: string, to: string): string {
   const start = parseISO(`${from}T12:00:00`);
   const end = parseISO(`${to}T12:00:00`);

@@ -2,12 +2,12 @@
 
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Download } from "lucide-react";
 
 import { formatFiscalPeriodRange } from "@/lib/fiscal-period/format";
 import type { FiscalPeriodClosingRecap } from "@/lib/fiscal-period/load-closing-recaps";
 import { formatMoney } from "@/lib/currency";
-import { mbokaPanelClassName } from "@/lib/design-tokens";
+import { mbokaButtonPrimaryClassName, mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type FiscalPeriodClosingRecapSectionProps = {
@@ -31,7 +31,7 @@ function ClosingRecapCard({
   recap: FiscalPeriodClosingRecap;
   highlighted?: boolean;
 }) {
-  const { period, snapshot, validatedByPdgName } = recap;
+  const { period, snapshot, validatedByPdgName, documentCode } = recap;
   const rangeLabel = formatFiscalPeriodRange(period.startDate, period.endDate);
   const closedLabel = period.closedAt
     ? format(parseISO(period.closedAt), "d MMMM yyyy 'à' HH:mm", { locale: fr })
@@ -85,6 +85,18 @@ function ClosingRecapCard({
         dépense{snapshot.expenseCount > 1 ? "s" : ""} · {snapshot.receivableCount} créance
         {snapshot.receivableCount > 1 ? "s" : ""} reportée{snapshot.receivableCount > 1 ? "s" : ""}
       </p>
+
+      {documentCode ? (
+        <a
+          href={`/api/exports/fiscal-period-balance/pdf?periodId=${encodeURIComponent(period.id)}`}
+          className={cn(mbokaButtonPrimaryClassName, "inline-flex w-fit no-underline")}
+          data-testid={`fiscal-period-closing-recap-pdf-${period.label}`}
+        >
+          <Download className="size-4" />
+          Télécharger le bilan PDF
+          <span className="sr-only"> ({documentCode})</span>
+        </a>
+      ) : null}
     </article>
   );
 }

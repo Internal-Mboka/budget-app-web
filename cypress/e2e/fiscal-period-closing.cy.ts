@@ -95,6 +95,28 @@ describe("Mboka Budget — SPEC 10 US-78/US-79 Validation clôture (PDG)", () =>
     cy.get('[data-testid="nav-fiscal-period-closing"]').should("not.exist");
   });
 
+  it("archive un bilan PDF trimestriel après validation PDG", () => {
+    cy.task("setFiscalPeriodStatus", "CLOSING");
+    cy.task("setFiscalPeriodAccountantVisa");
+
+    cy.visit("/dashboard/cloture-trimestre");
+    cy.dismissPwaPrompt();
+    cy.get('[data-testid^="fiscal-period-closing-approve-"]').first().click();
+    cy.get('[data-testid="fiscal-period-closing-success"]').should("be.visible");
+
+    cy.get('[data-testid^="fiscal-period-closing-recap-pdf-"]').should("be.visible");
+
+    cy.task("getClosedFiscalPeriodId").then((periodId) => {
+      cy.request({
+        url: `/api/exports/fiscal-period-balance/pdf?periodId=${periodId}`,
+        encoding: "binary",
+      }).then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.headers["content-type"]).to.include("application/pdf");
+      });
+    });
+  });
+
   it("ouvre automatiquement le trimestre suivant après validation PDG", () => {
     cy.task("setFiscalPeriodStatus", "CLOSING");
     cy.task("setFiscalPeriodAccountantVisa");

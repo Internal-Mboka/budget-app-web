@@ -275,7 +275,7 @@
 ```
 Phase A (Dashboard KPI)     → US-67 → US-68 → US-69 → US-70 → US-71 → US-72 → US-73
 Phase B (Période comptable) → US-74 → US-75 → US-76 → US-77 → US-78 → US-79 → US-80
-Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur FiscalPeriod (US-74)
+Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur FiscalPeriod (US-74) `[x]`
 ```
 
 | État système | Saisies financières | Dashboard |
@@ -348,12 +348,25 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 
 ---
 
-### Bloc C — Dépendances inter-SPEC (non implémentées ici)
+### Bloc C — Bilan PDF trimestriel (US-57 × FiscalPeriod)
+
+| Élément | Statut |
+|---------|--------|
+| Lien `FinancialPeriodClosure.fiscalPeriodId` + créances archivées | `[x]` |
+| Archivage auto à la finalisation clôture (US-79) | `[x]` |
+| API `/api/exports/fiscal-period-balance/pdf` | `[x]` |
+| Téléchargement depuis récap clôture trimestre | `[x]` |
+| Test Cypress PDF post-clôture | `[x]` |
+
+<!-- US-57 trimestriel : code document `BQ-T1-2026`, hash d'intégrité, synthèse trimestre + créances reportées. Coexiste avec bilan mensuel civil (`BP-YYYY-MM`). -->
+
+---
+
+### Dépendances inter-SPEC restantes
 
 | US existante | Lien avec SPEC 10 |
 |--------------|-------------------|
 | US-54 | Emails clôture trimestre (US-78), rappels créances |
-| US-57 | Bilan PDF période — s'appuie sur `FiscalPeriod` (US-74) |
 | US-36 | Verrou caisse **journalier** — reste complémentaire au verrou **trimestriel** (US-76) |
 | US-46–52 | Dashboard analytics — étendus par US-67–73 et US-80, non remplacés |
 

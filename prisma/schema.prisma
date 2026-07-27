@@ -273,6 +273,7 @@ model FiscalPeriod {
   validatedByAccountant     User?              @relation("FiscalPeriodAccountantValidator", fields: [validatedByAccountantId], references: [id], onDelete: SetNull)
   createdAt                 DateTime           @default(now())
   updatedAt                 DateTime           @updatedAt
+  financialPeriodClosure    FinancialPeriodClosure?
 
   @@index([status])
   @@index([startDate, endDate])
@@ -283,27 +284,31 @@ model FiscalPeriod {
 // ==========================================
 
 model FinancialPeriodClosure {
-  id               String   @id @default(cuid())
-  periodKey        String   @unique
-  startDate        DateTime
-  endDate          DateTime
-  documentCode     String   @unique
-  revenueTotal     Decimal  @db.Decimal(12, 2)
-  expenseTotal     Decimal  @db.Decimal(12, 2)
-  creditTotal      Decimal  @db.Decimal(12, 2)
-  netBalance       Decimal  @db.Decimal(12, 2)
-  paidRevenueTotal Decimal  @db.Decimal(12, 2)
-  paidExpenseTotal Decimal  @db.Decimal(12, 2)
-  netCashFlow      Decimal  @db.Decimal(12, 2)
-  revenueCount     Int
-  expenseCount     Int
-  creditCount      Int
-  integrityHash    String
-  closedAt         DateTime @default(now())
-  closedByUserId   String
-  closedBy         User     @relation("FinancialPeriodCloser", fields: [closedByUserId], references: [id])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                         String        @id @default(cuid())
+  periodKey                  String        @unique
+  fiscalPeriodId             String?       @unique
+  fiscalPeriod               FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id], onDelete: SetNull)
+  startDate                  DateTime
+  endDate                    DateTime
+  documentCode               String        @unique
+  revenueTotal               Decimal       @db.Decimal(12, 2)
+  expenseTotal               Decimal       @db.Decimal(12, 2)
+  creditTotal                Decimal       @db.Decimal(12, 2)
+  netBalance                 Decimal       @db.Decimal(12, 2)
+  paidRevenueTotal           Decimal       @db.Decimal(12, 2)
+  paidExpenseTotal           Decimal       @db.Decimal(12, 2)
+  netCashFlow                Decimal       @db.Decimal(12, 2)
+  revenueCount               Int
+  expenseCount               Int
+  creditCount                Int
+  receivableOutstandingTotal Decimal?      @db.Decimal(12, 2)
+  receivableCount            Int?
+  integrityHash              String
+  closedAt                   DateTime      @default(now())
+  closedByUserId             String
+  closedBy                   User          @relation("FinancialPeriodCloser", fields: [closedByUserId], references: [id])
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
 
   @@index([startDate, endDate])
   @@index([closedAt])

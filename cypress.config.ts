@@ -56,7 +56,14 @@ export default defineConfig({
             await prisma.fiscalPeriod.deleteMany({
               where: { id: { in: extras.map((period) => period.id) } },
             });
+            await prisma.financialPeriodClosure.deleteMany({
+              where: { fiscalPeriodId: { in: extras.map((period) => period.id) } },
+            });
           }
+
+          await prisma.financialPeriodClosure.deleteMany({
+            where: { fiscalPeriodId: keep.id },
+          });
 
           const endDate = normalizeFiscalPeriodEndDate(computeFiscalPeriodEndDate(keep.startDate));
 
@@ -138,7 +145,23 @@ export default defineConfig({
           await prisma.$disconnect();
           return null;
         },
-        async syncExpiredFiscalPeriods() {
+        async getClosedFiscalPeriodId() {
+          const { prisma } = await import("./lib/prisma");
+
+          const period = await prisma.fiscalPeriod.findFirst({
+            where: { status: "CLOSED" },
+            orderBy: { closedAt: "desc" },
+            select: { id: true },
+          });
+
+          await prisma.$disconnect();
+
+          if (!period) {
+            throw new Error("Aucun trimestre CLOSED en base pour le test.");
+          }
+
+          return period.id;
+        },
           const { syncExpiredFiscalPeriodsToClosing } = await import(
             "./lib/fiscal-period/sync-expired-periods"
           );

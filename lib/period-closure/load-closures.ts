@@ -6,6 +6,7 @@ import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 export type FinancialPeriodClosureRecord = {
   id: string;
   periodKey: string;
+  fiscalPeriodId: string | null;
   startDate: string;
   endDate: string;
   documentCode: string;
@@ -19,6 +20,8 @@ export type FinancialPeriodClosureRecord = {
   revenueCount: number;
   expenseCount: number;
   creditCount: number;
+  receivableOutstandingTotal: number | null;
+  receivableCount: number | null;
   integrityHash: string;
   closedAt: string;
   closedByUserId: string;
@@ -28,6 +31,7 @@ export type FinancialPeriodClosureRecord = {
 function mapClosureRow(row: {
   id: string;
   periodKey: string;
+  fiscalPeriodId: string | null;
   startDate: Date;
   endDate: Date;
   documentCode: string;
@@ -41,6 +45,8 @@ function mapClosureRow(row: {
   revenueCount: number;
   expenseCount: number;
   creditCount: number;
+  receivableOutstandingTotal: { toString(): string } | null;
+  receivableCount: number | null;
   integrityHash: string;
   closedAt: Date;
   closedByUserId: string;
@@ -52,6 +58,7 @@ function mapClosureRow(row: {
   return {
     id: row.id,
     periodKey: row.periodKey,
+    fiscalPeriodId: row.fiscalPeriodId,
     startDate: row.startDate.toISOString(),
     endDate: row.endDate.toISOString(),
     documentCode: row.documentCode,
@@ -65,6 +72,11 @@ function mapClosureRow(row: {
     revenueCount: row.revenueCount,
     expenseCount: row.expenseCount,
     creditCount: row.creditCount,
+    receivableOutstandingTotal:
+      row.receivableOutstandingTotal === null
+        ? null
+        : roundMoney(decimalToNumber(row.receivableOutstandingTotal)),
+    receivableCount: row.receivableCount,
     integrityHash: row.integrityHash,
     closedAt: row.closedAt.toISOString(),
     closedByUserId: row.closedByUserId,
@@ -75,6 +87,7 @@ function mapClosureRow(row: {
 const closureSelect = {
   id: true,
   periodKey: true,
+  fiscalPeriodId: true,
   startDate: true,
   endDate: true,
   documentCode: true,
@@ -88,6 +101,8 @@ const closureSelect = {
   revenueCount: true,
   expenseCount: true,
   creditCount: true,
+  receivableOutstandingTotal: true,
+  receivableCount: true,
   integrityHash: true,
   closedAt: true,
   closedByUserId: true,
@@ -116,6 +131,17 @@ export async function loadFinancialPeriodClosureById(
 ): Promise<FinancialPeriodClosureRecord | null> {
   const row = await prisma.financialPeriodClosure.findUnique({
     where: { id },
+    select: closureSelect,
+  });
+
+  return row ? mapClosureRow(row) : null;
+}
+
+export async function loadFinancialPeriodClosureByFiscalPeriodId(
+  fiscalPeriodId: string
+): Promise<FinancialPeriodClosureRecord | null> {
+  const row = await prisma.financialPeriodClosure.findUnique({
+    where: { fiscalPeriodId },
     select: closureSelect,
   });
 

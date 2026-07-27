@@ -4,7 +4,7 @@ import { hasAnyPermission } from "@/lib/auth/session";
 import { parseFinancialExportFilters } from "@/lib/exports/filters";
 import { buildPeriodLabel, getPeriodDateRange, isFullCivilMonthPeriod } from "@/lib/period-closure/dates";
 import { formatIntegrityHashForDisplay } from "@/lib/period-closure/integrity";
-import { loadFinancialPeriodClosureForFilters } from "@/lib/period-closure/load-closures";
+import { loadFinancialPeriodClosureByFiscalPeriodId, loadFinancialPeriodClosureForFilters } from "@/lib/period-closure/load-closures";
 import {
   buildPeriodBalanceSnapshotWithHash,
   loadPeriodBalanceMetrics,
@@ -171,5 +171,47 @@ export async function loadPeriodBalancePdfData(input: {
     periodLabel,
     issuedAt,
     isPreview: true,
+  });
+}
+
+export async function loadFiscalPeriodBalancePdfData(
+  fiscalPeriodId: string
+): Promise<PeriodBalancePdfData | null> {
+  const closure = await loadFinancialPeriodClosureByFiscalPeriodId(fiscalPeriodId);
+
+  if (!closure) {
+    return null;
+  }
+
+  const from = closure.startDate.slice(0, 10);
+  const to = closure.endDate.slice(0, 10);
+
+  return mapClosureSnapshotToPdfData({
+    snapshot: {
+      periodKey: closure.periodKey,
+      from,
+      to,
+      documentCode: closure.documentCode,
+      revenueTotal: closure.revenueTotal,
+      expenseTotal: closure.expenseTotal,
+      creditTotal: closure.creditTotal,
+      netBalance: closure.netBalance,
+      paidRevenueTotal: closure.paidRevenueTotal,
+      paidExpenseTotal: closure.paidExpenseTotal,
+      netCashFlow: closure.netCashFlow,
+      revenueCount: closure.revenueCount,
+      expenseCount: closure.expenseCount,
+      creditCount: closure.creditCount,
+    },
+    integrityHash: closure.integrityHash,
+    integrityHashDisplay: formatIntegrityHashForDisplay(closure.integrityHash),
+    periodLabel: `${closure.periodKey.replace(/-/g, " ")} · ${buildPeriodLabel(from, to)}`,
+    summaryTitle: "Synthèse du trimestre",
+    receivableOutstandingTotal: closure.receivableOutstandingTotal,
+    receivableCount: closure.receivableCount,
+    issuedAt: new Date().toISOString(),
+    closedAt: closure.closedAt,
+    closedByName: closure.closedByName,
+    isPreview: false,
   });
 }

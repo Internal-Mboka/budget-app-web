@@ -170,7 +170,7 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Synthèse du mois</Text>
+          <Text style={styles.sectionTitle}>{data.summaryTitle}</Text>
           <SummaryRow
             label="Revenus"
             meta={`${data.revenueCount} opération(s)`}
@@ -189,6 +189,21 @@ export function PeriodBalancePdfDocument({ data }: { data: PeriodBalancePdfData 
             </Text>
           </View>
         </View>
+
+        {typeof data.receivableOutstandingTotal === "number" ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Créances reportées</Text>
+            <SummaryRow
+              label="Créances ouvertes"
+              meta={
+                typeof data.receivableCount === "number"
+                  ? `${data.receivableCount} créance(s) active(s)`
+                  : undefined
+              }
+              value={data.receivableOutstandingTotal}
+            />
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Trésorerie</Text>

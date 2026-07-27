@@ -113,6 +113,9 @@ export function mapClosureSnapshotToPdfData(input: {
   integrityHash: string;
   integrityHashDisplay: string;
   periodLabel: string;
+  summaryTitle?: string;
+  receivableOutstandingTotal?: number | null;
+  receivableCount?: number | null;
   issuedAt: string;
   closedAt?: string;
   closedByName?: string;
@@ -121,6 +124,9 @@ export function mapClosureSnapshotToPdfData(input: {
   return {
     ...input.snapshot,
     periodLabel: input.periodLabel,
+    summaryTitle: input.summaryTitle ?? "Synthèse du mois",
+    receivableOutstandingTotal: input.receivableOutstandingTotal,
+    receivableCount: input.receivableCount,
     integrityHash: input.integrityHash,
     integrityHashDisplay: input.integrityHashDisplay,
     issuedAt: input.issuedAt,
