@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 
 import { AppSidebar } from "@/components/organisms/app-sidebar";
+import { canManageAlertSettings } from "@/lib/alerts/access";
 import { getDefaultDashboardPath } from "@/lib/auth/routes";
 import { hasAnyPermission, hasPermission } from "@/lib/auth/session";
 import { mbokaPageClassName } from "@/lib/design-tokens";
@@ -22,6 +23,7 @@ export function AppShell({
 }: AppShellProps) {
   const dashboardPath = getDefaultDashboardPath(user);
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
+  const canManageAlerts = canManageAlertSettings(user.roleName);
   const canManageClients = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
   const canManageExpenses = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_EXPENSE);
   const canCloseCash = hasPermission(user.permissions, PERMISSIONS.CASH_CLOSE);
@@ -38,6 +40,7 @@ export function AppShell({
         roleName={user.roleName}
         dashboardPath={dashboardPath}
         canManageUsers={canManageUsers}
+        canManageAlerts={canManageAlerts}
         canManageClients={canManageClients}
         canManageExpenses={canManageExpenses}
         canCloseCash={canCloseCash}

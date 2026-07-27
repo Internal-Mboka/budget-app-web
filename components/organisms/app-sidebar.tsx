@@ -46,6 +46,7 @@ type AppSidebarProps = {
   roleName: string;
   dashboardPath: string;
   canManageUsers: boolean;
+  canManageAlerts: boolean;
   canManageClients: boolean;
   canManageExpenses: boolean;
   canCloseCash: boolean;
@@ -125,6 +126,7 @@ export function AppSidebar({
   roleName,
   dashboardPath,
   canManageUsers,
+  canManageAlerts,
   canManageClients,
   canManageExpenses,
   canCloseCash,
@@ -200,7 +202,7 @@ export function AppSidebar({
         { href: "/account/two-factor", label: "2FA", icon: Fingerprint, testId: "nav-two-factor" },
       ],
     },
-    ...(canManageUsers || canViewAudit || canExportFinancial
+    ...(canManageUsers || canManageAlerts || canViewAudit || canExportFinancial
       ? [
           {
             title: "Administration",
@@ -217,6 +219,10 @@ export function AppSidebar({
                       icon: ShieldCheck,
                       testId: "nav-permissions",
                     },
+                  ]
+                : []),
+              ...(canManageAlerts
+                ? [
                     {
                       href: "/admin/alerts",
                       label: "Alertes",

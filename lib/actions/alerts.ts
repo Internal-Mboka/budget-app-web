@@ -3,11 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { sendAlertIntegrationPing } from "@/lib/alerts/ping";
+import { canManageAlertSettings } from "@/lib/alerts/access";
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
-import { hasPermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { PERMISSIONS } from "@/lib/permissions";
 import { updateAlertSettingsSchema } from "@/lib/validations/alerts";
 
 const ADMIN_ALERTS_PATH = "/admin/alerts";
@@ -19,8 +18,8 @@ export type AlertSettingsActionResult =
 async function assertAlertSettingsAccess() {
   const session = await getSession();
 
-  if (!session?.user || !hasPermission(session.user.permissions, PERMISSIONS.USERS_MANAGE)) {
-    return { ok: false as const, error: "Accès réservé au PDG et au Directeur Technique." };
+  if (!session?.user || !canManageAlertSettings(session.user.roleName)) {
+    return { ok: false as const, error: "Accès réservé au Directeur Technique." };
   }
 
   return { ok: true as const, session };

@@ -1,4 +1,5 @@
-import type { PermissionSlug } from "@/lib/permissions";
+import { canManageAlertSettings } from "@/lib/alerts/access";
+import type { PermissionSlug, RoleName } from "@/lib/permissions";
 import { PERMISSIONS } from "@/lib/permissions";
 
 export const PUBLIC_PATHS = [
@@ -55,7 +56,15 @@ export function getDefaultDashboardPath(user: DashboardSessionUser): string {
   return "/login";
 }
 
-export function canAccessRoute(pathname: string, permissions: PermissionSlug[]): boolean {
+export function canAccessRoute(
+  pathname: string,
+  permissions: PermissionSlug[],
+  roleName?: RoleName
+): boolean {
+  if (pathname === "/admin/alerts" || pathname.startsWith("/admin/alerts/")) {
+    return roleName ? canManageAlertSettings(roleName) : false;
+  }
+
   for (const { prefix, permission } of ROUTE_PREFIX_PERMISSIONS) {
     if (pathname.startsWith(prefix) && !permissions.includes(permission)) {
       return false;

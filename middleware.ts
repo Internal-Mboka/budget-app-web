@@ -53,7 +53,7 @@ export default auth((request) => {
       pathname.startsWith("/clients") ||
       pathname.startsWith("/revenues") ||
       pathname.startsWith("/expenses")) &&
-    !canAccessRoute(pathname, session!.user.permissions)
+    !canAccessRoute(pathname, session!.user.permissions, session!.user.roleName)
   ) {
     return NextResponse.redirect(
       new URL(getDefaultDashboardPath(session!.user), request.url)

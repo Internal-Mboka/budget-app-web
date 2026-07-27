@@ -216,7 +216,7 @@
 | US-57 | Bilan financier périodique | `[x]` |
 | US-58 | Personnalisation alertes Push/Webhooks | `[x]` |
 
-<!-- US-58 : /admin/alerts — toggles canaux, webhook URL/secret, seuil régularisation, types désactivables, ping test. Push web = prochaine version. -->
+<!-- US-58 : /admin/alerts (DT uniquement) — toggles canaux, webhook URL/secret, seuil régularisation, types désactivables, ping test. Push web = prochaine version. -->
 | US-59 | Historique exports & stockage | `[ ]` |
 | US-60 | Queue sync hors-ligne transactions | `[ ]` |
 

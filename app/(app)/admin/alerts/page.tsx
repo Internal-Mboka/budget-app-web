@@ -1,11 +1,10 @@
 import { AlertSettingsPanel } from "@/components/organisms/alert-settings-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
-import { requirePermission } from "@/lib/auth/session";
+import { requireAlertSettingsAccess } from "@/lib/alerts/access";
 import { loadAlertSettingsRecord } from "@/lib/alerts/load-settings";
-import { PERMISSIONS } from "@/lib/permissions";
 
 export default async function AdminAlertsPage() {
-  await requirePermission(PERMISSIONS.USERS_MANAGE);
+  await requireAlertSettingsAccess();
   const settings = await loadAlertSettingsRecord();
 
   return (
