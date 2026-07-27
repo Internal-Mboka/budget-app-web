@@ -12,10 +12,24 @@ export type UserDeviceGroup = {
   isCurrentDevice: boolean;
 };
 
+function encodeFingerprintPart(value: string): string {
+  return encodeURIComponent(value);
+}
+
+function decodeFingerprintPart(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export function buildDeviceFingerprint(
   session: Pick<ActiveSessionRow, "browser" | "deviceType" | "ipAddress">
 ): string {
-  return [session.browser, session.deviceType, session.ipAddress].join("::");
+  return [session.browser, session.deviceType, session.ipAddress]
+    .map(encodeFingerprintPart)
+    .join("|");
 }
 
 export function parseDeviceFingerprint(fingerprint: string): {
@@ -23,8 +37,9 @@ export function parseDeviceFingerprint(fingerprint: string): {
   deviceType: string;
   ipAddress: string;
 } {
-  const [browser = "Navigateur inconnu", deviceType = "Inconnu", ipAddress = "Inconnue"] =
-    fingerprint.split("::");
+  const parts = fingerprint.split("|").map(decodeFingerprintPart);
+
+  const [browser = "Navigateur inconnu", deviceType = "Inconnu", ipAddress = "Inconnue"] = parts;
 
   return { browser, deviceType, ipAddress };
 }
