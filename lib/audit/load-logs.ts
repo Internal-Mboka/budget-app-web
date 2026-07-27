@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { buildPaginationMeta, DEFAULT_PAGE_SIZE, parsePagination, type PaginationMeta } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 
 export type AuditLogFilters = {
@@ -79,8 +80,9 @@ export function parseAuditLogFilters(input: {
   entity?: string;
   userId?: string;
   page?: string;
+  pageSize?: string;
 }): AuditLogFilters {
-  const page = Number(input.page ?? "1");
+  const pagination = parsePagination(input);
 
   return {
     from: input.from?.match(/^\d{4}-\d{2}-\d{2}$/) ? input.from : undefined,
@@ -88,8 +90,8 @@ export function parseAuditLogFilters(input: {
     action: input.action?.trim() || undefined,
     entity: input.entity?.trim() || undefined,
     userId: input.userId?.trim() || undefined,
-    page: Number.isFinite(page) && page > 0 ? page : 1,
-    pageSize: 25,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
   };
 }
 
@@ -125,13 +127,10 @@ function buildWhere(filters: AuditLogFilters): Prisma.AuditLogWhereInput {
 
 export async function loadAuditLogs(filters: AuditLogFilters = {}): Promise<{
   items: AuditLogListItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  pagination: PaginationMeta;
 }> {
   const page = filters.page ?? 1;
-  const pageSize = filters.pageSize ?? 25;
+  const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
   const where = buildWhere(filters);
 
   const [rows, total] = await Promise.all([
@@ -147,10 +146,7 @@ export async function loadAuditLogs(filters: AuditLogFilters = {}): Promise<{
 
   return {
     items: rows.map(mapListRow),
-    total,
-    page,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    pagination: buildPaginationMeta(total, page, pageSize),
   };
 }
 

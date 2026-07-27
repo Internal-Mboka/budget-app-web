@@ -23,8 +23,8 @@ export default async function AuditDetailPage({ params }: AuditDetailPageProps) 
     <div className="space-y-6">
       <MbokaPageHeader
         eyebrow="Traçabilité"
-        title="Entrée d'audit"
-        description="Inspecteur détaillé avec métadonnées d'accès et comparaison avant/après."
+        title="Détail de l'événement"
+        description="Qui a fait quoi, depuis quel appareil, et ce qui a changé."
       />
 
       <AuditLogDetailPanel log={log} />

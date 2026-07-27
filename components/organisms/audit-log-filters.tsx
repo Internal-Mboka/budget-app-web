@@ -23,7 +23,7 @@ type AuditLogFiltersPanelProps = {
 };
 
 const ENTITY_OPTIONS = [
-  { value: "", label: "Toutes les entités" },
+  { value: "", label: "Tous les types" },
   { value: "User", label: "Utilisateur" },
   { value: "Client", label: "Client" },
   { value: "Transaction", label: "Transaction" },
@@ -76,7 +76,7 @@ export function AuditLogFiltersPanel({ filters, actors }: AuditLogFiltersPanelPr
           </Field>
           <Field>
             <FieldLabel htmlFor="action" className={mbokaLabelClassName}>
-              Action
+              Type d&apos;action
             </FieldLabel>
             <MbokaSelect
               id="action"
@@ -87,7 +87,7 @@ export function AuditLogFiltersPanel({ filters, actors }: AuditLogFiltersPanelPr
           </Field>
           <Field>
             <FieldLabel htmlFor="entity" className={mbokaLabelClassName}>
-              Entité
+              Type d&apos;enregistrement
             </FieldLabel>
             <MbokaSelect id="entity" name="entity" defaultValue={filters.entity ?? ""} options={ENTITY_OPTIONS} />
           </Field>

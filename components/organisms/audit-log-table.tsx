@@ -5,27 +5,21 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, ChevronRight } from "lucide-react";
 
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { getAuditActionLabel, getAuditEntityLabel } from "@/lib/audit/labels";
-import type { AuditLogListItem } from "@/lib/audit/load-logs";
+import type { AuditLogFilters, AuditLogListItem } from "@/lib/audit/load-logs";
+import { buildAuditListHref } from "@/lib/audit/list-url";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
+import type { PaginationMeta } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
 type AuditLogTableProps = {
   items: AuditLogListItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-  queryString: string;
+  pagination: PaginationMeta;
+  filters: Pick<AuditLogFilters, "from" | "to" | "action" | "entity" | "userId">;
 };
 
-function buildPageHref(queryString: string, page: number): string {
-  const params = new URLSearchParams(queryString);
-  params.set("page", String(page));
-  const query = params.toString();
-  return query ? `/audit?${query}` : `/audit?page=${page}`;
-}
-
-export function AuditLogTable({ items, total, page, totalPages, queryString }: AuditLogTableProps) {
+export function AuditLogTable({ items, pagination, filters }: AuditLogTableProps) {
   if (items.length === 0) {
     return (
       <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="audit-log-empty">
@@ -35,19 +29,14 @@ export function AuditLogTable({ items, total, page, totalPages, queryString }: A
   }
 
   return (
-    <section className="space-y-3" data-testid="audit-log-table">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        {total} entrée{total > 1 ? "s" : ""} · page {page}/{totalPages}
-      </p>
-
+    <section className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")} data-testid="audit-log-table">
       <div className="space-y-3">
         {items.map((item) => (
           <article
             key={item.id}
             data-testid={`audit-log-row-${item.id}`}
             className={cn(
-              mbokaPanelClassName,
-              "overflow-hidden",
+              "overflow-hidden rounded-2xl border border-sky-100 bg-white/80 dark:border-sky-900 dark:bg-slate-900/40",
               item.action === "SECURITY_ALERT" && "border-rose-200 dark:border-rose-900"
             )}
           >
@@ -74,7 +63,7 @@ export function AuditLogTable({ items, total, page, totalPages, queryString }: A
                   {item.entityId ? ` · ${item.entityId.slice(0, 8)}…` : ""}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  {item.user.firstName} {item.user.lastName} · {item.ipAddress ?? "IP inconnue"}
+                  {item.user.firstName} {item.user.lastName} · {item.ipAddress ?? "Adresse IP inconnue"}
                 </p>
               </div>
               <ChevronRight className="size-4 shrink-0 text-slate-400" />
@@ -83,26 +72,12 @@ export function AuditLogTable({ items, total, page, totalPages, queryString }: A
         ))}
       </div>
 
-      {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {page > 1 ? (
-            <Link
-              href={buildPageHref(queryString, page - 1)}
-              className={cn(mbokaPanelClassName, "px-3 py-2 text-sm")}
-            >
-              ← Précédent
-            </Link>
-          ) : null}
-          {page < totalPages ? (
-            <Link
-              href={buildPageHref(queryString, page + 1)}
-              className={cn(mbokaPanelClassName, "px-3 py-2 text-sm")}
-            >
-              Suivant →
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
+      <MbokaPagination
+        meta={pagination}
+        buildHref={(page, pageSize) =>
+          buildAuditListHref(filters, { page, pageSize: pageSize ?? pagination.pageSize })
+        }
+      />
     </section>
   );
 }

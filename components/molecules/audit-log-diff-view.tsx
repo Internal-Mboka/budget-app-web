@@ -14,7 +14,7 @@ export function AuditLogDiffView({ details }: AuditLogDiffViewProps) {
   if (!view) {
     return (
       <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="audit-log-diff-empty">
-        Aucun détail structuré enregistré pour cette entrée.
+        Aucun détail supplémentaire enregistré pour cet événement.
       </p>
     );
   }

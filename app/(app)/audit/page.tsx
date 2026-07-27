@@ -12,6 +12,7 @@ type AuditPageProps = {
     entity?: string;
     userId?: string;
     page?: string;
+    pageSize?: string;
   }>;
 };
 
@@ -24,7 +25,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
     PERMISSIONS.USERS_MANAGE,
   ]);
 
-  const [{ items, total, page, totalPages }, actors] = await Promise.all([
+  const [{ items, pagination }, actors] = await Promise.all([
     loadAuditLogs(filters),
     loadAuditActorOptions(),
   ]);
@@ -38,14 +39,12 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
       <MbokaPageHeader
         eyebrow="Traçabilité"
         title="Journaux d'audit"
-        description="Consultez les actions sensibles du système — connexions, finances, clôtures et IAM."
+        description="Consultez les actions sensibles du système — connexions, finances, clôtures et gestion des accès."
       />
 
       <AuditLogsManagement
         items={items}
-        total={total}
-        page={page}
-        totalPages={totalPages}
+        pagination={pagination}
         filters={filters}
         actors={actors}
         canExport={canExport}

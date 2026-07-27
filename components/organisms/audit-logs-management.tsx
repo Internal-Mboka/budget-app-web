@@ -6,13 +6,12 @@ import { AuditLogFiltersPanel } from "@/components/organisms/audit-log-filters";
 import { AuditLogTable } from "@/components/organisms/audit-log-table";
 import type { AuditLogFilters, AuditLogListItem } from "@/lib/audit/load-logs";
 import { mbokaButtonOutlineClassName, mbokaPanelClassName } from "@/lib/design-tokens";
+import type { PaginationMeta } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
 type AuditLogsManagementProps = {
   items: AuditLogListItem[];
-  total: number;
-  page: number;
-  totalPages: number;
+  pagination: PaginationMeta;
   filters: AuditLogFilters;
   actors: Array<{ id: string; label: string; email: string }>;
   canExport: boolean;
@@ -29,9 +28,7 @@ function buildExportHref(queryString: string, format: "csv" | "json"): string {
 
 export function AuditLogsManagement({
   items,
-  total,
-  page,
-  totalPages,
+  pagination,
   filters,
   actors,
   canExport,
@@ -44,8 +41,8 @@ export function AuditLogsManagement({
         data-testid="audit-log-immutability-note"
       >
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Registre <strong>append-only</strong> : les entrées ne peuvent ni être modifiées ni supprimées depuis
-          l&apos;application (US-45).
+          Ce registre est protégé&nbsp;: une fois enregistrée, une action ne peut plus être modifiée ni effacée
+          depuis l&apos;application.
         </p>
       </section>
 
@@ -55,7 +52,7 @@ export function AuditLogsManagement({
         <div className="flex flex-wrap gap-2">
           <a href={buildExportHref(queryString, "csv")} className={mbokaButtonOutlineClassName} data-testid="audit-export-csv">
             <Download className="size-4" />
-            Exporter CSV
+            Exporter en CSV
           </a>
           <a
             href={buildExportHref(queryString, "json")}
@@ -63,18 +60,12 @@ export function AuditLogsManagement({
             data-testid="audit-export-json"
           >
             <Download className="size-4" />
-            Exporter JSON
+            Exporter en JSON
           </a>
         </div>
       ) : null}
 
-      <AuditLogTable
-        items={items}
-        total={total}
-        page={page}
-        totalPages={totalPages}
-        queryString={queryString}
-      />
+      <AuditLogTable items={items} pagination={pagination} filters={filters} />
     </div>
   );
 }

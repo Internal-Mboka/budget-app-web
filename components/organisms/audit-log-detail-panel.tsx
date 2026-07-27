@@ -53,7 +53,7 @@ export function AuditLogDetailPanel({ log }: AuditLogDetailPanelProps) {
             <p className="text-xs text-slate-500">{log.user.email}</p>
           </div>
           <div>
-            <p className={mbokaLabelClassName}>Entité</p>
+            <p className={mbokaLabelClassName}>Type d&apos;enregistrement</p>
             <p className="mt-1 text-sm">{getAuditEntityLabel(log.entity)}</p>
             {log.entityId ? <p className="text-xs text-slate-500">{log.entityId}</p> : null}
           </div>
