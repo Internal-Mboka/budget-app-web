@@ -68,6 +68,7 @@ export function DashboardFinancialSection({
           label={activityGroupLabel}
           scope={activityScope}
           testId="dashboard-kpi-section-activity"
+          cardsClassName="lg:grid-cols-3"
         >
           <MbokaKpiCard
             label="Chiffre d'affaires"
@@ -100,6 +101,14 @@ export function DashboardFinancialSection({
                   }
                 : undefined
             }
+          />
+          <MbokaKpiCard
+            label="Encaissements réels"
+            value={kpis.cashCollections}
+            hint={kpis.cashCollectionsHint}
+            scope={activityScope}
+            size="stat"
+            testId="dashboard-kpi-cash-collections"
           />
         </MbokaKpiBoardGroup>
 

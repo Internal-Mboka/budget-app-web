@@ -86,6 +86,9 @@ export function MbokaKpiCard({
             className="mt-1.5 text-[11px]"
           />
         ) : null}
+        {hint ? (
+          <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
+        ) : null}
       </article>
     );
   }

@@ -42,6 +42,11 @@ export function MbokaKpiBoard({
               dépenses ».
             </p>
             <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Encaissements réels</strong> — somme
+              des paiements clients effectivement reçus sur la période (date d&apos;encaissement), distincte du CA
+              enregistré.
+            </p>
+            <p>
               <strong className="font-medium text-slate-700 dark:text-slate-200">Position trésorerie</strong> — solde net
               encaissé et créances ouvertes <em>à l&apos;instant T</em>, indépendamment de la période filtrée.
             </p>
@@ -60,6 +65,7 @@ type MbokaKpiBoardGroupProps = {
   testId: string;
   children: ReactNode;
   className?: string;
+  cardsClassName?: string;
 };
 
 const groupScopeIcon = {
@@ -67,7 +73,14 @@ const groupScopeIcon = {
   global: Globe2,
 } as const;
 
-export function MbokaKpiBoardGroup({ label, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
+export function MbokaKpiBoardGroup({
+  label,
+  scope,
+  testId,
+  children,
+  className,
+  cardsClassName,
+}: MbokaKpiBoardGroupProps) {
   const headingId = `${testId}-heading`;
   const ScopeIcon = groupScopeIcon[scope];
 
@@ -84,7 +97,7 @@ export function MbokaKpiBoardGroup({ label, scope, testId, children, className }
           {label}
         </p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">{children}</div>
+      <div className={cn("grid gap-3 sm:grid-cols-2 sm:gap-4", cardsClassName)}>{children}</div>
     </div>
   );
 }

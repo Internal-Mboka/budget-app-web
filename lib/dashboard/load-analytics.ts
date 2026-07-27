@@ -13,12 +13,15 @@ import {
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { formatChartBucketLabel, getChartRange, getKpiPeriodRange } from "@/lib/dashboard/periods";
+import { loadGlobalCashCollections, loadPeriodCashCollections } from "@/lib/dashboard/load-cash-collections";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
 export type DashboardKpis = {
   revenueTotal: number;
   expenseTotal: number;
+  cashCollections: number;
+  cashCollectionsHint: string;
   netTreasury: number;
   receivables: number;
   periodLabel: string;
@@ -137,7 +140,12 @@ export async function loadDashboardKpis(
       ? await loadGlobalFinancialTotals()
       : await loadPeriodFinancialTotals(from, to);
 
-  const [netTreasury, receivableRows] = await Promise.all([
+  const cashCollectionsPromise =
+    kpiScope === "global"
+      ? loadGlobalCashCollections()
+      : loadPeriodCashCollections(from, to);
+
+  const [netTreasury, receivableRows, cashCollections] = await Promise.all([
     loadCurrentNetTreasury(),
     prisma.transaction.findMany({
       where: {
@@ -146,16 +154,25 @@ export async function loadDashboardKpis(
       },
       select: { remainingAmount: true },
     }),
+    cashCollectionsPromise,
   ]);
+
+  const periodLabel = kpiScope === "global" ? "Cumul global" : label;
+  const cashCollectionsHint =
+    kpiScope === "global"
+      ? "Encaissements réels · cumul historique"
+      : `Encaissements réels · ${label.toLowerCase()}`;
 
   return {
     revenueTotal: financialTotals.revenueTotal,
     expenseTotal: financialTotals.expenseTotal,
+    cashCollections,
+    cashCollectionsHint,
     netTreasury,
     receivables: roundMoney(
       receivableRows.reduce((sum, row) => sum + decimalToNumber(row.remainingAmount), 0)
     ),
-    periodLabel: kpiScope === "global" ? "Cumul global" : label,
+    periodLabel,
   };
 }
 
