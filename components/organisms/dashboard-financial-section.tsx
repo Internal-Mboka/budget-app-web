@@ -2,14 +2,13 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
+import { DashboardKpiScopeSwitch } from "@/components/molecules/dashboard-kpi-scope-switch";
 import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
 import { MbokaKpiBoard, MbokaKpiBoardGroup } from "@/components/molecules/mboka-kpi-section";
-import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
-import { getKpiScopeLabel, type DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
-import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
+import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
@@ -26,8 +25,6 @@ type DashboardFinancialSectionProps = {
   projectionPeriod?: DashboardKpiPeriod;
   projectionScenario?: TreasuryProjectionScenario;
 };
-
-const KPI_SCOPE_OPTIONS: DashboardKpiScope[] = ["period", "global"];
 
 export function DashboardFinancialSection({
   basePath,
@@ -55,25 +52,15 @@ export function DashboardFinancialSection({
       <MbokaKpiBoard
         periodLabel={kpis.periodLabel}
         headerAction={
-          <MbokaPeriodSwitch
-            label="Portée Activité"
-            testId="dashboard-kpi-scope-switch"
-            value={kpiScope}
-            options={KPI_SCOPE_OPTIONS.map((value) => ({
-              value,
-              label: getKpiScopeLabel(value),
-            }))}
-            buildHref={(value) =>
-              buildFinancialDashboardHref(basePath, {
-                kpiPeriod,
-                kpiScope: value,
-                granularity,
-                categoryPeriod,
-                occupancyPeriod,
-                projectionPeriod,
-                projectionScenario,
-              })
-            }
+          <DashboardKpiScopeSwitch
+            basePath={basePath}
+            kpiPeriod={kpiPeriod}
+            kpiScope={kpiScope}
+            granularity={granularity}
+            categoryPeriod={categoryPeriod}
+            occupancyPeriod={occupancyPeriod}
+            projectionPeriod={projectionPeriod}
+            projectionScenario={projectionScenario}
           />
         }
       >
