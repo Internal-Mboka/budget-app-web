@@ -20,10 +20,11 @@ describe("Mboka Budget — SPEC 7 US-46 Dashboard financier global", () => {
     cy.get('[data-testid="dashboard-kpi-section-activity"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-section-position"]').should("be.visible");
     cy.contains("Indicateurs financiers").should("be.visible");
-    cy.contains("Activité").should("be.visible");
-    cy.contains("Trésorerie").should("be.visible");
-    cy.get('[data-testid="dashboard-kpi-revenue"]').should("have.attr", "data-scope", "period");
-    cy.get('[data-testid="dashboard-kpi-treasury"]').should("have.attr", "data-scope", "global");
+    cy.get('[data-testid="dashboard-kpi-section-activity-scope"]').should("contain.text", "Période");
+    cy.get('[data-testid="dashboard-kpi-section-position-scope"]').should("contain.text", "Global");
+    cy.get('[data-testid="dashboard-kpi-revenue-scope"]').should("contain.text", "Période");
+    cy.get('[data-testid="dashboard-kpi-treasury-scope"]').should("contain.text", "Global");
+    cy.get('[data-testid="dashboard-kpi-info-popover"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-revenue"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-expenses"]').should("be.visible");
     cy.get('[data-testid="dashboard-kpi-treasury"]').should("be.visible");

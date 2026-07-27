@@ -17,9 +17,9 @@ type MbokaKpiCardProps = {
   size?: "default" | "compact" | "stat";
 };
 
-const scopeAccentClassName = {
-  period: "border-l-[#10579F] dark:border-l-sky-400",
-  global: "border-l-slate-300 dark:border-l-slate-600",
+const scopeSurfaceClassName = {
+  period: "bg-sky-50/70 dark:bg-sky-950/20",
+  global: "bg-slate-50/80 dark:bg-slate-800/35",
 } as const;
 
 export function MbokaKpiCard({
@@ -49,17 +49,31 @@ export function MbokaKpiCard({
     return (
       <article
         className={cn(
-          "border-l-2 pl-3",
-          scope ? scopeAccentClassName[scope] : "border-l-sky-200",
+          "rounded-xl p-3",
+          scope ? scopeSurfaceClassName[scope] : "bg-sky-50/40",
           className
         )}
         data-testid={testId}
         data-scope={scope}
-        title={hint}
       >
-        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {label}
-        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+          {scope ? (
+            <span
+              className={cn(
+                "inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+                scope === "period"
+                  ? "bg-sky-100 text-[#10579F] dark:bg-sky-900/60 dark:text-sky-200"
+                  : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+              )}
+              data-testid={testId ? `${testId}-scope` : undefined}
+            >
+              {scope === "period" ? "Période" : "Global"}
+            </span>
+          ) : null}
+        </div>
         <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-[#10579F] dark:text-sky-50 sm:text-2xl">
           {displayValue}
         </p>
@@ -69,11 +83,6 @@ export function MbokaKpiCard({
             testId={testId ? `${testId}-delta` : undefined}
             className="mt-1.5 text-[11px]"
           />
-        ) : null}
-        {scope ? (
-          <span className="sr-only" data-testid={testId ? `${testId}-scope` : undefined}>
-            {scope === "period" ? "Période" : "Global"}
-          </span>
         ) : null}
       </article>
     );
