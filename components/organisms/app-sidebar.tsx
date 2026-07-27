@@ -106,6 +106,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href;
   }
 
+  if (href === "/account/profile") {
+    return pathname === href;
+  }
+
   if (href === "/account/sessions") {
     return pathname === href;
   }
@@ -326,15 +330,24 @@ export function AppSidebar({
         </nav>
 
         <div className="border-t border-sky-100 p-4 dark:border-sky-900">
-          <div className="mb-3 flex items-center gap-3 rounded-2xl bg-sky-50/80 px-3 py-3 dark:bg-slate-800/80">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#10579F] text-xs font-semibold text-white">
-              {getInitials(userName)}
+          <div className="mb-3 flex items-center gap-2 rounded-2xl bg-sky-50/80 px-3 py-3 dark:bg-slate-800/80">
+            <Link
+              href="/account/profile"
+              onClick={() => setMobileOpen(false)}
+              data-testid="app-profile-link"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 dark:focus-visible:ring-sky-900"
+            >
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#10579F] text-xs font-semibold text-white">
+                {getInitials(userName)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-[#10579F] dark:text-sky-50">{userName}</p>
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">{roleLabel}</p>
+              </div>
+            </Link>
+            <div className="shrink-0" data-testid="app-profile-theme-toggle">
+              <ThemeToggle />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-[#10579F] dark:text-sky-50">{userName}</p>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{roleLabel}</p>
-            </div>
-            <ThemeToggle />
           </div>
 
           <form action={logoutAction}>
