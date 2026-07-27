@@ -401,3 +401,128 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 | Date | US | Validé par | Commit |
 |------|-----|------------|--------|
 | — | SPEC 10 (planification) | Retour client juillet 2026 | — |
+
+---
+
+## Phase 5 — Backlog post-livraison (v2.1+)
+
+> **Contexte :** la feuille de route v2.0 (SPEC 1 → 10) est implémentée. Cette section recense les évolutions **hors scope livraison actuelle**, identifiées dans le code, les specs ou la dette technique restante.
+> **Priorité :** P1 = recommandé avant / juste après prod · P2 = valeur métier forte · P3 = confort / scale.
+
+### Légende
+
+| Priorité | Signification |
+|----------|---------------|
+| P1 | Bloquant ou fortement recommandé pour la production multi-utilisateurs |
+| P2 | Amélioration métier notable |
+| P3 | Confort, scale ou polish |
+
+---
+
+### A — Notifications & alertes
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-A01 | **Push Web** pour alertes critiques (Web Push API + SW) — complète US-58 (email/webhook déjà OK) | P2 | `[ ]` |
+| V2-A02 | Abonnement push par utilisateur / rôle (opt-in depuis `/admin/alerts` ou profil) | P2 | `[ ]` |
+| V2-A03 | Canaux messagerie terrain : SMS ou WhatsApp Business (rappels créances, alertes caisse) | P3 | `[ ]` |
+| V2-A04 | Planification automatique des rappels créances (cron / job, au-delà de l'envoi manuel Brevo) | P2 | `[ ]` |
+
+<!-- V2-A01 : US-58 mentionne « Push web = prochaine version » dans TODO. conception.md — Webhooks Email / Push. -->
+
+---
+
+### B — Stockage cloud & infrastructure production
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-B01 | **Stockage cloud S3/R2** des pièces justificatives dépenses (US-27 — local `storage/` aujourd'hui) | P1 | `[ ]` |
+| V2-B02 | **Stockage cloud** des exports archivés `GeneratedExport` (US-59 — local `storage/exports/`, incompatible multi-instance Vercel) | P1 | `[ ]` |
+| V2-B03 | Pipeline CI/CD (lint, build, migrations, Cypress sur PR) | P1 | `[ ]` |
+| V2-B04 | Environnements staging + prod séparés (Neon branch, variables d'env) | P1 | `[ ]` |
+| V2-B05 | Monitoring & observabilité (Sentry ou équivalent, logs structurés alertes échouées) | P2 | `[ ]` |
+| V2-B06 | Sauvegardes automatisées base Neon + rétention exports | P2 | `[ ]` |
+
+<!-- V2-B01/B02 : TODO.md clés API — « Stockage fichiers S3/R2 » US-27. Exports et attachments partagent le même besoin prod. -->
+
+---
+
+### C — Finances, devises & comptabilité
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-C01 | **Multi-devises agrégées** au dashboard (conversion CDF ↔ USD avec taux configurable ou API) | P2 | `[ ]` |
+| V2-C02 | Taux de change journalier / historique (table `ExchangeRate`, audit des conversions) | P2 | `[ ]` |
+| V2-C03 | Bilans et exports respectant la devise d'origine + colonne convertie | P3 | `[ ]` |
+| V2-C04 | Factory unique `getDashboardMetrics()` — dette SPEC 10 note technique #1 | P3 | `[ ]` |
+
+<!-- V2-C01 : SPEC 10 — « documenter limite USD agrégé si pas de conversion ». Revenus/dépenses en USD et CDF coexistent. -->
+
+---
+
+### D — PWA, offline & terrain
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-D01 | Queue offline **dépenses** (extension US-60 — revenus seuls aujourd'hui) | P2 | `[ ]` |
+| V2-D02 | Sync conflict resolution (doublon, conflit réservation après reconnexion) | P2 | `[ ]` |
+| V2-D03 | Indicateur UI persistent « N saisies en attente » accessible hors bandeau réseau | P3 | `[ ]` |
+| V2-D04 | Cache offline élargi (fiche client, planning réservations du jour) | P3 | `[ ]` |
+
+---
+
+### E — UX, profil & préférences
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-E01 | Préférence **thème clair/sombre sur le profil utilisateur** (US-64 — localStorage `mboka-theme` seulement) | P3 | `[ ]` |
+| V2-E02 | Streaming dashboard par panneau (`Suspense` granulaire — approfondissement US-61) | P3 | `[ ]` |
+| V2-E03 | Panneau aide raccourcis clavier accessible depuis le menu (US-63 — toast `Ctrl+Shift+?` seulement) | P3 | `[ ]` |
+| V2-E04 | `loading.tsx` / skeletons sur routes restantes (audit, exports, admin, clôture trimestre) | P3 | `[ ]` |
+
+---
+
+### F — Facturation, documents & clients
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-F01 | **Module factures** formalisées (numérotation, statut émise/payée/annulée, lien client) | P2 | `[ ]` |
+| V2-F02 | Envoi facture / reçu par email au client (Brevo, PDF en pièce jointe) | P2 | `[ ]` |
+| V2-F03 | Portail client lecture seule (historique, PDF, solde restant) | P3 | `[ ]` |
+| V2-F04 | Relance impayés avec template personnalisable par segment client | P3 | `[ ]` |
+
+<!-- V2-F01 : client-search-panel — « prêt pour une future facture » ; conception.md — factures PDF. -->
+
+---
+
+### G — Sécurité, conformité & exploitation
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-G01 | Rate limiting API (exports, auth, upload attachments) | P2 | `[ ]` |
+| V2-G02 | Archivage froid des journaux d'audit au-delà de la politique US-45 (S3 + rétention légale) | P3 | `[ ]` |
+| V2-G03 | Export RGPD / suppression compte utilisateur avec anonymisation audit | P3 | `[ ]` |
+| V2-G04 | Revue permissions Observateur (accès macro vs fuite de détail opérationnel) | P3 | `[ ]` |
+
+---
+
+### H — Qualité & tests
+
+| ID | Titre | Priorité | Statut |
+|----|-------|----------|--------|
+| V2-H01 | Suite Cypress complète en CI (tous rôles, parcours clôture trimestre bout-en-bout) | P1 | `[ ]` |
+| V2-H02 | Tests de charge sur exports PDF / registres CSV volumineux | P3 | `[ ]` |
+| V2-H03 | Documentation opérateur (secrétaire, comptable, PDG) — hors `thisproject/` | P2 | `[ ]` |
+
+---
+
+### Ordre d'implémentation suggéré (v2.1 → v2.3)
+
+```
+v2.1 Prod-ready     → V2-B01, V2-B02, V2-B03, V2-B04, V2-H01
+v2.2 Métier         → V2-A01, V2-C01, V2-D01, V2-F01, V2-F02
+v2.3 Scale & polish → V2-A03, V2-E01, V2-F03, V2-G02, V2-E02
+```
+
+> **Note :** ne pas démarrer une entrée v2.1+ tant que la validation client `[✓]` de la livraison v2.0 n'est pas actée (cf. règle en tête de fichier).
+
