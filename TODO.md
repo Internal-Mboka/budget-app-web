@@ -193,7 +193,7 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-46 | Dashboard financier global temps réel | `[ ]` |
+| US-46 | Dashboard financier global temps réel | `[x]` |
 | US-47 | Vue macro Observateurs | `[ ]` |
 | US-48 | Ventilation CA par activité | `[ ]` |
 | US-49 | Taux d'occupation espaces studio | `[ ]` |
