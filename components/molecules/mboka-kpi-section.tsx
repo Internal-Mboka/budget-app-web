@@ -59,7 +59,7 @@ export function MbokaKpiBoard({
         </div>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">{children}</div>
+      <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">{children}</div>
     </section>
   );
 }
@@ -78,6 +78,35 @@ const groupScopeIcon = {
   global: Globe2,
 } as const;
 
+export function MbokaKpiBoardGroupLabel({
+  label,
+  scope,
+  testId,
+  className,
+}: {
+  label: string;
+  scope: "period" | "global";
+  testId: string;
+  className?: string;
+}) {
+  const headingId = `${testId}-heading`;
+  const ScopeIcon = groupScopeIcon[scope];
+
+  return (
+    <div
+      className={cn("col-span-2 flex items-center gap-1.5", className)}
+      data-testid={testId}
+      data-scope={scope}
+      aria-labelledby={headingId}
+    >
+      <ScopeIcon className="size-4 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
+      <p id={headingId} className="text-sm font-medium text-[#10579F] dark:text-sky-50">
+        {label}
+      </p>
+    </div>
+  );
+}
+
 export function MbokaKpiBoardGroup({
   label,
   scope,
@@ -91,7 +120,7 @@ export function MbokaKpiBoardGroup({
 
   return (
     <div
-      className={cn("min-w-0 space-y-3", className)}
+      className={cn("flex h-full min-w-0 flex-col gap-3", className)}
       data-testid={testId}
       data-scope={scope}
       aria-labelledby={headingId}
@@ -102,7 +131,14 @@ export function MbokaKpiBoardGroup({
           {label}
         </p>
       </div>
-      <div className={cn("grid gap-3 sm:grid-cols-2 sm:gap-4", cardsClassName)}>{children}</div>
+      <div
+        className={cn(
+          "grid flex-1 auto-rows-fr gap-3 sm:grid-cols-2 sm:items-stretch sm:gap-4",
+          cardsClassName
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

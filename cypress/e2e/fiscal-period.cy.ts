@@ -35,6 +35,7 @@ describe("Mboka Budget — SPEC 10 US-75 Onboarding trimestre comptable", () => 
       if ($body.find('[data-testid="fiscal-period-setup-banner"]').length > 0) {
         cy.get('[data-testid="fiscal-period-setup-banner"]').should("be.visible");
         cy.get('[data-testid="fiscal-period-setup-banner-link"]').should("be.visible");
+        cy.get('[data-testid="nav-fiscal-period-setup"]').should("be.visible");
         cy.contains("ouvrez le 1er trimestre").should("be.visible");
       } else {
         cy.log("Trimestre OPEN déjà présent (SEED_FISCAL_PERIOD) — bandeau masqué.");

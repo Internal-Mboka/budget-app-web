@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils";
 type AppShellProps = {
   user: Session["user"];
   children: React.ReactNode;
+  showFiscalPeriodSetupNav?: boolean;
 };
 
-export function AppShell({ user, children }: AppShellProps) {
+export function AppShell({ user, children, showFiscalPeriodSetupNav = false }: AppShellProps) {
   const dashboardPath = getDefaultDashboardPath(user);
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
   const canManageClients = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
@@ -36,6 +37,7 @@ export function AppShell({ user, children }: AppShellProps) {
         canCloseCash={canCloseCash}
         canViewAudit={canViewAudit}
         canExportFinancial={canExportFinancial}
+        showFiscalPeriodSetupNav={showFiscalPeriodSetupNav}
       />
 
       <div className="flex min-h-0 flex-1 flex-col lg:pl-72">

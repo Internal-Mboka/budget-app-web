@@ -64,7 +64,7 @@ export function MbokaKpiCard({
     return (
       <article
         className={cn(
-          "rounded-xl p-3",
+          "flex h-full flex-col rounded-xl p-3",
           scope ? scopeSurfaceClassName[scope] : "bg-sky-50/40",
           className
         )}
@@ -99,7 +99,7 @@ export function MbokaKpiCard({
         ) : null}
         {breakdown && breakdown.length > 0 ? (
           <ul
-            className="mt-2 space-y-0.5 border-t border-sky-100/80 pt-2 dark:border-sky-900/80"
+            className="mt-auto space-y-0.5 border-t border-sky-100/80 pt-2 dark:border-sky-900/80"
             data-testid={testId ? `${testId}-breakdown` : undefined}
           >
             {breakdown.map((line) => (

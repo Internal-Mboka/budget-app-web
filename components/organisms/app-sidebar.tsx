@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarRange,
   Download,
   Fingerprint,
   KeyRound,
@@ -49,6 +50,7 @@ type AppSidebarProps = {
   canCloseCash: boolean;
   canViewAudit: boolean;
   canExportFinancial: boolean;
+  showFiscalPeriodSetupNav?: boolean;
 };
 
 function getInitials(name: string): string {
@@ -89,6 +91,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/dashboard/setup") {
+    return pathname === href;
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -114,6 +120,7 @@ export function AppSidebar({
   canCloseCash,
   canViewAudit,
   canExportFinancial,
+  showFiscalPeriodSetupNav = false,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -122,7 +129,19 @@ export function AppSidebar({
 
   const navSections: NavSection[] = [
     {
-      items: [{ href: dashboardPath, label: "Dashboard", icon: LayoutDashboard }],
+      items: [
+        { href: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
+        ...(showFiscalPeriodSetupNav
+          ? [
+              {
+                href: "/dashboard/setup",
+                label: "Trimestre comptable",
+                icon: CalendarRange,
+                testId: "nav-fiscal-period-setup",
+              },
+            ]
+          : []),
+      ],
     },
     ...(canManageClients || canManageExpenses || canCloseCash
       ? [
