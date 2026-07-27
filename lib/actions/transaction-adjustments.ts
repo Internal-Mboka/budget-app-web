@@ -120,7 +120,7 @@ export async function createTransactionAdjustmentAction(
 
   const periodLock = await assertFinancialPeriodWritable({
     transactionDate: parent.createdAt,
-    permissions: session.user.permissions,
+    roleName: session.user.roleName,
   });
 
   if (!periodLock.ok) {

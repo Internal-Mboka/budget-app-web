@@ -309,8 +309,8 @@ export function FinancialExportsPanel({
             </div>
           ) : (
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              Ce mois n&apos;est pas encore clôturé. Après clôture, seul le PDG pourra modifier les
-              opérations passées.
+              Ce mois n&apos;est pas encore clôturé. Après clôture, seuls le PDG et le DT pourront
+              modifier les opérations passées.
             </p>
           )}
 
@@ -339,7 +339,7 @@ export function FinancialExportsPanel({
                       data-testid="financial-export-period-balance-close"
                       onClick={(event) => {
                         const confirmed = window.confirm(
-                          "Clôturer ce mois ? Les modifications rétroactives seront réservées au PDG."
+                          "Clôturer ce mois ? Les modifications rétroactives seront réservées au PDG et au DT."
                         );
 
                         if (!confirmed) {
@@ -365,7 +365,26 @@ export function FinancialExportsPanel({
             )}
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section
+          className={cn(mbokaPanelClassName, "space-y-3 p-4 sm:p-5")}
+          data-testid="financial-export-period-balance-hint"
+        >
+          <div className="flex items-center gap-2">
+            <Scale className="size-4 text-sky-600 dark:text-sky-400" />
+            <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Bilan périodique PDF</p>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Pour générer ou clôturer le bilan mensuel, sélectionnez un{" "}
+            <span className="font-medium">mois civil complet</span> — du 1<sup>er</sup> au dernier jour
+            du même mois.
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Période actuelle : du {formatDisplayDate(`${filters.from}T12:00:00`)} au{" "}
+            {formatDisplayDate(`${filters.to}T12:00:00`)}.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

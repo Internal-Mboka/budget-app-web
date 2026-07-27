@@ -44,8 +44,11 @@ function mapClosureRow(row: {
   integrityHash: string;
   closedAt: Date;
   closedByUserId: string;
-  closedBy: { name: string | null; email: string };
+  closedBy: { firstName: string; lastName: string; email: string };
 }): FinancialPeriodClosureRecord {
+  const closedByName =
+    `${row.closedBy.firstName} ${row.closedBy.lastName}`.trim() || row.closedBy.email;
+
   return {
     id: row.id,
     periodKey: row.periodKey,
@@ -65,7 +68,7 @@ function mapClosureRow(row: {
     integrityHash: row.integrityHash,
     closedAt: row.closedAt.toISOString(),
     closedByUserId: row.closedByUserId,
-    closedByName: row.closedBy.name?.trim() || row.closedBy.email,
+    closedByName,
   };
 }
 
@@ -88,7 +91,7 @@ const closureSelect = {
   integrityHash: true,
   closedAt: true,
   closedByUserId: true,
-  closedBy: { select: { name: true, email: true } },
+  closedBy: { select: { firstName: true, lastName: true, email: true } },
 } as const;
 
 export async function loadFinancialPeriodClosureByKey(

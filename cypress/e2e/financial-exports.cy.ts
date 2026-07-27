@@ -63,6 +63,14 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
     cy.get('[data-testid="financial-export-period-balance-preview"]').should("be.visible");
   });
 
+  it("affiche une indication quand la période n'est pas un mois complet", () => {
+    cy.visit("/exports?from=2026-07-01&to=2026-07-15");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="financial-export-period-balance-hint"]').should("be.visible");
+    cy.get('[data-testid="financial-export-period-balance"]').should("not.exist");
+  });
+
   it("génère un aperçu PDF bilan périodique", () => {
     cy.request({
       url: "/api/exports/period-balance/pdf?from=2026-07-01&to=2026-07-31&preview=1",
