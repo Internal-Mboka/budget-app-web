@@ -39,28 +39,27 @@ export function DashboardAnalyticsPanel({
     <div className="space-y-4" data-testid="dashboard-analytics-panel">
       <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="min-w-0">
-          {kpiScope === "period" ? (
-            <MbokaPeriodSwitch
-              label="Période des indicateurs"
-              testId="dashboard-kpi-period-switch"
-              value={kpiPeriod}
-              options={KPI_PERIOD_OPTIONS.map((value) => ({
-                value,
-                label: getKpiPeriodLabel(value),
-              }))}
-              buildHref={(value) =>
-                buildFinancialDashboardHref(basePath, {
-                  kpiPeriod: value,
-                  kpiScope,
-                  granularity,
-                  categoryPeriod,
-                  occupancyPeriod,
-                  projectionPeriod,
-                  projectionScenario,
-                })
-              }
-            />
-          ) : null}
+          <MbokaPeriodSwitch
+            label="Période des indicateurs"
+            testId="dashboard-kpi-period-switch"
+            value={kpiPeriod}
+            disabled={kpiScope === "global"}
+            options={KPI_PERIOD_OPTIONS.map((value) => ({
+              value,
+              label: getKpiPeriodLabel(value),
+            }))}
+            buildHref={(value) =>
+              buildFinancialDashboardHref(basePath, {
+                kpiPeriod: value,
+                kpiScope,
+                granularity,
+                categoryPeriod,
+                occupancyPeriod,
+                projectionPeriod,
+                projectionScenario,
+              })
+            }
+          />
         </div>
 
         <MbokaPeriodSwitch
