@@ -16,7 +16,6 @@ import {
 import { computeExpectedClosingBalances } from "@/lib/cash-closing/expected";
 import { computeCashClosingGap } from "@/lib/cash-closing/gap";
 import { formatGapDifference } from "@/lib/cash-closing/gap-labels";
-import type { SuggestedOpeningFloat } from "@/lib/cash-closing/load-closings";
 import type { CashClosingDaySummary } from "@/lib/cash-closing/theoretical";
 import { formatMoney } from "@/lib/currency";
 import {
@@ -30,7 +29,6 @@ import { cn } from "@/lib/utils";
 type CashClosingFormProps = {
   summary: CashClosingDaySummary;
   defaultClosingDate: string;
-  suggestedOpening?: SuggestedOpeningFloat | null;
   existingClosing?: { id: string; date: string } | null;
 };
 
@@ -83,28 +81,33 @@ function FormulaLine({
   );
 }
 
-function formatOpeningInput(value: number): string {
-  return value === 0 ? "0" : String(value);
-}
-
 export function CashClosingForm({
   summary,
   defaultClosingDate,
-  suggestedOpening,
   existingClosing,
 }: CashClosingFormProps) {
   const router = useRouter();
   const handledStateRef = useRef<CashClosingFormState>(null);
   const [state, formAction] = useActionState(createCashClosingFormAction, null);
   const [discrepancyNotes, setDiscrepancyNotes] = useState("");
-  const [openingCashInput, setOpeningCashInput] = useState(() =>
-    formatOpeningInput(suggestedOpening?.openingCash ?? 0)
-  );
-  const [openingMobileMoneyInput, setOpeningMobileMoneyInput] = useState(() =>
-    formatOpeningInput(suggestedOpening?.openingMobileMoney ?? 0)
-  );
+  const [isSwitchingDate, setIsSwitchingDate] = useState(false);
+  const [openingCashInput, setOpeningCashInput] = useState("0");
+  const [openingMobileMoneyInput, setOpeningMobileMoneyInput] = useState("0");
   const [realCashInput, setRealCashInput] = useState("");
   const [realMobileMoneyInput, setRealMobileMoneyInput] = useState("");
+
+  const resetFormForDate = () => {
+    setOpeningCashInput("0");
+    setOpeningMobileMoneyInput("0");
+    setRealCashInput("");
+    setRealMobileMoneyInput("");
+    setDiscrepancyNotes("");
+  };
+
+  useEffect(() => {
+    resetFormForDate();
+    setIsSwitchingDate(false);
+  }, [defaultClosingDate]);
 
   useEffect(() => {
     if (!state || state === handledStateRef.current || state.success) {
@@ -153,6 +156,11 @@ export function CashClosingForm({
   }, [expected, realCash, realMobileMoney]);
 
   const hasOtherPayments = summary.otherTransactionCount > 0;
+  const openingTotal =
+    (Number.isFinite(openingCash) ? openingCash : 0) +
+    (Number.isFinite(openingMobileMoney) ? openingMobileMoney : 0);
+  const dayMovementTotal = summary.netCash + summary.netMobileMoney;
+  const hasDayActivity = summary.liquidTransactionCount > 0;
 
   return (
     <div className="space-y-5">
@@ -218,7 +226,8 @@ export function CashClosingForm({
           <div>
             <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Comptage de fin de journée</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Fond du matin + activité du jour = montant à compter ce soir.
+              Chaque journée se clôture indépendamment : fond du matin + activité du jour = montant à compter ce
+              soir.
             </p>
           </div>
         </div>
@@ -241,28 +250,27 @@ export function CashClosingForm({
                     const value = event.target.value;
 
                     if (value && value !== defaultClosingDate) {
+                      setIsSwitchingDate(true);
+                      resetFormForDate();
                       router.push(`/cash-closing?date=${value}`);
                     }
                   }}
                   className={cn(mbokaFieldClassName, "max-w-xs")}
+                  disabled={isSwitchingDate}
                 />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Les montants du jour se mettent à jour quand vous changez la date.
+                  {isSwitchingDate
+                    ? "Chargement des mouvements de cette date…"
+                    : "Seuls les mouvements enregistrés à la date choisie sont pris en compte."}
                 </p>
               </Field>
 
               <div className="space-y-4">
                 <StepBadge step={1} label="Fond de caisse ce matin" />
-                {suggestedOpening ? (
-                  <p
-                    className="text-xs text-slate-500 dark:text-slate-400"
-                    data-testid="cash-closing-suggested-opening-hint"
-                  >
-                    Prérempli depuis la clôture du{" "}
-                    {new Date(suggestedOpening.sourceClosingDate).toLocaleDateString("fr-FR")} (montants
-                    comptés ce soir-là).
-                  </p>
-                ) : null}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Par défaut <strong>0</strong> — indiquez seulement s&apos;il restait déjà de l&apos;argent en
+                  caisse avant les encaissements du jour. Les clôtures passées sont dans l&apos;historique.
+                </p>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <Field className="gap-2">
                     <FieldLabel htmlFor="openingCash" className={mbokaLabelClassName}>
@@ -301,7 +309,13 @@ export function CashClosingForm({
                 </div>
               </div>
 
-              <div className="space-y-3" data-testid="cash-closing-theoretical-panel">
+              <div
+                className={cn(
+                  "space-y-3 transition-opacity",
+                  isSwitchingDate && "pointer-events-none opacity-50"
+                )}
+                data-testid="cash-closing-theoretical-panel"
+              >
                 <StepBadge step={2} label="Activité du jour (automatique)" />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Revenus − dépenses en espèces ou mobile money. Ce n&apos;est{" "}
@@ -334,7 +348,13 @@ export function CashClosingForm({
                 </p>
               </div>
 
-              <div className="space-y-3" data-testid="cash-closing-expected-panel">
+              <div
+                className={cn(
+                  "space-y-3 transition-opacity",
+                  isSwitchingDate && "pointer-events-none opacity-50"
+                )}
+                data-testid="cash-closing-expected-panel"
+              >
                 <StepBadge step={3} label="Montant à compter ce soir" />
                 <div className="grid gap-3">
                   <FormulaLine
@@ -361,12 +381,9 @@ export function CashClosingForm({
                     {formatMoney(expected.expectedTotal)}
                   </p>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Fond du matin{" "}
-                    {formatMoney(
-                      (Number.isFinite(openingCash) ? openingCash : 0) +
-                        (Number.isFinite(openingMobileMoney) ? openingMobileMoney : 0)
-                    )}{" "}
-                    · Activité du jour {formatSignedMoney(summary.netCash + summary.netMobileMoney)}
+                    Fond du matin {formatMoney(openingTotal)} · Activité du jour{" "}
+                    {formatSignedMoney(dayMovementTotal)}
+                    {!hasDayActivity ? " (aucun mouvement enregistré aujourd'hui)" : ""}
                   </p>
                 </div>
                 {(expected.expectedCash < 0 || expected.expectedMobileMoney < 0) && (
