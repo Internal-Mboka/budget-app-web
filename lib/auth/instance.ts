@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { readAuditRequestMeta } from "@/lib/audit/request-context";
 import {
-  createUserSession,
+  findOrCreateUserSession,
   isUserSessionActive,
+  pruneStaleUserSessions,
   shouldTouchSession,
   touchUserSession,
 } from "@/lib/sessions/service";
@@ -27,7 +28,10 @@ async function readSessionClientMeta() {
 async function attachSessionRecord(userId: string, token: Record<string, unknown>) {
   try {
     const meta = await readSessionClientMeta();
-    const dbSession = await createUserSession(userId, meta);
+    const dbSession = await findOrCreateUserSession(userId, meta);
+
+    await pruneStaleUserSessions(userId, dbSession.id);
+
     token.sessionId = dbSession.id;
     token.lastActiveBump = Date.now();
   } catch (error) {

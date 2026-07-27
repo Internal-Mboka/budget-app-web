@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import type { SessionClientMeta } from "./user-agent";
 
 const ACTIVE_TOUCH_INTERVAL_MS = 5 * 60 * 1000;
+const SESSION_REUSE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const STALE_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type ActiveSessionRow = {
   id: string;
@@ -23,6 +25,44 @@ export async function createUserSession(userId: string, meta: SessionClientMeta)
       deviceType: meta.deviceType,
       browser: meta.browser,
       ipAddress: meta.ipAddress,
+    },
+  });
+}
+
+export async function findReusableUserSession(userId: string, meta: SessionClientMeta) {
+  const reuseSince = new Date(Date.now() - SESSION_REUSE_WINDOW_MS);
+
+  return prisma.session.findFirst({
+    where: {
+      userId,
+      browser: meta.browser,
+      deviceType: meta.deviceType,
+      ipAddress: meta.ipAddress,
+      lastActiveAt: { gte: reuseSince },
+    },
+    orderBy: { lastActiveAt: "desc" },
+  });
+}
+
+export async function findOrCreateUserSession(userId: string, meta: SessionClientMeta) {
+  const reusable = await findReusableUserSession(userId, meta);
+
+  if (reusable) {
+    await touchUserSession(reusable.id);
+    return reusable;
+  }
+
+  return createUserSession(userId, meta);
+}
+
+export async function pruneStaleUserSessions(userId: string, keepSessionId?: string) {
+  const staleBefore = new Date(Date.now() - STALE_SESSION_MAX_AGE_MS);
+
+  return prisma.session.deleteMany({
+    where: {
+      userId,
+      lastActiveAt: { lt: staleBefore },
+      ...(keepSessionId ? { id: { not: keepSessionId } } : {}),
     },
   });
 }

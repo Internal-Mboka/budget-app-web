@@ -60,7 +60,9 @@ export function ActiveSessionsPanel({
     setSessions(initialSessions);
   }, [initialSessions]);
 
-  const otherSessionsCount = sessions.filter((session) => session.id !== currentSessionId).length;
+  const totalSessions = pagination.total;
+  const otherSessionsCount = Math.max(0, totalSessions - (currentSessionId ? 1 : 0));
+  const hasManySessions = totalSessions > 5;
 
   async function handleRevokeSession(sessionId: string) {
     setPendingSessionId(sessionId);
@@ -110,16 +112,36 @@ export function ActiveSessionsPanel({
 
   return (
     <div className="space-y-6">
-      <section className={cn(mbokaPanelClassName, "space-y-4")}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {pagination.total} session{pagination.total > 1 ? "s actives" : " active"}.
-          </p>
+      <section
+        className={cn(mbokaPanelClassName, "p-4 sm:p-5")}
+        data-testid="active-sessions-summary"
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
+              {totalSessions === 1
+                ? "1 session enregistrée"
+                : `${totalSessions} sessions enregistrées`}
+            </p>
+            <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Chaque connexion depuis un navigateur ou un appareil est listée ici. Sur le même
+              poste, une seule session devrait rester active après nettoyage.
+            </p>
+            {hasManySessions ? (
+              <p className="text-xs leading-5 text-amber-700 dark:text-amber-300">
+                Beaucoup d&apos;entrées ? Les tests automatiques ou les anciennes connexions
+                peuvent s&apos;accumuler — utilisez le bouton ci-contre pour nettoyer.
+              </p>
+            ) : null}
+          </div>
 
           <button
             type="button"
             data-testid="revoke-other-sessions"
-            className={cn(mbokaButtonOutlineClassName, "whitespace-nowrap")}
+            className={cn(
+              mbokaButtonOutlineClassName,
+              "w-full shrink-0 whitespace-normal sm:w-auto sm:whitespace-nowrap"
+            )}
             disabled={otherSessionsCount === 0 || isRevokingOthers}
             onClick={() => {
               void handleRevokeOthers();
@@ -148,11 +170,11 @@ export function ActiveSessionsPanel({
               data-testid={`session-row-${session.id}`}
               className={cn(
                 mbokaPanelClassName,
-                "flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between",
+                "flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between",
                 isCurrent && "ring-1 ring-sky-200 dark:ring-sky-800"
               )}
             >
-              <div className="flex min-w-0 items-start gap-4">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-50">
                   <MonitorSmartphone className="size-5" />
                 </div>
@@ -184,7 +206,7 @@ export function ActiveSessionsPanel({
                 data-testid={`revoke-session-${session.id}`}
                 className={cn(
                   mbokaButtonPrimaryClassName,
-                  "whitespace-nowrap sm:min-w-[140px]",
+                  "w-full shrink-0 self-start whitespace-nowrap lg:min-w-[9.5rem] lg:w-auto",
                   isCurrent && "bg-rose-600 hover:bg-rose-700"
                 )}
                 disabled={isPending}
