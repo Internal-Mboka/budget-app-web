@@ -22,6 +22,7 @@ import {
   loadPeriodCashDisbursements,
 } from "@/lib/dashboard/load-cash-collections";
 import { loadOpenCashBalance } from "@/lib/dashboard/load-open-cash-balance";
+import { loadTreasuryByChannel, type TreasuryChannelBalance } from "@/lib/dashboard/load-treasury-by-channel";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -34,6 +35,7 @@ export type DashboardKpis = {
   receivables: number;
   openCashBalance: number;
   openCashBalanceHint: string;
+  treasuryByChannel: TreasuryChannelBalance[];
   periodLabel: string;
 };
 
@@ -165,7 +167,8 @@ export async function loadDashboardKpis(
       ? loadGlobalCashCollections()
       : loadPeriodCashCollections(from, to);
 
-  const [netTreasury, receivableRows, cashCollections, openCashBalanceKpi] = await Promise.all([
+  const [netTreasury, receivableRows, cashCollections, openCashBalanceKpi, treasuryByChannel] =
+    await Promise.all([
     loadCurrentNetTreasury(),
     prisma.transaction.findMany({
       where: {
@@ -176,6 +179,7 @@ export async function loadDashboardKpis(
     }),
     cashCollectionsPromise,
     loadOpenCashBalance(reference),
+    loadTreasuryByChannel(),
   ]);
 
   const periodLabel = kpiScope === "global" ? "Cumul global" : label;
@@ -195,6 +199,7 @@ export async function loadDashboardKpis(
     ),
     openCashBalance: openCashBalanceKpi.total,
     openCashBalanceHint: openCashBalanceKpi.hint,
+    treasuryByChannel,
     periodLabel,
   };
 }

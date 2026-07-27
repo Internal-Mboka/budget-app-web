@@ -128,6 +128,11 @@ export function DashboardFinancialSection({
             scope="global"
             size="stat"
             testId="dashboard-kpi-treasury"
+            breakdown={kpis.treasuryByChannel.map((line) => ({
+              label: line.label,
+              value: line.net,
+              testId: `dashboard-kpi-treasury-channel-${line.channel.toLowerCase()}`,
+            }))}
           />
           <MbokaKpiCard
             label="Créances clients ouvertes"

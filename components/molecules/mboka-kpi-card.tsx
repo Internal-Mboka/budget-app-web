@@ -5,12 +5,19 @@ import { formatMoney } from "@/lib/currency";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
+type KpiBreakdownLine = {
+  label: string;
+  value: number;
+  testId?: string;
+};
+
 type MbokaKpiCardProps = {
   label: string;
   value: number;
   hint?: string;
   scope?: "period" | "global";
   delta?: KpiTrendDelta;
+  breakdown?: KpiBreakdownLine[];
   testId?: string;
   className?: string;
   format?: "money" | "percent" | "hours" | "number";
@@ -35,6 +42,7 @@ export function MbokaKpiCard({
   hint,
   scope,
   delta,
+  breakdown,
   testId,
   className,
   format = "money",
@@ -85,6 +93,25 @@ export function MbokaKpiCard({
             testId={testId ? `${testId}-delta` : undefined}
             className="mt-1.5 text-[11px]"
           />
+        ) : null}
+        {breakdown && breakdown.length > 0 ? (
+          <ul
+            className="mt-2 space-y-0.5 border-t border-sky-100/80 pt-2 dark:border-sky-900/80"
+            data-testid={testId ? `${testId}-breakdown` : undefined}
+          >
+            {breakdown.map((line) => (
+              <li
+                key={line.label}
+                className="flex items-baseline justify-between gap-2 text-[11px] leading-snug"
+                data-testid={line.testId}
+              >
+                <span className="text-slate-500 dark:text-slate-400">{line.label}</span>
+                <span className="shrink-0 tabular-nums font-medium text-slate-600 dark:text-slate-300">
+                  {formatMoney(line.value)}
+                </span>
+              </li>
+            ))}
+          </ul>
         ) : null}
         {hint ? (
           <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
