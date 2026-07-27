@@ -1,4 +1,5 @@
 import { Lock } from "lucide-react";
+import Link from "next/link";
 
 import { formatFiscalPeriodRange } from "@/lib/fiscal-period/format";
 import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
@@ -7,9 +8,13 @@ import { cn } from "@/lib/utils";
 
 type FiscalPeriodClosingBannerProps = {
   period: FiscalPeriodRecord;
+  showClosingLink?: boolean;
 };
 
-export function FiscalPeriodClosingBanner({ period }: FiscalPeriodClosingBannerProps) {
+export function FiscalPeriodClosingBanner({
+  period,
+  showClosingLink = false,
+}: FiscalPeriodClosingBannerProps) {
   const rangeLabel = formatFiscalPeriodRange(period.startDate, period.endDate);
   const statusLabel = getFiscalPeriodStatusLabel(period.status);
 
@@ -33,6 +38,16 @@ export function FiscalPeriodClosingBanner({ period }: FiscalPeriodClosingBannerP
           </p>
         </div>
       </div>
+
+      {showClosingLink ? (
+        <Link
+          href="/dashboard/cloture-trimestre"
+          className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-[#10579F] px-4 py-2 text-sm font-medium text-white no-underline transition hover:bg-[#0d4a87]"
+          data-testid="fiscal-period-closing-banner-link"
+        >
+          Valider la clôture
+        </Link>
+      ) : null}
     </div>
   );
 }

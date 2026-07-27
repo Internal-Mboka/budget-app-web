@@ -3,7 +3,9 @@ import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 export type CriticalAlertType =
   | "CASH_CLOSING_DISCREPANCY"
   | "EXPENSE_THRESHOLD_EXCEEDED"
-  | "HIGH_VALUE_ADJUSTMENT";
+  | "HIGH_VALUE_ADJUSTMENT"
+  | "FISCAL_PERIOD_CLOSING_PENDING"
+  | "FISCAL_PERIOD_CLOSING_APPROVED";
 
 export function areCriticalAlertsEnabled(): boolean {
   const raw = process.env.ALERTS_ENABLED?.trim().toLowerCase();
@@ -46,6 +48,10 @@ export function getCriticalAlertTypeLabel(type: CriticalAlertType): string {
       return "Dépense au-dessus du seuil";
     case "HIGH_VALUE_ADJUSTMENT":
       return "Régularisation de montant élevé";
+    case "FISCAL_PERIOD_CLOSING_PENDING":
+      return "Clôture trimestrielle en attente";
+    case "FISCAL_PERIOD_CLOSING_APPROVED":
+      return "Clôture trimestrielle validée";
     default:
       return type;
   }

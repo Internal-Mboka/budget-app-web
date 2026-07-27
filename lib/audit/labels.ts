@@ -55,6 +55,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   CASH_CLOSING_REVIEW_RESOLVED: "Clôture régularisée (PDG)",
   FISCAL_PERIOD_INITIALIZED: "Trimestre comptable initialisé",
   FISCAL_PERIOD_CLOSING_REQUESTED: "Clôture trimestrielle demandée",
+  FISCAL_PERIOD_CLOSING_ACCOUNTANT_APPROVED: "Visa comptable — clôture trimestrielle",
   FISCAL_PERIOD_CLOSING_APPROVED: "Clôture trimestrielle validée",
   FINANCIAL_REGISTER_EXPORTED: "Export registre comptable",
   FINANCIAL_PERIOD_CLOSED: "Clôture mensuelle — bilan périodique",

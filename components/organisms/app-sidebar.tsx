@@ -51,6 +51,7 @@ type AppSidebarProps = {
   canViewAudit: boolean;
   canExportFinancial: boolean;
   showFiscalPeriodSetupNav?: boolean;
+  showFiscalPeriodClosingNav?: boolean;
 };
 
 function getInitials(name: string): string {
@@ -95,6 +96,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href;
   }
 
+  if (href === "/dashboard/cloture-trimestre") {
+    return pathname === href;
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -121,6 +126,7 @@ export function AppSidebar({
   canViewAudit,
   canExportFinancial,
   showFiscalPeriodSetupNav = false,
+  showFiscalPeriodClosingNav = false,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -138,6 +144,16 @@ export function AppSidebar({
                 label: "Trimestre comptable",
                 icon: CalendarRange,
                 testId: "nav-fiscal-period-setup",
+              },
+            ]
+          : []),
+        ...(showFiscalPeriodClosingNav
+          ? [
+              {
+                href: "/dashboard/cloture-trimestre",
+                label: "Clôture trimestre",
+                icon: ShieldCheck,
+                testId: "nav-fiscal-period-closing",
               },
             ]
           : []),

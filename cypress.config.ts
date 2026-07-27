@@ -36,9 +36,60 @@ export default defineConfig({
         },
         async resetFiscalPeriodOpen() {
           const { prisma } = await import("./lib/prisma");
-          await prisma.fiscalPeriod.updateMany({ data: { status: "OPEN" } });
+          const { computeFiscalPeriodEndDate, normalizeFiscalPeriodEndDate } = await import(
+            "./lib/fiscal-period/dates"
+          );
+
+          const periods = await prisma.fiscalPeriod.findMany({
+            select: { id: true, startDate: true },
+          });
+
+          for (const period of periods) {
+            const endDate = normalizeFiscalPeriodEndDate(computeFiscalPeriodEndDate(period.startDate));
+
+            await prisma.fiscalPeriod.update({
+              where: { id: period.id },
+              data: {
+                status: "OPEN",
+                endDate,
+                validatedByAccountantId: null,
+                validatedByPdgId: null,
+              },
+            });
+          }
+
           await prisma.$disconnect();
           return null;
+        },
+        async setFiscalPeriodAccountantVisa() {
+          const { prisma } = await import("./lib/prisma");
+
+          const period = await prisma.fiscalPeriod.findFirst({
+            where: { status: "CLOSING" },
+            orderBy: { startDate: "desc" },
+            select: { id: true, label: true },
+          });
+
+          if (!period) {
+            throw new Error("Aucun trimestre CLOSING en base pour le test.");
+          }
+
+          const actor = await prisma.user.findFirst({
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
+            select: { id: true },
+          });
+
+          if (!actor) {
+            throw new Error("Aucun utilisateur actif pour simuler le visa comptable.");
+          }
+
+          await prisma.fiscalPeriod.update({
+            where: { id: period.id },
+            data: { validatedByAccountantId: actor.id },
+          });
+          await prisma.$disconnect();
+          return period.label;
         },
         async expireOpenFiscalPeriod() {
           const { prisma } = await import("./lib/prisma");

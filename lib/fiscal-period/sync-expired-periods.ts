@@ -1,6 +1,7 @@
 import { startOfDay } from "date-fns";
 
 import { writeAuditLog } from "@/lib/audit";
+import { notifyFiscalPeriodClosingPending } from "@/lib/alerts/dispatch";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/permissions";
 
@@ -133,6 +134,13 @@ export async function syncExpiredFiscalPeriodsToClosing(input: {
         endDate: period.endDate.toISOString(),
         syncedAt: new Date().toISOString(),
       },
+    });
+
+    void notifyFiscalPeriodClosingPending({
+      periodId: period.id,
+      periodLabel: period.label,
+      endDate: period.endDate.toISOString(),
+      triggeredByUserId: input.actorUserId,
     });
 
     transitioned.push(mapRow(updated));

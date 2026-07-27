@@ -193,3 +193,43 @@ export async function notifyHighValueAdjustment(input: {
     triggeredByUserId: input.triggeredByUserId,
   });
 }
+
+export async function notifyFiscalPeriodClosingPending(input: {
+  periodId: string;
+  periodLabel: string;
+  endDate: string;
+  triggeredByUserId: string;
+}): Promise<void> {
+  await dispatchCriticalAlert({
+    type: "FISCAL_PERIOD_CLOSING_PENDING",
+    title: `Clôture ${input.periodLabel} — action requise`,
+    message: `Le trimestre ${input.periodLabel} est en clôture. Visa comptable puis validation PDG attendus.`,
+    entity: "FiscalPeriod",
+    entityId: input.periodId,
+    details: {
+      periodLabel: input.periodLabel,
+      endDate: input.endDate,
+    },
+    triggeredByUserId: input.triggeredByUserId,
+  });
+}
+
+export async function notifyFiscalPeriodClosingApproved(input: {
+  periodId: string;
+  periodLabel: string;
+  performerEmail: string;
+  triggeredByUserId: string;
+}): Promise<void> {
+  await dispatchCriticalAlert({
+    type: "FISCAL_PERIOD_CLOSING_APPROVED",
+    title: `Clôture ${input.periodLabel} validée`,
+    message: `Le trimestre ${input.periodLabel} a été validé par ${input.performerEmail}. Finalisation T+1 à venir.`,
+    entity: "FiscalPeriod",
+    entityId: input.periodId,
+    details: {
+      periodLabel: input.periodLabel,
+      performerEmail: input.performerEmail,
+    },
+    triggeredByUserId: input.triggeredByUserId,
+  });
+}
