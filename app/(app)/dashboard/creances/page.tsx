@@ -1,12 +1,16 @@
+import Link from "next/link";
+
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
+import { OverdueReceivablesSummaryGrid } from "@/components/organisms/overdue-receivables-summary-grid";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasAnyPermission, requireSession } from "@/lib/auth/session";
-import { formatMoney } from "@/lib/currency";
 import {
-  getOverdueReceivablesTotal,
   loadOverdueReceivables,
+  summarizeOverdueReceivables,
 } from "@/lib/dashboard/load-overdue-receivables";
 import { PERMISSIONS } from "@/lib/permissions";
+import { mbokaPanelClassName } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
 export default async function OverdueReceivablesPage() {
@@ -21,7 +25,8 @@ export default async function OverdueReceivablesPage() {
     redirect("/login?error=forbidden");
   }
 
-  const [items, totalAmount] = await Promise.all([loadOverdueReceivables(), getOverdueReceivablesTotal()]);
+  const items = await loadOverdueReceivables();
+  const summary = summarizeOverdueReceivables(items);
 
   return (
     <section className="space-y-8">
@@ -31,12 +36,26 @@ export default async function OverdueReceivablesPage() {
         description="Réservations « Réservé — acompte requis » dont la date de prestation est dépassée."
       />
 
+      <OverdueReceivablesSummaryGrid summary={summary} />
+
       <OverdueReceivablesPanel
         items={items}
-        totalOverdue={items.length}
-        totalAmount={totalAmount}
-        description={`${items.length} créance${items.length > 1 ? "s" : ""} à relancer — total ${formatMoney(totalAmount)}.`}
+        totalOverdue={summary.count}
+        totalAmount={summary.totalAmount}
+        layout="table"
+        showReminderInfo
+        title="Liste complète"
+        description={`${summary.count} créance${summary.count > 1 ? "s" : ""} triée${summary.count > 1 ? "s" : ""} par montant dû puis ancienneté.`}
       />
+
+      <section className={cn(mbokaPanelClassName, "p-5 sm:p-6")}>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Besoin du registre complet des revenus ?{" "}
+          <Link href="/revenues" className="font-medium text-[#10579F] hover:underline dark:text-sky-300">
+            Ouvrir le registre des revenus →
+          </Link>
+        </p>
+      </section>
     </section>
   );
 }

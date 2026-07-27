@@ -134,7 +134,9 @@ describe("Mboka Budget — SPEC 7 US-50 Créances en souffrance", () => {
     cy.dismissPwaPrompt();
 
     cy.contains("Créances en souffrance").should("be.visible");
-    cy.get('[data-testid="overdue-receivables-panel"]').should("be.visible");
+    cy.get('[data-testid="overdue-receivables-summary-count"]').should("be.visible");
+    cy.get('[data-testid="overdue-receivables-reminder-info"]').should("be.visible");
+    cy.get('[data-testid="overdue-receivables-table"]').should("be.visible");
   });
 });
 

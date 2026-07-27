@@ -9,6 +9,7 @@ import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expens
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import {
   countOverdueReceivables,
+  DASHBOARD_OVERDUE_PREVIEW_LIMIT,
   getOverdueReceivablesTotal,
   loadOverdueReceivables,
 } from "@/lib/dashboard/load-overdue-receivables";
@@ -50,7 +51,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
       loadRevenueExpenseSeries(granularity),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
-      loadOverdueReceivables(5),
+      loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
       countOverdueReceivables(),
       getOverdueReceivablesTotal(),
       canApproveExpenses

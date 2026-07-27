@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 import { MbokaPendingFieldset, MbokaSubmitButton } from "@/components/molecules/mboka-submit-button";
 import {
@@ -22,9 +22,29 @@ type OverdueReceivablesPanelProps = {
   totalAmount: number;
   showQuickActions?: boolean;
   showViewAllLink?: boolean;
+  showReminderInfo?: boolean;
+  layout?: "cards" | "table";
   title?: string;
   description?: string;
 };
+
+function buildPanelDescription(
+  totalOverdue: number,
+  items: OverdueReceivableItem[],
+  totalAmount: number,
+  showViewAllLink: boolean,
+  description?: string
+) {
+  if (description) {
+    return description;
+  }
+
+  if (showViewAllLink && totalOverdue > items.length) {
+    return `Aperçu des ${items.length} créances les plus urgentes sur ${totalOverdue} au total — ${formatMoney(totalAmount)}.`;
+  }
+
+  return `${totalOverdue} créance${totalOverdue > 1 ? "s" : ""} en souffrance — total ${formatMoney(totalAmount)}.`;
+}
 
 function ReminderButton({
   transactionId,
@@ -70,45 +90,147 @@ function ReminderButton({
   );
 }
 
+function OverdueReceivableActions({
+  item,
+  showQuickActions,
+}: {
+  item: OverdueReceivableItem;
+  showQuickActions: boolean;
+}) {
+  if (!showQuickActions) {
+    return null;
+  }
+
+  const canSendReminder = Boolean(item.client?.email);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <ReminderButton
+        transactionId={item.id}
+        disabled={!canSendReminder}
+        disabledReason="Ajoutez un e-mail sur la fiche client pour envoyer un rappel."
+      />
+      <Link
+        href={`/revenues/${item.id}`}
+        className="inline-flex rounded-xl border border-sky-100 px-3 py-2 text-xs font-medium text-[#10579F] no-underline transition hover:bg-sky-50 dark:border-sky-900 dark:text-sky-200 dark:hover:bg-slate-800"
+        data-testid={`receivable-payment-${item.id}`}
+      >
+        Encaisser
+      </Link>
+    </div>
+  );
+}
+
 export function OverdueReceivablesPanel({
   items,
   totalOverdue,
   totalAmount,
   showQuickActions = true,
   showViewAllLink = false,
+  showReminderInfo = false,
+  layout = "cards",
   title = "Créances en souffrance",
   description,
 }: OverdueReceivablesPanelProps) {
   const shouldShowViewAll = showViewAllLink ? totalOverdue > 0 : totalOverdue > items.length;
+  const panelDescription = buildPanelDescription(totalOverdue, items, totalAmount, showViewAllLink, description);
 
   return (
-    <section
-      className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}
-      data-testid="overdue-receivables-panel"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
-          <AlertCircle className="size-5" />
+    <div className="space-y-4">
+      {showReminderInfo ? (
+        <section
+          className={cn(mbokaPanelClassName, "flex gap-3 p-4 sm:p-5")}
+          data-testid="overdue-receivables-reminder-info"
+        >
+          <Info className="mt-0.5 size-5 shrink-0 text-sky-600 dark:text-sky-300" />
+          <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            <p className="font-medium text-[#10579F] dark:text-sky-50">Rappels manuels pour l&apos;instant</p>
+            <p>
+              Le bouton <strong>Rappel</strong> envoie un e-mail au client (journalisé dans l&apos;audit). Aucun envoi
+              automatique n&apos;est déclenché tant que Brevo n&apos;est pas configuré (prévu US-54).
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      <section
+        className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6")}
+        data-testid="overdue-receivables-panel"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
+            <AlertCircle className="size-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">{title}</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{panelDescription}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">{title}</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            {description ??
-              `${totalOverdue} réservation${totalOverdue > 1 ? "s" : ""} en attente d'acompte dont la date est dépassée — total ${formatMoney(totalAmount)}.`}
+
+        {items.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="overdue-receivables-empty">
+            Aucune créance en souffrance pour le moment.
           </p>
-        </div>
-      </div>
-
-      {items.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="overdue-receivables-empty">
-          Aucune créance en souffrance pour le moment.
-        </p>
-      ) : (
-        <div className="space-y-3" data-testid="overdue-receivables-list">
-          {items.map((item) => {
-            const canSendReminder = Boolean(item.client?.email);
-
-            return (
+        ) : layout === "table" ? (
+          <div className="overflow-x-auto" data-testid="overdue-receivables-table">
+            <table className="min-w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-sky-100 text-xs uppercase tracking-wide text-slate-400 dark:border-sky-900">
+                  <th className="px-3 py-2 font-medium">Transaction</th>
+                  <th className="px-3 py-2 font-medium">Client</th>
+                  <th className="px-3 py-2 font-medium">Activité</th>
+                  <th className="px-3 py-2 font-medium">Échéance</th>
+                  <th className="px-3 py-2 font-medium">Retard</th>
+                  <th className="px-3 py-2 font-medium">Reste dû</th>
+                  {showQuickActions ? <th className="px-3 py-2 font-medium">Actions</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr
+                    key={item.id}
+                    data-testid={`overdue-receivable-${item.code}`}
+                    className="border-b border-sky-50 last:border-0 dark:border-slate-800"
+                  >
+                    <td className="px-3 py-3">
+                      <Link
+                        href={`/revenues/${item.id}`}
+                        className="font-semibold text-[#10579F] hover:underline dark:text-sky-50"
+                      >
+                        {item.code}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                      {item.client ? (
+                        <Link href={`/clients/${item.client.id}`} className="hover:underline">
+                          {item.client.name}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                      {getRevenueCategoryLabel(item.revenueCategory)}
+                      <span className="mt-0.5 block text-xs text-slate-400">{item.summary}</span>
+                    </td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">{item.dueLabel}</td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">{item.daysOverdue} j</td>
+                    <td className="px-3 py-3 font-medium text-slate-700 dark:text-slate-200">
+                      {formatMoney(item.remainingAmount)}
+                    </td>
+                    {showQuickActions ? (
+                      <td className="px-3 py-3">
+                        <OverdueReceivableActions item={item} showQuickActions={showQuickActions} />
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="space-y-3" data-testid="overdue-receivables-list">
+            {items.map((item) => (
               <article
                 key={item.id}
                 data-testid={`overdue-receivable-${item.code}`}
@@ -136,37 +258,22 @@ export function OverdueReceivablesPanel({
                   </p>
                 </div>
 
-                {showQuickActions ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <ReminderButton
-                      transactionId={item.id}
-                      disabled={!canSendReminder}
-                      disabledReason="Ajoutez un e-mail sur la fiche client pour envoyer un rappel."
-                    />
-                    <Link
-                      href={`/revenues/${item.id}`}
-                      className="inline-flex rounded-xl border border-sky-100 px-3 py-2 text-xs font-medium text-[#10579F] no-underline transition hover:bg-sky-50 dark:border-sky-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                      data-testid={`receivable-payment-${item.id}`}
-                    >
-                      Encaisser
-                    </Link>
-                  </div>
-                ) : null}
+                <OverdueReceivableActions item={item} showQuickActions={showQuickActions} />
               </article>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
 
-      {shouldShowViewAll ? (
-        <Link
-          href="/dashboard/creances"
-          className="inline-flex text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
-          data-testid="overdue-receivables-view-all"
-        >
-          Voir toutes les créances ({totalOverdue}) →
-        </Link>
-      ) : null}
-    </section>
+        {shouldShowViewAll ? (
+          <Link
+            href="/dashboard/creances"
+            className="inline-flex text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+            data-testid="overdue-receivables-view-all"
+          >
+            Voir toutes les créances ({totalOverdue}) →
+          </Link>
+        ) : null}
+      </section>
+    </div>
   );
 }

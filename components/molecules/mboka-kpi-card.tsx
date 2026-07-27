@@ -10,7 +10,7 @@ type MbokaKpiCardProps = {
   hint?: string;
   testId?: string;
   className?: string;
-  format?: "money" | "percent" | "hours";
+  format?: "money" | "percent" | "hours" | "number";
 };
 
 export function MbokaKpiCard({
@@ -26,7 +26,9 @@ export function MbokaKpiCard({
       ? `${value.toLocaleString("fr-FR")} %`
       : format === "hours"
         ? `${value.toLocaleString("fr-FR")} h`
-        : formatMoney(value);
+        : format === "number"
+          ? value.toLocaleString("fr-FR")
+          : formatMoney(value);
 
   return (
     <article

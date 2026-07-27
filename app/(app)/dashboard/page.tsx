@@ -8,6 +8,7 @@ import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import {
   countOverdueReceivables,
+  DASHBOARD_OVERDUE_PREVIEW_LIMIT,
   getOverdueReceivablesTotal,
   loadOverdueReceivables,
 } from "@/lib/dashboard/load-overdue-receivables";
@@ -50,7 +51,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
     loadStudioOccupancy(occupancyPeriod),
-    loadOverdueReceivables(5),
+    loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
     countOverdueReceivables(),
     getOverdueReceivablesTotal(),
     canApproveExpenses

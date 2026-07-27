@@ -9,7 +9,9 @@ import {
   getRevenueDueDate,
   isRevenueOverdue,
 } from "@/lib/revenues/due-date";
-import { decimalToNumber } from "@/lib/transactions/decimal";
+import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
+
+export const DASHBOARD_OVERDUE_PREVIEW_LIMIT = 2;
 
 export type OverdueReceivableItem = {
   id: string;
@@ -153,4 +155,35 @@ export async function getOverdueReceivablesTotal(reference = new Date()): Promis
   const items = await loadOverdueReceivables(undefined, reference);
 
   return items.reduce((sum, item) => sum + item.remainingAmount, 0);
+}
+
+export type OverdueReceivablesSummary = {
+  count: number;
+  totalAmount: number;
+  averageDaysOverdue: number;
+  withoutEmailCount: number;
+  maxDaysOverdue: number;
+};
+
+export function summarizeOverdueReceivables(items: OverdueReceivableItem[]): OverdueReceivablesSummary {
+  if (items.length === 0) {
+    return {
+      count: 0,
+      totalAmount: 0,
+      averageDaysOverdue: 0,
+      withoutEmailCount: 0,
+      maxDaysOverdue: 0,
+    };
+  }
+
+  const totalAmount = roundMoney(items.reduce((sum, item) => sum + item.remainingAmount, 0));
+  const totalDays = items.reduce((sum, item) => sum + item.daysOverdue, 0);
+
+  return {
+    count: items.length,
+    totalAmount,
+    averageDaysOverdue: roundMoney(totalDays / items.length),
+    withoutEmailCount: items.filter((item) => !item.client?.email).length,
+    maxDaysOverdue: Math.max(...items.map((item) => item.daysOverdue)),
+  };
 }
