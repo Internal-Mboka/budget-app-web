@@ -331,7 +331,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 
 <!-- US-74 : Tables suggérées — `FiscalPeriod` (id, label T1/T2…, startDate, endDate, status: PENDING_SETUP|OPEN|CLOSING|CLOSED, closedAt, validatedByPdgId, validatedByAccountantId, openingBalanceCash?, openingBalanceMobile?, openingBalanceBank?, skipOpeningBalance boolean). Index sur status + dates. Migration additive. -->
 
-<!-- US-75 : Écran `/dashboard/setup` ou wizard modal (PDG uniquement) si aucune période OPEN. Saisie date début T1 (fin = +3 mois − 1 jour). Soldes d'ouverture par canal OPTIONNELS (case « Nouveau départ — sans solde initial »). Débloque revenus/dépenses/paiements. Audit `FISCAL_PERIOD_INITIALIZED`. -->
+<!-- US-75 : Écran `/dashboard/setup` ou wizard modal (PDG ou DT) si aucune période OPEN. Saisie date début T1 (fin = +3 mois − 1 jour). Soldes d'ouverture par canal OPTIONNELS (case « Nouveau départ — sans solde initial »). Débloque revenus/dépenses/paiements. Audit `FISCAL_PERIOD_INITIALIZED`. -->
 
 <!-- US-76 : `lib/fiscal-period/lock.ts` — complète `assertTodayCashDayOpen` (SPEC 5, journalier). CLOSING/CLOSED : bloquer create/update transactions sur la période ; régularisations autorisées uniquement sur période OPEN (vigilance 4). Pas de DELETE. Secrétaire/Comptable/DT/PDG soumis au même verrou période. -->
 
@@ -365,7 +365,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 2. **URL searchParams** : ajouter `kpiScope`, `accountingMode` à `buildFinancialDashboardHref` (comme `projectionPeriod`) — tous les panneaux dashboard préservent les params existants.
 3. **Période comptable** : vérification centralisée dans les Server Actions revenus/dépenses/paiements (`lib/actions/`) + message UI explicite si CLOSING.
 4. **Tests Cypress** : specs dédiées `dashboard-kpi-scope.cy.ts`, `fiscal-period.cy.ts` — ne pas modifier les specs US-46–52 existantes sauf assertions additive.
-5. **Seed dev** : option `SEED_FISCAL_PERIOD=open` pour bypass onboarding en local/E2E.
+5. **Seed dev** : comptes `SEED_PDG_*` + `SEED_DT_*` ; option `SEED_FISCAL_PERIOD=open` pour bypass onboarding en local/E2E.
 
 ---
 

@@ -10,7 +10,7 @@ export async function assertOpenFiscalPeriodForFinancialWrite(): Promise<
     return {
       ok: false,
       error:
-        "Aucun trimestre comptable ouvert. Le PDG doit initialiser le 1er trimestre depuis le tableau de bord.",
+        "Aucun trimestre comptable ouvert. Le PDG ou le DT doit initialiser le 1er trimestre depuis le tableau de bord.",
     };
   }
 

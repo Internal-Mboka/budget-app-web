@@ -8,7 +8,7 @@ import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { initializeFirstFiscalPeriod } from "@/lib/fiscal-period/initialize-first-period";
 import { requiresFiscalPeriodSetup } from "@/lib/fiscal-period/load-fiscal-periods";
-import { ROLES } from "@/lib/permissions";
+import { canInitializeFiscalPeriod } from "@/lib/fiscal-period/can-initialize";
 import { parseFiscalPeriodSetupFormData } from "@/lib/validations/fiscal-period-setup";
 
 export type FiscalPeriodSetupActionResult =
@@ -43,8 +43,11 @@ export async function initializeFiscalPeriodAction(
     return { success: false, error: "Session expirée. Reconnectez-vous." };
   }
 
-  if (session.user.roleName !== ROLES.PDG) {
-    return { success: false, error: "Seul le PDG peut initialiser le 1er trimestre comptable." };
+  if (!canInitializeFiscalPeriod(session.user.roleName)) {
+    return {
+      success: false,
+      error: "Seuls le PDG et le Directeur Technique peuvent initialiser le 1er trimestre comptable.",
+    };
   }
 
   if (!(await requiresFiscalPeriodSetup())) {

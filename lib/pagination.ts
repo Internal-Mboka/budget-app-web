@@ -24,12 +24,27 @@ const paginationInputSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(DEFAULT_PAGE_SIZE),
 });
 
-export function parsePagination(input: {
-  page?: string | string[] | number;
-  pageSize?: string | string[] | number;
-}): PaginationParams {
-  const pageRaw = Array.isArray(input.page) ? input.page[0] : input.page;
-  const pageSizeRaw = Array.isArray(input.pageSize) ? input.pageSize[0] : input.pageSize;
+export function parsePagination(
+  input: {
+    page?: string | string[] | number;
+    pageSize?: string | string[] | number;
+  },
+  options?: { pageParam?: string; pageSizeParam?: string; query?: Record<string, string | undefined> }
+): PaginationParams {
+  const pageKey = options?.pageParam ?? "page";
+  const pageSizeKey = options?.pageSizeParam ?? "pageSize";
+  const query = options?.query;
+
+  const pageRaw = query
+    ? query[pageKey]
+    : Array.isArray(input.page)
+      ? input.page[0]
+      : input.page;
+  const pageSizeRaw = query
+    ? query[pageSizeKey]
+    : Array.isArray(input.pageSize)
+      ? input.pageSize[0]
+      : input.pageSize;
 
   const parsed = paginationInputSchema.parse({
     page: pageRaw ?? 1,

@@ -68,6 +68,24 @@ Cypress.Commands.add("loginAsDt", () => {
   cy.dismissToasts();
 });
 
+Cypress.Commands.add("loginAsPdg", () => {
+  const email = Cypress.env("PDG_EMAIL");
+  const password = Cypress.env("PDG_PASSWORD");
+
+  if (!email || !password) {
+    throw new Error("SEED_PDG_EMAIL / SEED_PDG_PASSWORD requis pour les tests E2E PDG.");
+  }
+
+  cy.visit("/login", { retryOnStatusCodeFailure: true, timeout: 30000 });
+  cy.dismissPwaPrompt();
+  cy.dismissToasts();
+  cy.get("#email").clear().type(email);
+  cy.get("#password").clear().type(password);
+  cy.contains("button", "Se connecter").click();
+  cy.location("pathname", { timeout: 20000 }).should("eq", "/dashboard");
+  cy.dismissToasts();
+});
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -76,6 +94,7 @@ declare global {
       pickMbokaSelect(fieldId: string, optionLabel: string): Chainable<void>;
       fillStudioSessionDate(offsetDays?: number): Chainable<void>;
       loginAsDt(): Chainable<void>;
+      loginAsPdg(): Chainable<void>;
     }
   }
 }

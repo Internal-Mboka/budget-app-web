@@ -99,19 +99,26 @@ async function main() {
     where: { name: "DIRECTEUR_TECHNIQUE" },
   });
 
-  const email = process.env.SEED_DT_EMAIL ?? "prince.vangu@mboka.studio";
+  const pdgRole = await prisma.role.findUniqueOrThrow({
+    where: { name: "PDG" },
+  });
+
+  const dtEmail = process.env.SEED_DT_EMAIL ?? "prince.vangu@mboka.studio";
+  const pdgEmail = process.env.SEED_PDG_EMAIL ?? "pdg@mboka.studio";
   const plainPassword = process.env.SEED_DT_PASSWORD;
 
   if (!plainPassword) {
     throw new Error(
-      "SEED_DT_PASSWORD est requis pour créer le compte Directeur Technique (Prince Vangu)."
+      "SEED_DT_PASSWORD est requis pour créer les comptes PDG et Directeur Technique."
     );
   }
 
+  const pdgPlainPassword = process.env.SEED_PDG_PASSWORD ?? plainPassword;
   const passwordHash = await bcrypt.hash(plainPassword, 12);
+  const pdgPasswordHash = await bcrypt.hash(pdgPlainPassword, 12);
 
   const dtUser = await prisma.user.upsert({
-    where: { email },
+    where: { email: dtEmail },
     update: {
       firstName: "Prince",
       lastName: "Vangu",
@@ -122,9 +129,28 @@ async function main() {
     create: {
       firstName: "Prince",
       lastName: "Vangu",
-      email,
+      email: dtEmail,
       password: passwordHash,
       roleId: dtRole.id,
+      isActive: true,
+    },
+  });
+
+  const pdgUser = await prisma.user.upsert({
+    where: { email: pdgEmail },
+    update: {
+      firstName: "PDG",
+      lastName: "Mboka",
+      password: pdgPasswordHash,
+      roleId: pdgRole.id,
+      isActive: true,
+    },
+    create: {
+      firstName: "PDG",
+      lastName: "Mboka",
+      email: pdgEmail,
+      password: pdgPasswordHash,
+      roleId: pdgRole.id,
       isActive: true,
     },
   });
@@ -138,6 +164,19 @@ async function main() {
       details: {
         message: "Compte initial Directeur Technique créé via seed",
         role: "DIRECTEUR_TECHNIQUE",
+      },
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "USER_SEEDED",
+      entity: "User",
+      entityId: pdgUser.id,
+      userId: pdgUser.id,
+      details: {
+        message: "Compte initial PDG créé via seed",
+        role: "PDG",
       },
     },
   });
@@ -157,9 +196,10 @@ async function main() {
   }
 
   console.log("✅ Seed terminé.");
-  console.log(`   → Directeur Technique : ${dtUser.firstName} ${dtUser.lastName}`);
-  console.log(`   → Email               : ${dtUser.email}`);
-  console.log(`   → Rôle                : DIRECTEUR_TECHNIQUE`);
+  console.log(`   → PDG                  : ${pdgUser.firstName} ${pdgUser.lastName}`);
+  console.log(`   → Email PDG            : ${pdgUser.email}`);
+  console.log(`   → Directeur Technique  : ${dtUser.firstName} ${dtUser.lastName}`);
+  console.log(`   → Email DT             : ${dtUser.email}`);
   console.log(`   → ${ROLE_DEFINITIONS.length} rôles, ${PERMISSIONS.length} permissions`);
 }
 

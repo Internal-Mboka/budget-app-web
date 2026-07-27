@@ -9,6 +9,10 @@ import {
 } from "@/lib/exports/filters";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import { getApprovalStatusLabel } from "@/lib/expenses/approval";
+import {
+  buildExpenseAttachmentUrl,
+  getExpenseAttachments,
+} from "@/lib/expenses/attachments";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
 import { getPaymentStatusLabel } from "@/lib/transactions/labels";
 import { getPaymentMethodLabel } from "@/lib/transactions/payment-methods";
@@ -74,6 +78,19 @@ export type RevenuePdfExportItem = {
   totalAmount: number;
   paidAmount: number;
   createdAt: string;
+};
+
+export type ExpenseJustificatifExportItem = {
+  expenseId: string;
+  expenseCode: string;
+  categoryLabel: string;
+  totalAmount: number;
+  attachmentId: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  downloadUrl: string;
+  uploadedAt: string;
 };
 
 function buildPeriodWhere(filters: FinancialExportFilters): Prisma.TransactionWhereInput {
@@ -213,6 +230,84 @@ export async function loadRevenuePdfExportItems(
     createdAt: row.createdAt.toISOString(),
   }));
 }
+
+function flattenExpenseJustificatifs(
+  rows: Array<{
+    id: string;
+    code: string;
+    expenseCategory: string | null;
+    totalAmount: { toString(): string };
+    metadata: unknown;
+  }>
+): ExpenseJustificatifExportItem[] {
+  const items = rows.flatMap((row) => {
+    const attachments = getExpenseAttachments(row.metadata);
+
+    return attachments.map((attachment) => ({
+      expenseId: row.id,
+      expenseCode: row.code,
+      categoryLabel: row.expenseCategory ? getExpenseCategoryLabel(row.expenseCategory) : "—",
+      totalAmount: decimalToNumber(row.totalAmount),
+      attachmentId: attachment.id,
+      fileName: attachment.fileName,
+      mimeType: attachment.mimeType,
+      sizeBytes: attachment.sizeBytes,
+      downloadUrl: buildExpenseAttachmentUrl(row.id, attachment.id),
+      uploadedAt: attachment.uploadedAt,
+    }));
+  });
+
+  return items.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
+export async function loadExpenseJustificatifExportItems(
+  filters: FinancialExportFilters,
+  pagination?: { skip: number; take: number }
+): Promise<ExpenseJustificatifExportItem[]> {
+  const rows = await prisma.transaction.findMany({
+    where: {
+      ...ACTIVE_EXPENSE_WHERE,
+      ...buildPeriodWhere(filters),
+    },
+    orderBy: [{ createdAt: "desc" }, { code: "desc" }],
+    select: {
+      id: true,
+      code: true,
+      expenseCategory: true,
+      totalAmount: true,
+      metadata: true,
+    },
+  });
+
+  const flat = flattenExpenseJustificatifs(rows);
+
+  if (!pagination) {
+    return flat;
+  }
+
+  return flat.slice(pagination.skip, pagination.skip + pagination.take);
+}
+
+export async function countExpenseJustificatifExportItems(
+  filters: FinancialExportFilters
+): Promise<number> {
+  const rows = await prisma.transaction.findMany({
+    where: {
+      ...ACTIVE_EXPENSE_WHERE,
+      ...buildPeriodWhere(filters),
+    },
+    select: {
+      id: true,
+      code: true,
+      expenseCategory: true,
+      totalAmount: true,
+      metadata: true,
+    },
+  });
+
+  return flattenExpenseJustificatifs(rows).length;
+}
+
 
 export async function countFinancialExportRows(
   filters: FinancialExportFilters,

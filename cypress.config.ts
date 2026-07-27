@@ -11,6 +11,8 @@ export default defineConfig({
     env: {
       DT_EMAIL: process.env.SEED_DT_EMAIL,
       DT_PASSWORD: process.env.SEED_DT_PASSWORD,
+      PDG_EMAIL: process.env.SEED_PDG_EMAIL,
+      PDG_PASSWORD: process.env.SEED_PDG_PASSWORD ?? process.env.SEED_DT_PASSWORD,
     },
     setupNodeEvents(on, config) {
       return config;

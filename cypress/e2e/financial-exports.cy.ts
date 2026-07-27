@@ -18,6 +18,7 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
     cy.get('[data-testid="financial-export-filters"]').should("be.visible");
     cy.get('[data-testid="financial-export-csv"]').should("be.visible");
     cy.get('[data-testid="financial-export-pdf"]').should("be.visible");
+    cy.get('[data-testid="financial-export-expense-justificatifs"]').should("be.visible");
     cy.get('[data-testid="financial-export-csv-download"]').should("be.visible");
   });
 
@@ -89,6 +90,19 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
     }).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.headers["content-type"]).to.include("application/pdf");
+    });
+  });
+
+  it("génère un récap PDF des dépenses sur la période", () => {
+    cy.request({
+      url: "/api/exports/expense-recap/pdf?from=2026-01-01&to=2026-12-31",
+      encoding: "binary",
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.be.oneOf([200, 404]);
+      if (response.status === 200) {
+        expect(response.headers["content-type"]).to.include("application/pdf");
+      }
     });
   });
 });

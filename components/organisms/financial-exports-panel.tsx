@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, FileSpreadsheet, FileText, Lock, Scale } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Lock, Paperclip, Scale } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,11 @@ import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { formatMoney } from "@/lib/currency";
 import type { FinancialExportFilters, FinancialExportRegister } from "@/lib/exports/filters";
 import { buildExportsListHref } from "@/lib/exports/list-url";
-import type { RevenuePdfExportItem } from "@/lib/exports/load-financial-register";
+import type {
+  ExpenseJustificatifExportItem,
+  RevenuePdfExportItem,
+} from "@/lib/exports/load-financial-register";
+import { formatAttachmentSize } from "@/lib/expenses/attachments";
 import {
   mbokaButtonOutlineClassName,
   mbokaButtonPrimaryClassName,
@@ -30,6 +34,8 @@ type FinancialExportsPanelProps = {
   filters: FinancialExportFilters;
   revenueDocuments: RevenuePdfExportItem[];
   revenueDocumentsPagination: PaginationMeta;
+  expenseJustificatifs: ExpenseJustificatifExportItem[];
+  expenseJustificatifsPagination: PaginationMeta;
   exportRowCount: number;
   periodClosure: FinancialPeriodClosureRecord | null;
   canClosePeriod: boolean;
@@ -60,6 +66,8 @@ export function FinancialExportsPanel({
   filters,
   revenueDocuments,
   revenueDocumentsPagination,
+  expenseJustificatifs,
+  expenseJustificatifsPagination,
   exportRowCount,
   periodClosure,
   canClosePeriod,
@@ -74,10 +82,33 @@ export function FinancialExportsPanel({
     return buildExportsListHref({
       page,
       pageSize: pageSize ?? revenueDocumentsPagination.pageSize,
+      justPage: expenseJustificatifsPagination.page,
+      justPageSize: expenseJustificatifsPagination.pageSize,
       from: filters.from,
       to: filters.to,
       register: filters.register,
     });
+  }
+
+  function buildJustificatifListHref(page: number, pageSize?: number) {
+    return buildExportsListHref({
+      page: revenueDocumentsPagination.page,
+      pageSize: revenueDocumentsPagination.pageSize,
+      justPage: page,
+      justPageSize: pageSize ?? expenseJustificatifsPagination.pageSize,
+      from: filters.from,
+      to: filters.to,
+      register: filters.register,
+    });
+  }
+
+  function buildExpenseRecapPdfHref() {
+    const params = new URLSearchParams({
+      from: filters.from,
+      to: filters.to,
+    });
+
+    return `/api/exports/expense-recap/pdf?${params.toString()}`;
   }
 
   function buildPeriodBalancePdfHref(preview = false) {
@@ -202,8 +233,8 @@ export function FinancialExportsPanel({
           </FieldGroup>
 
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            La période filtre le CSV, les PDF revenus et le bilan. Le registre CSV ne modifie que le
-            téléchargement du fichier.
+            La période filtre le CSV, les justificatifs dépenses, les PDF revenus et le bilan. Le registre
+            CSV ne modifie que le téléchargement du fichier.
           </p>
 
           <div className="flex flex-wrap gap-2">
@@ -313,6 +344,87 @@ export function FinancialExportsPanel({
         )}
 
         <MbokaPagination meta={revenueDocumentsPagination} buildHref={buildListHref} />
+      </section>
+
+      <section
+        className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")}
+        data-testid="financial-export-expense-justificatifs"
+      >
+        <div className="flex items-center gap-2">
+          <Paperclip className="size-4 text-sky-600 dark:text-sky-400" />
+          <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Justificatifs dépenses</p>
+        </div>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          <span className="font-medium">
+            {expenseJustificatifsPagination.total.toLocaleString("fr-FR")}{" "}
+            {expenseJustificatifsPagination.total > 1 ? "pièces jointes" : "pièce jointe"}
+          </span>
+          {" sur cette période — factures et reçus fournisseurs (indépendamment du registre CSV)."}
+        </p>
+
+        <a
+          href={buildExpenseRecapPdfHref()}
+          className={cn(mbokaButtonOutlineClassName, "inline-flex w-fit no-underline")}
+          data-testid="financial-export-expense-recap-download"
+        >
+          <Download className="size-4" />
+          Télécharger le récap PDF des dépenses
+        </a>
+
+        {expenseJustificatifs.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Aucune pièce justificative sur cette période.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-sky-100 dark:border-sky-900">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-sky-50/80 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                <tr>
+                  <th className="px-3 py-2.5 font-medium">Dépense</th>
+                  <th className="px-3 py-2.5 font-medium">Catégorie</th>
+                  <th className="px-3 py-2.5 font-medium">Montant</th>
+                  <th className="px-3 py-2.5 font-medium">Fichier</th>
+                  <th className="px-3 py-2.5 font-medium">Télécharger</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-sky-100 dark:divide-sky-900">
+                {expenseJustificatifs.map((item) => (
+                  <tr
+                    key={`${item.expenseId}-${item.attachmentId}`}
+                    data-testid={`financial-export-justificatif-row-${item.expenseCode}-${item.attachmentId}`}
+                  >
+                    <td className="px-3 py-2.5 font-medium text-[#10579F] dark:text-sky-50">
+                      <Link href={`/expenses/${item.expenseId}`} className="hover:underline">
+                        {item.expenseCode}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300">{item.categoryLabel}</td>
+                    <td className="px-3 py-2.5 tabular-nums text-slate-700 dark:text-slate-200">
+                      {formatMoney(item.totalAmount)}
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                      <span className="block max-w-[14rem] truncate" title={item.fileName}>
+                        {item.fileName}
+                      </span>
+                      <span className="text-xs text-slate-500">{formatAttachmentSize(item.sizeBytes)}</span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <a
+                        href={item.downloadUrl}
+                        className={cn(mbokaButtonOutlineClassName, "px-3 py-1.5 text-xs no-underline")}
+                        data-testid={`financial-export-justificatif-download-${item.expenseCode}-${item.attachmentId}`}
+                      >
+                        Ouvrir
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <MbokaPagination meta={expenseJustificatifsPagination} buildHref={buildJustificatifListHref} />
       </section>
 
       {isFullMonth ? (

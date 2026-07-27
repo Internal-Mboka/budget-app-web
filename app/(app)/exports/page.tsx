@@ -4,6 +4,8 @@ import { hasAnyPermission, requireSession } from "@/lib/auth/session";
 import { parseFinancialExportFilters } from "@/lib/exports/filters";
 import {
   countFinancialExportRows,
+  countExpenseJustificatifExportItems,
+  loadExpenseJustificatifExportItems,
   loadRevenuePdfExportItems,
 } from "@/lib/exports/load-financial-register";
 import { loadFinancialPeriodClosureForFilters } from "@/lib/period-closure/load-closures";
@@ -19,6 +21,8 @@ type ExportsPageProps = {
     register?: string;
     page?: string;
     pageSize?: string;
+    justPage?: string;
+    justPageSize?: string;
     closureError?: string;
   }>;
 };
@@ -38,8 +42,20 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
   const query = await searchParams;
   const filters = parseFinancialExportFilters(query);
   const paginationParams = parsePagination(query);
+  const justPaginationParams = parsePagination({}, {
+    pageParam: "justPage",
+    pageSizeParam: "justPageSize",
+    query,
+  });
 
-  const [revenueDocuments, revenueDocumentTotal, exportRowCount, periodClosure] = await Promise.all([
+  const [
+    revenueDocuments,
+    revenueDocumentTotal,
+    exportRowCount,
+    periodClosure,
+    expenseJustificatifs,
+    expenseJustificatifTotal,
+  ] = await Promise.all([
     loadRevenuePdfExportItems(filters, {
       skip: paginationParams.skip,
       take: paginationParams.take,
@@ -47,12 +63,23 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
     countFinancialExportRows(filters, "revenues"),
     countFinancialExportRows(filters, filters.register),
     isFullCivilMonthPeriod(filters) ? loadFinancialPeriodClosureForFilters(filters) : Promise.resolve(null),
+    loadExpenseJustificatifExportItems(filters, {
+      skip: justPaginationParams.skip,
+      take: justPaginationParams.take,
+    }),
+    countExpenseJustificatifExportItems(filters),
   ]);
 
   const revenueDocumentsPagination = buildPaginationMeta(
     revenueDocumentTotal,
     paginationParams.page,
     paginationParams.pageSize
+  );
+
+  const expenseJustificatifsPagination = buildPaginationMeta(
+    expenseJustificatifTotal,
+    justPaginationParams.page,
+    justPaginationParams.pageSize
   );
 
   const canClosePeriod = hasAnyPermission(session.user.permissions, [
@@ -72,6 +99,8 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
         filters={filters}
         revenueDocuments={revenueDocuments}
         revenueDocumentsPagination={revenueDocumentsPagination}
+        expenseJustificatifs={expenseJustificatifs}
+        expenseJustificatifsPagination={expenseJustificatifsPagination}
         exportRowCount={exportRowCount}
         periodClosure={periodClosure}
         canClosePeriod={canClosePeriod}
