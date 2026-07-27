@@ -196,7 +196,7 @@
 | US-46 | Dashboard financier global temps réel | `[x]` |
 | US-47 | Vue macro Observateurs | `[x]` |
 | US-48 | Ventilation CA par activité | `[x]` |
-| US-49 | Taux d'occupation espaces studio | `[ ]` |
+| US-49 | Taux d'occupation espaces studio | `[x]` |
 | US-50 | Créances & factures impayées | `[ ]` |
 | US-51 | Comparatif performances N vs N-1 | `[ ]` |
 | US-52 | Projection trésorerie & prévisions | `[ ]` |

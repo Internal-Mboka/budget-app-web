@@ -12,6 +12,7 @@ type DashboardAnalyticsPanelProps = {
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
+  occupancyPeriod?: DashboardKpiPeriod;
   series: RevenueExpensePoint[];
 };
 
@@ -23,6 +24,7 @@ export function DashboardAnalyticsPanel({
   kpiPeriod,
   granularity,
   categoryPeriod,
+  occupancyPeriod,
   series,
 }: DashboardAnalyticsPanelProps) {
   return (
@@ -37,7 +39,12 @@ export function DashboardAnalyticsPanel({
             label: getKpiPeriodLabel(value),
           }))}
           buildHref={(value) =>
-            buildFinancialDashboardHref(basePath, { kpiPeriod: value, granularity, categoryPeriod })
+            buildFinancialDashboardHref(basePath, {
+              kpiPeriod: value,
+              granularity,
+              categoryPeriod,
+              occupancyPeriod,
+            })
           }
         />
 
@@ -50,7 +57,12 @@ export function DashboardAnalyticsPanel({
             label: getGranularityLabel(value),
           }))}
           buildHref={(value) =>
-            buildFinancialDashboardHref(basePath, { kpiPeriod, granularity: value, categoryPeriod })
+            buildFinancialDashboardHref(basePath, {
+              kpiPeriod,
+              granularity: value,
+              categoryPeriod,
+              occupancyPeriod,
+            })
           }
         />
       </div>

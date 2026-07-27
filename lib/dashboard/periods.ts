@@ -69,6 +69,13 @@ export function parseCategoryPeriod(
   return fallback;
 }
 
+export function parseOccupancyPeriod(
+  value: string | string[] | undefined,
+  fallback: DashboardKpiPeriod = "month"
+): DashboardKpiPeriod {
+  return parseCategoryPeriod(value, fallback);
+}
+
 export function getKpiPeriodRange(period: DashboardKpiPeriod, reference = new Date()) {
   switch (period) {
     case "quarter":

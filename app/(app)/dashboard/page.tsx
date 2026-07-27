@@ -1,14 +1,17 @@
 import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
 import { DashboardRevenueBreakdownPanel } from "@/components/organisms/dashboard-revenue-breakdown-panel";
+import { DashboardStudioOccupancyPanel } from "@/components/organisms/dashboard-studio-occupancy-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import { loadRevenueByCategory } from "@/lib/dashboard/load-revenue-by-category";
+import { loadStudioOccupancy } from "@/lib/dashboard/load-studio-occupancy";
 import {
   parseCategoryPeriod,
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
+  parseOccupancyPeriod,
 } from "@/lib/dashboard/periods";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
@@ -18,7 +21,12 @@ import {
 import { PERMISSIONS } from "@/lib/permissions";
 
 type DashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; categoryPeriod?: string }>;
+  searchParams: Promise<{
+    granularity?: string;
+    kpiPeriod?: string;
+    categoryPeriod?: string;
+    occupancyPeriod?: string;
+  }>;
 };
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -27,12 +35,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const granularity = parseDashboardChartGranularity(query.granularity);
   const categoryPeriod = parseCategoryPeriod(query.categoryPeriod, kpiPeriod);
+  const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, series, revenueBreakdown, pendingApprovals] = await Promise.all([
+  const [kpis, series, revenueBreakdown, studioOccupancy, pendingApprovals] = await Promise.all([
     loadDashboardKpis(kpiPeriod),
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
+    loadStudioOccupancy(occupancyPeriod),
     canApproveExpenses
       ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
           ([items, totalPending]) => ({
@@ -58,15 +68,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
+        occupancyPeriod={occupancyPeriod}
       />
 
       <DashboardRevenueBreakdownPanel
         categoryPeriod={categoryPeriod}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
+        occupancyPeriod={occupancyPeriod}
         points={revenueBreakdown.points}
         periodLabel={revenueBreakdown.periodLabel}
         total={revenueBreakdown.total}
+      />
+
+      <DashboardStudioOccupancyPanel
+        occupancyPeriod={occupancyPeriod}
+        kpiPeriod={kpiPeriod}
+        granularity={granularity}
+        categoryPeriod={categoryPeriod}
+        snapshot={studioOccupancy}
       />
 
       {pendingApprovals ? (

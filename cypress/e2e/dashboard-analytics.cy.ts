@@ -75,6 +75,35 @@ describe("Mboka Budget — SPEC 7 US-48 Ventilation CA par activité", () => {
   });
 });
 
+describe("Mboka Budget — SPEC 7 US-49 Occupation espaces studio", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("affiche l'occupation par salle avec filtre de période", () => {
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="dashboard-studio-occupancy-panel"]').should("be.visible");
+    cy.get('[data-testid="dashboard-occupancy-kpi-rate"]').should("be.visible");
+    cy.get('[data-testid="dashboard-occupancy-kpi-sold"]').should("be.visible");
+    cy.get('[data-testid="dashboard-occupancy-kpi-capacity"]').should("be.visible");
+    cy.get('[data-testid="dashboard-studio-occupancy-chart"]').should("be.visible");
+    cy.get('[data-testid="dashboard-occupancy-period-switch"]').should("be.visible");
+
+    cy.get('[data-testid="dashboard-occupancy-period-switch-quarter"]').click();
+    cy.location("search").should("include", "occupancyPeriod=quarter");
+    cy.get('[data-testid="dashboard-studio-occupancy-chart"]').should("be.visible");
+  });
+});
+
 describe("Mboka Budget — SPEC 7 US-47 Vue macro Observateur", () => {
   beforeEach(function () {
     const email = Cypress.env("OBSERVATEUR_EMAIL");

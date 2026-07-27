@@ -4,6 +4,7 @@ export type DashboardHrefParams = {
   kpiPeriod?: DashboardKpiPeriod;
   granularity?: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
+  occupancyPeriod?: DashboardKpiPeriod;
 };
 
 export type MacroHrefParams = {
@@ -33,6 +34,10 @@ export function buildFinancialDashboardHref(
     [
       "categoryPeriod",
       params.categoryPeriod && params.categoryPeriod !== "month" ? params.categoryPeriod : undefined,
+    ],
+    [
+      "occupancyPeriod",
+      params.occupancyPeriod && params.occupancyPeriod !== "month" ? params.occupancyPeriod : undefined,
     ],
   ]);
 }

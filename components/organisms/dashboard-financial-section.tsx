@@ -13,6 +13,7 @@ type DashboardFinancialSectionProps = {
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
+  occupancyPeriod?: DashboardKpiPeriod;
 };
 
 export function DashboardFinancialSection({
@@ -22,6 +23,7 @@ export function DashboardFinancialSection({
   kpiPeriod,
   granularity,
   categoryPeriod,
+  occupancyPeriod,
 }: DashboardFinancialSectionProps) {
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
 
@@ -63,6 +65,7 @@ export function DashboardFinancialSection({
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
+        occupancyPeriod={occupancyPeriod}
         series={series}
       />
     </>
