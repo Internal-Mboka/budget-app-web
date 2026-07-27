@@ -32,7 +32,7 @@ export default async function ExportsHistoryPage({ searchParams }: ExportsHistor
       <MbokaPageHeader
         eyebrow="Archives & exports"
         title="Documents exportés"
-        description="Retrouvez ici les PDF et CSV déjà produits. Téléchargez la copie enregistrée, ou regénérez le document si les chiffres ont changé depuis."
+        description="Chaque export est conservé tel qu'il a été produit. Pour un audit, téléchargez la copie archivée (date et contenu figés). La version à jour n'est proposée que pour les registres CSV et récaps de dépenses."
       />
 
       <ExportsHistoryFilters from={filters.from} to={filters.to} kind={filters.kind} />

@@ -33,3 +33,13 @@ export function getGeneratedExportFormatLabel(mimeType: string): string {
 
   return mimeType;
 }
+
+/** Bilans clôturés : snapshot figé — seule la copie archivée sert de référence audit. */
+export function exportKindUsesArchivedSnapshotOnly(kind: GeneratedExportKind): boolean {
+  return kind === "PERIOD_BALANCE_PDF" || kind === "FISCAL_PERIOD_BALANCE_PDF";
+}
+
+/** Registres et récaps : la regénération relit les données actuelles (peut différer de l'archive). */
+export function exportKindAllowsLiveRegenerate(kind: GeneratedExportKind): boolean {
+  return kind === "FINANCIAL_CSV" || kind === "EXPENSE_RECAP_PDF";
+}
