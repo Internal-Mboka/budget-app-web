@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/session";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
@@ -107,6 +108,8 @@ export async function addClientNoteAction(formData: FormData): Promise<ClientNot
     return { success: false, error: "Client introuvable." };
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   const created = await prisma.$transaction(async (tx) => {
     const note = await tx.clientNote.create({
       data: {
@@ -129,17 +132,18 @@ export async function addClientNoteAction(formData: FormData): Promise<ClientNot
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "CLIENT_NOTE_ADDED",
-        entity: "Client",
-        entityId: clientId,
-        userId: session.user.id,
-        details: {
-          clientName: client.name,
-          notePreview: content.slice(0, 120),
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "CLIENT_NOTE_ADDED",
+      entity: "Client",
+      entityId: clientId,
+      userId: session.user.id,
+      details: {
+        clientName: client.name,
+        notePreview: content.slice(0, 120),
+        performedBy: session.user.email,
       },
     });
 

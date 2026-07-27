@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { auth, signOut } from "@/lib/auth/instance";
 import { requireSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
 import {
   revokeOtherUserSessions,
   revokeUserSession,
@@ -37,17 +37,19 @@ export async function revokeSessionAction(formData: FormData): Promise<SessionAc
     return { success: false, error: "Session introuvable ou déjà révoquée." };
   }
 
-  await prisma.auditLog.create({
-    data: {
-      action: "SESSION_REVOKED",
-      entity: "Session",
-      entityId: sessionId,
-      userId: session.user.id,
-      details: {
-        revokedSessionId: sessionId,
-        isCurrentSession: sessionId === currentSessionId,
-        performedBy: session.user.email,
-      },
+  const auditMeta = await captureAuditRequestContext();
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "SESSION_REVOKED",
+    entity: "Session",
+    entityId: sessionId,
+    userId: session.user.id,
+    details: {
+      revokedSessionId: sessionId,
+      isCurrentSession: sessionId === currentSessionId,
+      performedBy: session.user.email,
     },
   });
 
@@ -70,17 +72,19 @@ export async function revokeOtherSessionsAction(): Promise<SessionActionResult> 
 
   const result = await revokeOtherUserSessions(session.user.id, currentSessionId);
 
-  await prisma.auditLog.create({
-    data: {
-      action: "SESSIONS_REVOKED_OTHERS",
-      entity: "User",
-      entityId: session.user.id,
-      userId: session.user.id,
-      details: {
-        revokedCount: result.count,
-        keptSessionId: currentSessionId,
-        performedBy: session.user.email,
-      },
+  const auditMeta = await captureAuditRequestContext();
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "SESSIONS_REVOKED_OTHERS",
+    entity: "User",
+    entityId: session.user.id,
+    userId: session.user.id,
+    details: {
+      revokedCount: result.count,
+      keptSessionId: currentSessionId,
+      performedBy: session.user.email,
     },
   });
 

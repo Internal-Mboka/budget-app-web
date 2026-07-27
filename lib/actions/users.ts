@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -60,6 +61,7 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const auditMeta = await captureAuditRequestContext();
 
   const created = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
@@ -73,17 +75,18 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "USER_CREATED",
-        entity: "User",
-        entityId: user.id,
-        userId: session.user.id,
-        details: {
-          targetEmail: user.email,
-          targetRole: role.name,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "USER_CREATED",
+      entity: "User",
+      entityId: user.id,
+      userId: session.user.id,
+      details: {
+        targetEmail: user.email,
+        targetRole: role.name,
+        performedBy: session.user.email,
       },
     });
 
@@ -150,6 +153,8 @@ export async function updateUserAction(formData: FormData): Promise<UserActionRe
     return { success: false, error: "Rôle introuvable." };
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   await prisma.$transaction(async (tx) => {
     const updated = await tx.user.update({
       where: { id: userId },
@@ -161,29 +166,30 @@ export async function updateUserAction(formData: FormData): Promise<UserActionRe
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "USER_UPDATED",
-        entity: "User",
-        entityId: updated.id,
-        userId: session.user.id,
-        details: {
-          before: {
-            firstName: existingUser.firstName,
-            lastName: existingUser.lastName,
-            email: existingUser.email,
-            role: existingUser.role.name,
-            isActive: existingUser.isActive,
-          },
-          after: {
-            firstName: updated.firstName,
-            lastName: updated.lastName,
-            email: updated.email,
-            role: role.name,
-            isActive: updated.isActive,
-          },
-          performedBy: session.user.email,
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "USER_UPDATED",
+      entity: "User",
+      entityId: updated.id,
+      userId: session.user.id,
+      details: {
+        before: {
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          email: existingUser.email,
+          role: existingUser.role.name,
+          isActive: existingUser.isActive,
         },
+        after: {
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          email: updated.email,
+          role: role.name,
+          isActive: updated.isActive,
+        },
+        performedBy: session.user.email,
       },
     });
   });
@@ -220,24 +226,28 @@ export async function toggleUserActiveAction(formData: FormData): Promise<UserAc
     return { success: false, error: "Utilisateur introuvable." };
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   await prisma.$transaction(async (tx) => {
     const updated = await tx.user.update({
       where: { id: userId },
       data: { isActive },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: isActive ? "USER_ACTIVATED" : "USER_BLOCKED",
-        entity: "User",
-        entityId: updated.id,
-        userId: session.user.id,
-        details: {
-          targetEmail: updated.email,
-          targetRole: existingUser.role.name,
-          isActive,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: isActive ? "USER_ACTIVATED" : "USER_BLOCKED",
+      entity: "User",
+      entityId: updated.id,
+      userId: session.user.id,
+      details: {
+        before: { isActive: existingUser.isActive },
+        after: { isActive },
+        targetEmail: updated.email,
+        targetRole: existingUser.role.name,
+        performedBy: session.user.email,
       },
     });
   });

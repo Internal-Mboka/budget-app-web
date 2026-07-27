@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
+import {
+  captureAuditRequestContext,
+  writeAuditLog,
+  type AuditRequestMeta,
+} from "@/lib/audit";
 import { auth, signOut } from "@/lib/auth/instance";
 import { requirePermission } from "@/lib/auth/session";
 import {
@@ -39,16 +44,17 @@ async function writePasswordAudit(
   userId: string,
   action: string,
   details: Prisma.InputJsonValue,
-  actorUserId?: string
+  actorUserId?: string,
+  requestMeta?: AuditRequestMeta | null
 ) {
-  await prisma.auditLog.create({
-    data: {
-      action,
-      entity: "User",
-      entityId: userId,
-      userId: actorUserId ?? userId,
-      details,
-    },
+  await writeAuditLog({
+    requestMeta,
+    captureRequest: false,
+    action,
+    entity: "User",
+    entityId: userId,
+    userId: actorUserId ?? userId,
+    details,
   });
 }
 
@@ -111,10 +117,12 @@ export async function changePasswordAction(formData: FormData): Promise<Password
     },
   });
 
+  const auditMeta = await captureAuditRequestContext();
+
   await writePasswordAudit(dbUser.id, "PASSWORD_CHANGED", {
     context: dbUser.mustChangePassword ? "first_login" : "self_change",
     email: dbUser.email,
-  });
+  }, undefined, auditMeta);
 
   await notifyPasswordChanged({
     email: dbUser.email,
@@ -170,9 +178,11 @@ export async function requestPasswordResetAction(
 
     await notifyPasswordResetRequested(user.email, resetUrl);
 
+    const auditMeta = await captureAuditRequestContext();
+
     await writePasswordAudit(user.id, "PASSWORD_RESET_REQUESTED", {
       email: user.email,
-    });
+    }, undefined, auditMeta);
   }
 
   return {
@@ -231,10 +241,12 @@ export async function resetPasswordWithTokenAction(
 
   await revokeAllUserSessions(resetToken.userId);
 
+  const auditMeta = await captureAuditRequestContext();
+
   await writePasswordAudit(resetToken.userId, "PASSWORD_RESET_COMPLETED", {
     email: resetToken.user.email,
     context: "forgot_reset",
-  });
+  }, undefined, auditMeta);
 
   await notifyPasswordChanged({
     email: resetToken.user.email,
@@ -289,6 +301,8 @@ export async function adminResetPasswordAction(
 
   await revokeAllUserSessions(userId);
 
+  const auditMeta = await captureAuditRequestContext();
+
   await writePasswordAudit(
     userId,
     "PASSWORD_ADMIN_RESET",
@@ -296,7 +310,8 @@ export async function adminResetPasswordAction(
       targetEmail: targetUser.email,
       performedBy: session.user.email,
     },
-    session.user.id
+    session.user.id,
+    auditMeta
   );
 
   await notifyPasswordChanged({

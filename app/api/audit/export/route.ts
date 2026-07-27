@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/get-session";
 import { hasAnyPermission, hasPermission } from "@/lib/auth/session";
-import { writeAuditLog } from "@/lib/audit";
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { loadAuditLogsForExport, parseAuditLogFilters } from "@/lib/audit/load-logs";
 import { PERMISSIONS } from "@/lib/permissions";
 
@@ -37,8 +37,11 @@ export async function GET(request: Request) {
 
   const rows = await loadAuditLogsForExport(filters);
   const exportedAt = new Date();
+  const auditMeta = await captureAuditRequestContext();
 
   await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
     action: "AUDIT_LOG_EXPORTED",
     entity: "AuditLog",
     userId: session.user.id,

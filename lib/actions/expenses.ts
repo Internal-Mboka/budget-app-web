@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
@@ -85,6 +86,8 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
   }
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const created = await prisma.$transaction(async (tx) => {
       const code = await generateTransactionCode();
 
@@ -112,41 +115,43 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "EXPENSE_CREATED",
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "EXPENSE_CREATED",
+        entity: "Transaction",
+        entityId: transaction.id,
+        userId: session.user.id,
+        details: {
+          code: transaction.code,
+          expenseCategory: transaction.expenseCategory,
+          expenseCategoryLabel: getExpenseCategoryLabel(transaction.expenseCategory!),
+          totalAmount,
+          paymentMethod: parsed.paymentMethod,
+          label: parsed.metadata.label,
+          metadata: parsed.metadata as ExpenseMetadata,
+          staffPayroll: parseStaffPayrollMetadata(parsed.metadata),
+          approvalStatus: approval.approvalStatus,
+          requiresApproval: requiresExpenseApproval(totalAmount),
+          performedBy: session.user.email,
+        },
+      });
+
+      if (approval.approvalStatus === "PENDING") {
+        await writeAuditLog({
+          tx,
+          requestMeta: auditMeta,
+          captureRequest: false,
+          action: "EXPENSE_APPROVAL_REQUESTED",
           entity: "Transaction",
           entityId: transaction.id,
           userId: session.user.id,
           details: {
             code: transaction.code,
-            expenseCategory: transaction.expenseCategory,
-            expenseCategoryLabel: getExpenseCategoryLabel(transaction.expenseCategory!),
             totalAmount,
-            paymentMethod: parsed.paymentMethod,
-            label: parsed.metadata.label,
-            metadata: parsed.metadata as ExpenseMetadata,
-            staffPayroll: parseStaffPayrollMetadata(parsed.metadata),
-            approvalStatus: approval.approvalStatus,
-            requiresApproval: requiresExpenseApproval(totalAmount),
+            expenseCategory: transaction.expenseCategory,
             performedBy: session.user.email,
-          },
-        },
-      });
-
-      if (approval.approvalStatus === "PENDING") {
-        await tx.auditLog.create({
-          data: {
-            action: "EXPENSE_APPROVAL_REQUESTED",
-            entity: "Transaction",
-            entityId: transaction.id,
-            userId: session.user.id,
-            details: {
-              code: transaction.code,
-              totalAmount,
-              expenseCategory: transaction.expenseCategory,
-              performedBy: session.user.email,
-            },
           },
         });
       }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog, buildAuditChangeDetails } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS, ROLES } from "@/lib/permissions";
@@ -63,6 +64,13 @@ export async function toggleRolePermissionAction(formData: FormData): Promise<Ro
     };
   }
 
+  const beforePermissionSlugs = role.permissions.map((p) => p.slug).sort();
+  const afterPermissionSlugs = enabled
+    ? [...beforePermissionSlugs, permissionSlug].sort()
+    : beforePermissionSlugs.filter((slug) => slug !== permissionSlug);
+
+  const auditMeta = await captureAuditRequestContext();
+
   await prisma.$transaction(async (tx) => {
     await tx.role.update({
       where: { id: roleId },
@@ -73,18 +81,23 @@ export async function toggleRolePermissionAction(formData: FormData): Promise<Ro
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: enabled ? "ROLE_PERMISSION_GRANTED" : "ROLE_PERMISSION_REVOKED",
-        entity: "Role",
-        entityId: String(roleId),
-        userId: session.user.id,
-        details: {
-          roleName: role.name,
-          permissionSlug,
-          enabled,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: enabled ? "ROLE_PERMISSION_GRANTED" : "ROLE_PERMISSION_REVOKED",
+      entity: "Role",
+      entityId: String(roleId),
+      userId: session.user.id,
+      details: {
+        ...buildAuditChangeDetails(
+          { permissionSlugs: beforePermissionSlugs },
+          { permissionSlugs: afterPermissionSlugs }
+        ),
+        roleName: role.name,
+        permissionSlug,
+        enabled,
+        performedBy: session.user.email,
       },
     });
   });

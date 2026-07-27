@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getClosingDayRange } from "@/lib/cash-closing/day-range";
@@ -105,6 +106,8 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
   }
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const closing = await prisma.$transaction(async (tx) => {
       const created = await tx.cashClosing.create({
         data: {
@@ -124,28 +127,29 @@ export async function createCashClosingAction(formData: FormData): Promise<CashC
         select: { id: true },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CASH_CLOSING_CREATED",
-          entity: "CashClosing",
-          entityId: created.id,
-          userId: session.user.id,
-          details: {
-            closingDate: closingDateInput,
-            theoreticalCash: theoretical.theoreticalCash,
-            theoreticalMobileMoney: theoretical.theoreticalMobileMoney,
-            openingCash,
-            openingMobileMoney,
-            expectedCash: expected.expectedCash,
-            expectedMobileMoney: expected.expectedMobileMoney,
-            realCash,
-            realMobileMoney,
-            gapAmount,
-            hasDiscrepancy,
-            notes: parsed.notes ?? null,
-            transactionCount: theoretical.transactionCount,
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CASH_CLOSING_CREATED",
+        entity: "CashClosing",
+        entityId: created.id,
+        userId: session.user.id,
+        details: {
+          closingDate: closingDateInput,
+          theoreticalCash: theoretical.theoreticalCash,
+          theoreticalMobileMoney: theoretical.theoreticalMobileMoney,
+          openingCash,
+          openingMobileMoney,
+          expectedCash: expected.expectedCash,
+          expectedMobileMoney: expected.expectedMobileMoney,
+          realCash,
+          realMobileMoney,
+          gapAmount,
+          hasDiscrepancy,
+          notes: parsed.notes ?? null,
+          transactionCount: theoretical.transactionCount,
+          performedBy: session.user.email,
         },
       });
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -70,16 +71,18 @@ export async function confirmTwoFactorSetupAction(
     data: { twoFactorEnabled: true },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      action: "TWO_FACTOR_ENABLED",
-      entity: "User",
-      entityId: session.user.id,
-      userId: session.user.id,
-      details: {
-        email: session.user.email,
-        role: session.user.roleName,
-      },
+  const auditMeta = await captureAuditRequestContext();
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "TWO_FACTOR_ENABLED",
+    entity: "User",
+    entityId: session.user.id,
+    userId: session.user.id,
+    details: {
+      email: session.user.email,
+      role: session.user.roleName,
     },
   });
 
@@ -120,16 +123,18 @@ export async function disableTwoFactorAction(formData: FormData): Promise<TwoFac
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      action: "TWO_FACTOR_DISABLED",
-      entity: "User",
-      entityId: session.user.id,
-      userId: session.user.id,
-      details: {
-        email: session.user.email,
-        role: session.user.roleName,
-      },
+  const auditMeta = await captureAuditRequestContext();
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "TWO_FACTOR_DISABLED",
+    entity: "User",
+    entityId: session.user.id,
+    userId: session.user.id,
+    details: {
+      email: session.user.email,
+      role: session.user.roleName,
     },
   });
 

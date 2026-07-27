@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
@@ -149,6 +150,8 @@ export async function cancelRevenueAction(formData: FormData): Promise<CancelRev
   const metadata = withRevenueCancellation(transaction.metadata, cancellation);
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const updated = await prisma.$transaction(async (tx) => {
       const saved = await tx.transaction.update({
         where: { id: transaction.id },
@@ -168,26 +171,27 @@ export async function cancelRevenueAction(formData: FormData): Promise<CancelRev
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "REVENUE_CANCELLED",
-          entity: "Transaction",
-          entityId: saved.id,
-          userId: access.session.user.id,
-          details: {
-            code: transaction.code,
-            revenueCategory: transaction.revenueCategory,
-            revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
-            reason: parsed.reason,
-            penaltyMode: parsed.penaltyMode,
-            penaltyKept: amounts.penaltyKept,
-            refundedAmount: amounts.refundedAmount,
-            previousTotalAmount: currentTotal,
-            previousPaidAmount: currentPaid,
-            clientId: transaction.clientId,
-            clientName: transaction.client?.name,
-            performedBy: access.session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "REVENUE_CANCELLED",
+        entity: "Transaction",
+        entityId: saved.id,
+        userId: access.session.user.id,
+        details: {
+          code: transaction.code,
+          revenueCategory: transaction.revenueCategory,
+          revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
+          reason: parsed.reason,
+          penaltyMode: parsed.penaltyMode,
+          penaltyKept: amounts.penaltyKept,
+          refundedAmount: amounts.refundedAmount,
+          previousTotalAmount: currentTotal,
+          previousPaidAmount: currentPaid,
+          clientId: transaction.clientId,
+          clientName: transaction.client?.name,
+          performedBy: access.session.user.email,
         },
       });
 

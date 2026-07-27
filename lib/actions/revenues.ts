@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -126,6 +127,8 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
     : metadataBase;
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const created = await prisma.$transaction(async (tx) => {
       const code = await generateTransactionCode();
 
@@ -156,25 +159,26 @@ export async function createRevenueAction(formData: FormData): Promise<CreateRev
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "REVENUE_CREATED",
-          entity: "Transaction",
-          entityId: transaction.id,
-          userId: session.user.id,
-          details: {
-            code: transaction.code,
-            revenueCategory: transaction.revenueCategory,
-            revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
-            totalAmount,
-            paidAmount,
-            remainingAmount,
-            status,
-            clientId: client.id,
-            clientName: client.name,
-            metadata: parsed.metadata as RevenueMetadata,
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "REVENUE_CREATED",
+        entity: "Transaction",
+        entityId: transaction.id,
+        userId: session.user.id,
+        details: {
+          code: transaction.code,
+          revenueCategory: transaction.revenueCategory,
+          revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
+          totalAmount,
+          paidAmount,
+          remainingAmount,
+          status,
+          clientId: client.id,
+          clientName: client.name,
+          metadata: parsed.metadata as RevenueMetadata,
+          performedBy: session.user.email,
         },
       });
 

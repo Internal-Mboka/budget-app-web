@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-import { writeAuditLog } from "./index";
-import { readAuditRequestMeta } from "./request-context";
+import { captureAuditRequestContext, writeAuditLog } from "./index";
 
 const FAILURE_WINDOW_MS = 15 * 60 * 1000;
 const FAILURE_ALERT_THRESHOLD = 3;
@@ -22,10 +21,12 @@ export async function recordFailedLoginAttempt(email: string): Promise<void> {
     return;
   }
 
-  const meta = await readAuditRequestMeta();
+  const auditMeta = await captureAuditRequestContext();
   const windowStart = new Date(Date.now() - FAILURE_WINDOW_MS);
 
   await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
     action: "LOGIN_FAILED",
     entity: "User",
     entityId: user.id,
@@ -33,11 +34,9 @@ export async function recordFailedLoginAttempt(email: string): Promise<void> {
     details: {
       email: user.email,
       reason: "invalid_credentials",
-      deviceType: meta.deviceType,
-      browser: meta.browser,
+      deviceType: auditMeta?.deviceType,
+      browser: auditMeta?.browser,
     },
-    ipAddress: meta.ipAddress,
-    userAgent: meta.userAgent,
   });
 
   const recentFailures = await prisma.auditLog.count({
@@ -66,6 +65,8 @@ export async function recordFailedLoginAttempt(email: string): Promise<void> {
   }
 
   await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
     action: "SECURITY_ALERT",
     entity: "User",
     entityId: user.id,
@@ -76,7 +77,5 @@ export async function recordFailedLoginAttempt(email: string): Promise<void> {
       email: user.email,
       message: `${recentFailures} échecs de connexion consécutifs détectés.`,
     },
-    ipAddress: meta.ipAddress,
-    userAgent: meta.userAgent,
   });
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import {
@@ -109,6 +110,8 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
       ? mergeCashAdvanceWorkflowStatus(expense.metadata, "APPROVED")
       : null;
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
@@ -121,20 +124,21 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: isCashAdvance ? "CASH_ADVANCE_APPROVED" : "EXPENSE_APPROVED",
-          entity: "Transaction",
-          entityId: expense.id,
-          userId: auth.userId,
-          details: {
-            code: expense.code,
-            expenseCategory: expense.expenseCategory,
-            expenseCategoryLabel: getExpenseCategoryLabel(expense.expenseCategory!),
-            totalAmount: decimalToNumber(expense.totalAmount),
-            label: (expense.metadata as ExpenseMetadata | null)?.label,
-            performedBy: auth.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: isCashAdvance ? "CASH_ADVANCE_APPROVED" : "EXPENSE_APPROVED",
+        entity: "Transaction",
+        entityId: expense.id,
+        userId: auth.userId,
+        details: {
+          code: expense.code,
+          expenseCategory: expense.expenseCategory,
+          expenseCategoryLabel: getExpenseCategoryLabel(expense.expenseCategory!),
+          totalAmount: decimalToNumber(expense.totalAmount),
+          label: (expense.metadata as ExpenseMetadata | null)?.label,
+          performedBy: auth.email,
         },
       });
     });
@@ -186,6 +190,8 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
       ? mergeCashAdvanceWorkflowStatus(expense.metadata, "REJECTED")
       : null;
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
@@ -198,20 +204,21 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: isCashAdvance ? "CASH_ADVANCE_REJECTED" : "EXPENSE_REJECTED",
-          entity: "Transaction",
-          entityId: expense.id,
-          userId: auth.userId,
-          details: {
-            code: expense.code,
-            expenseCategory: expense.expenseCategory,
-            expenseCategoryLabel: getExpenseCategoryLabel(expense.expenseCategory!),
-            totalAmount: decimalToNumber(expense.totalAmount),
-            label: (expense.metadata as ExpenseMetadata | null)?.label,
-            performedBy: auth.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: isCashAdvance ? "CASH_ADVANCE_REJECTED" : "EXPENSE_REJECTED",
+        entity: "Transaction",
+        entityId: expense.id,
+        userId: auth.userId,
+        details: {
+          code: expense.code,
+          expenseCategory: expense.expenseCategory,
+          expenseCategoryLabel: getExpenseCategoryLabel(expense.expenseCategory!),
+          totalAmount: decimalToNumber(expense.totalAmount),
+          label: (expense.metadata as ExpenseMetadata | null)?.label,
+          performedBy: auth.email,
         },
       });
     });

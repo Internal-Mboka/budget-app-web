@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import { headers } from "next/headers";
 
-import { writeAuditLog } from "@/lib/audit";
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { readAuditRequestMeta } from "@/lib/audit/request-context";
 import {
   createUserSession,
@@ -104,6 +104,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const meta = await readAuditRequestMeta();
 
         await writeAuditLog({
+          requestMeta: meta,
+          captureRequest: false,
           action: "USER_LOGIN",
           entity: "User",
           entityId: user.id,
@@ -116,7 +118,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
-          captureRequest: false,
         });
       } catch (error) {
         console.error("Login audit log failed", error);

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import {
@@ -92,6 +93,8 @@ export async function createCashAdvanceRequestAction(
   const metadata = mergeCashAdvanceWorkflowStatus(parsed.metadata, approval.workflowStatus);
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const created = await prisma.$transaction(async (tx) => {
       const code = await generateTransactionCode();
 
@@ -117,37 +120,39 @@ export async function createCashAdvanceRequestAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CASH_ADVANCE_REQUESTED",
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CASH_ADVANCE_REQUESTED",
+        entity: "Transaction",
+        entityId: transaction.id,
+        userId: session.user.id,
+        details: {
+          code: transaction.code,
+          expenseCategory: "AVANCE_CAISSE_NOTE_FRAIS",
+          expenseCategoryLabel: getExpenseCategoryLabel("AVANCE_CAISSE_NOTE_FRAIS"),
+          totalAmount,
+          purpose: parsed.purpose,
+          approvalStatus: approval.approvalStatus,
+          performedBy: session.user.email,
+        },
+      });
+
+      if (approval.approvalStatus === "PENDING") {
+        await writeAuditLog({
+          tx,
+          requestMeta: auditMeta,
+          captureRequest: false,
+          action: "EXPENSE_APPROVAL_REQUESTED",
           entity: "Transaction",
           entityId: transaction.id,
           userId: session.user.id,
           details: {
             code: transaction.code,
-            expenseCategory: "AVANCE_CAISSE_NOTE_FRAIS",
-            expenseCategoryLabel: getExpenseCategoryLabel("AVANCE_CAISSE_NOTE_FRAIS"),
             totalAmount,
-            purpose: parsed.purpose,
-            approvalStatus: approval.approvalStatus,
+            source: "cash_advance",
             performedBy: session.user.email,
-          },
-        },
-      });
-
-      if (approval.approvalStatus === "PENDING") {
-        await tx.auditLog.create({
-          data: {
-            action: "EXPENSE_APPROVAL_REQUESTED",
-            entity: "Transaction",
-            entityId: transaction.id,
-            userId: session.user.id,
-            details: {
-              code: transaction.code,
-              totalAmount,
-              source: "cash_advance",
-              performedBy: session.user.email,
-            },
           },
         });
       }
@@ -232,6 +237,8 @@ export async function disburseCashAdvanceAction(transactionId: string): Promise<
     const metadata = mergeCashAdvanceWorkflowStatus(expense.metadata, "DISBURSED");
     const totalAmount = roundMoney(decimalToNumber(expense.totalAmount));
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
@@ -243,18 +250,19 @@ export async function disburseCashAdvanceAction(transactionId: string): Promise<
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CASH_ADVANCE_DISBURSED",
-          entity: "Transaction",
-          entityId: expense.id,
-          userId: session.user.id,
-          details: {
-            code: expense.code,
-            totalAmount,
-            purpose: (metadata as ExpenseMetadata).label,
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CASH_ADVANCE_DISBURSED",
+        entity: "Transaction",
+        entityId: expense.id,
+        userId: session.user.id,
+        details: {
+          code: expense.code,
+          totalAmount,
+          purpose: (metadata as ExpenseMetadata).label,
+          performedBy: session.user.email,
         },
       });
     });

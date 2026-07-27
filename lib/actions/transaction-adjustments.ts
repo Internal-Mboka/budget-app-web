@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog, buildAuditChangeDetails } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
@@ -160,6 +161,8 @@ export async function createTransactionAdjustmentAction(
   };
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const created = await prisma.$transaction(async (tx) => {
       const code = await generateTransactionCode();
 
@@ -187,32 +190,43 @@ export async function createTransactionAdjustmentAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "TRANSACTION_ADJUSTMENT_CREATED",
-          entity: "Transaction",
-          entityId: adjustment.id,
-          userId: session.user.id,
-          details: {
-            adjustmentCode: adjustment.code,
-            parentTransactionId: parent.id,
-            parentCode: parent.code,
-            parentType: parent.type,
-            amount,
-            reason: parsed.reason,
-            kind: mode,
-            revenueCategory: parent.revenueCategory,
-            revenueCategoryLabel: parent.revenueCategory
-              ? getRevenueCategoryLabel(parent.revenueCategory)
-              : undefined,
-            expenseCategory: parent.expenseCategory,
-            expenseCategoryLabel: parent.expenseCategory
-              ? getExpenseCategoryLabel(parent.expenseCategory)
-              : undefined,
-            clientId: parent.clientId,
-            clientName: parent.client?.name,
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "TRANSACTION_ADJUSTMENT_CREATED",
+        entity: "Transaction",
+        entityId: adjustment.id,
+        userId: session.user.id,
+        details: {
+          ...buildAuditChangeDetails(
+            {
+              parentCode: parent.code,
+              parentTotal,
+              remainingAdjustable,
+            },
+            {
+              parentCode: parent.code,
+              adjustmentCode: adjustment.code,
+              adjustmentAmount: amount,
+              remainingAfter: roundMoney(remainingAdjustable - amount),
+            }
+          ),
+          parentTransactionId: parent.id,
+          parentType: parent.type,
+          reason: parsed.reason,
+          kind: mode,
+          revenueCategory: parent.revenueCategory,
+          revenueCategoryLabel: parent.revenueCategory
+            ? getRevenueCategoryLabel(parent.revenueCategory)
+            : undefined,
+          expenseCategory: parent.expenseCategory,
+          expenseCategoryLabel: parent.expenseCategory
+            ? getExpenseCategoryLabel(parent.expenseCategory)
+            : undefined,
+          clientId: parent.clientId,
+          clientName: parent.client?.name,
+          performedBy: session.user.email,
         },
       });
 

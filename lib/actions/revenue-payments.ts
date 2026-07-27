@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
@@ -138,6 +139,8 @@ export async function recordRevenuePaymentAction(
   const metadata = appendRevenuePaymentHistory(transaction.metadata, paymentEntry);
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const updated = await prisma.$transaction(async (tx) => {
       const saved = await tx.transaction.update({
         where: { id: transaction.id },
@@ -157,26 +160,27 @@ export async function recordRevenuePaymentAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "REVENUE_PAYMENT_RECORDED",
-          entity: "Transaction",
-          entityId: saved.id,
-          userId: access.session.user.id,
-          details: {
-            code: transaction.code,
-            revenueCategory: transaction.revenueCategory,
-            revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
-            paymentAmount: parsed.paymentAmount,
-            previousPaidAmount: currentPaid,
-            paidAmount: newPaidAmount,
-            remainingAmount,
-            status,
-            paymentMethod: parsed.paymentMethod ?? transaction.paymentMethod,
-            clientId: transaction.clientId,
-            clientName: transaction.client?.name,
-            performedBy: access.session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "REVENUE_PAYMENT_RECORDED",
+        entity: "Transaction",
+        entityId: saved.id,
+        userId: access.session.user.id,
+        details: {
+          code: transaction.code,
+          revenueCategory: transaction.revenueCategory,
+          revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
+          paymentAmount: parsed.paymentAmount,
+          previousPaidAmount: currentPaid,
+          paidAmount: newPaidAmount,
+          remainingAmount,
+          status,
+          paymentMethod: parsed.paymentMethod ?? transaction.paymentMethod,
+          clientId: transaction.clientId,
+          clientName: transaction.client?.name,
+          performedBy: access.session.user.email,
         },
       });
 
@@ -263,27 +267,30 @@ export async function markRevenueRealizedAction(
   const metadata = withRevenueRealized(transaction.metadata);
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: transaction.id },
         data: { metadata: metadata as Prisma.InputJsonValue },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "REVENUE_REALIZED",
-          entity: "Transaction",
-          entityId: transaction.id,
-          userId: access.session.user.id,
-          details: {
-            code: transaction.code,
-            revenueCategory: transaction.revenueCategory,
-            revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
-            realizedAt: String(metadata.realizedAt),
-            clientId: transaction.clientId,
-            clientName: transaction.client?.name,
-            performedBy: access.session.user.email,
-          },
+      await writeAuditLog({
+        requestMeta: auditMeta,
+        captureRequest: false,
+        tx,
+        action: "REVENUE_REALIZED",
+        entity: "Transaction",
+        entityId: transaction.id,
+        userId: access.session.user.id,
+        details: {
+          code: transaction.code,
+          revenueCategory: transaction.revenueCategory,
+          revenueCategoryLabel: getRevenueCategoryLabel(transaction.revenueCategory!),
+          realizedAt: String(metadata.realizedAt),
+          clientId: transaction.clientId,
+          clientName: transaction.client?.name,
+          performedBy: access.session.user.email,
         },
       });
     });

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import {
@@ -115,6 +116,8 @@ export async function uploadExpenseAttachmentAction(
   const bytes = Buffer.from(await file.arrayBuffer());
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await saveExpenseAttachmentFile({
         transactionId: expense.id,
@@ -137,24 +140,25 @@ export async function uploadExpenseAttachmentAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "EXPENSE_ATTACHMENT_UPLOADED",
-          entity: "Transaction",
-          entityId: expense.id,
-          userId: session.user.id,
-          details: {
-            expenseCode: expense.code,
-            attachmentId: attachment.id,
-            fileName: attachment.fileName,
-            mimeType: attachment.mimeType,
-            sizeBytes: attachment.sizeBytes,
-            url: attachment.url,
-            cashAdvanceJustified:
-              isCashAdvanceCategory(expense.expenseCategory) &&
-              parseCashAdvanceMetadata(finalMetadata)?.workflowStatus === "JUSTIFIED",
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "EXPENSE_ATTACHMENT_UPLOADED",
+        entity: "Transaction",
+        entityId: expense.id,
+        userId: session.user.id,
+        details: {
+          expenseCode: expense.code,
+          attachmentId: attachment.id,
+          fileName: attachment.fileName,
+          mimeType: attachment.mimeType,
+          sizeBytes: attachment.sizeBytes,
+          url: attachment.url,
+          cashAdvanceJustified:
+            isCashAdvanceCategory(expense.expenseCategory) &&
+            parseCashAdvanceMetadata(finalMetadata)?.workflowStatus === "JUSTIFIED",
+          performedBy: session.user.email,
         },
       });
     });

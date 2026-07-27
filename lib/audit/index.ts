@@ -2,7 +2,9 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-import { readAuditRequestMeta } from "./request-context";
+import { readAuditRequestMeta, type AuditRequestMeta } from "./request-context";
+
+export type { AuditRequestMeta };
 
 /**
  * US-45 — Les journaux d'audit sont append-only.
@@ -18,16 +20,29 @@ export type WriteAuditLogInput = {
   details?: Prisma.InputJsonValue;
   ipAddress?: string;
   userAgent?: string;
+  /** Contexte HTTP capturé en amont (recommandé dans les transactions). */
+  requestMeta?: AuditRequestMeta | null;
   captureRequest?: boolean;
   tx?: Prisma.TransactionClient;
 };
+
+export async function captureAuditRequestContext(): Promise<AuditRequestMeta | null> {
+  try {
+    return await readAuditRequestMeta();
+  } catch {
+    return null;
+  }
+}
 
 export async function writeAuditLog(input: WriteAuditLogInput) {
   const client = input.tx ?? prisma;
   let ipAddress = input.ipAddress;
   let userAgent = input.userAgent;
 
-  if (input.captureRequest !== false && !ipAddress && !userAgent) {
+  if (input.requestMeta) {
+    ipAddress = input.requestMeta.ipAddress;
+    userAgent = input.requestMeta.userAgent;
+  } else if (input.captureRequest !== false && !ipAddress && !userAgent) {
     try {
       const meta = await readAuditRequestMeta();
       ipAddress = meta.ipAddress;

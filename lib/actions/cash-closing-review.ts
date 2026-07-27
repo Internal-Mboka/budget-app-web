@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -117,6 +118,8 @@ export async function approveCashClosingReviewAction(input: {
       return { success: false, error: "Cette clôture n'est plus en attente de revue." };
     }
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.cashClosing.update({
         where: { id: closing.id },
@@ -127,17 +130,18 @@ export async function approveCashClosingReviewAction(input: {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CASH_CLOSING_REVIEW_APPROVED",
-          entity: "CashClosing",
-          entityId: closing.id,
-          userId: auth.userId,
-          details: {
-            gapAmount: decimalToNumber(closing.gapAmount),
-            reviewerInstruction: input.reviewerInstruction ?? null,
-            performedBy: auth.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CASH_CLOSING_REVIEW_APPROVED",
+        entity: "CashClosing",
+        entityId: closing.id,
+        userId: auth.userId,
+        details: {
+          gapAmount: decimalToNumber(closing.gapAmount),
+          reviewerInstruction: input.reviewerInstruction ?? null,
+          performedBy: auth.email,
         },
       });
     });
@@ -188,6 +192,8 @@ export async function resolveCashClosingReviewAction(input: {
       return { success: false, error: "Cette clôture n'est plus en attente de revue." };
     }
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.cashClosing.update({
         where: { id: closing.id },
@@ -198,17 +204,18 @@ export async function resolveCashClosingReviewAction(input: {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CASH_CLOSING_REVIEW_RESOLVED",
-          entity: "CashClosing",
-          entityId: closing.id,
-          userId: auth.userId,
-          details: {
-            gapAmount: decimalToNumber(closing.gapAmount),
-            reviewerInstruction: input.reviewerInstruction,
-            performedBy: auth.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CASH_CLOSING_REVIEW_RESOLVED",
+        entity: "CashClosing",
+        entityId: closing.id,
+        userId: auth.userId,
+        details: {
+          gapAmount: decimalToNumber(closing.gapAmount),
+          reviewerInstruction: input.reviewerInstruction,
+          performedBy: auth.email,
         },
       });
     });

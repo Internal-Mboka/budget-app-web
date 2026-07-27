@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { resolveExpenseApprovalOnCreate, requiresExpenseApproval } from "@/lib/expenses/approval";
@@ -69,6 +70,8 @@ export async function createRecurringExpenseTemplateAction(
   const totalAmount = roundMoney(parsed.totalAmount);
 
   try {
+    const auditMeta = await captureAuditRequestContext();
+
     const created = await prisma.$transaction(async (tx) => {
       const code = await generateTransactionCode();
 
@@ -101,22 +104,23 @@ export async function createRecurringExpenseTemplateAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "RECURRING_EXPENSE_TEMPLATE_CREATED",
-          entity: "Transaction",
-          entityId: transaction.id,
-          userId: session.user.id,
-          details: {
-            code: transaction.code,
-            expenseCategory: parsed.expenseCategory,
-            expenseCategoryLabel: getExpenseCategoryLabel(parsed.expenseCategory),
-            recurringPeriod: parsed.recurringPeriod,
-            totalAmount,
-            nextDueDate: parsed.nextDueDate,
-            label: parsed.label,
-            performedBy: session.user.email,
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "RECURRING_EXPENSE_TEMPLATE_CREATED",
+        entity: "Transaction",
+        entityId: transaction.id,
+        userId: session.user.id,
+        details: {
+          code: transaction.code,
+          expenseCategory: parsed.expenseCategory,
+          expenseCategoryLabel: getExpenseCategoryLabel(parsed.expenseCategory),
+          recurringPeriod: parsed.recurringPeriod,
+          totalAmount,
+          nextDueDate: parsed.nextDueDate,
+          label: parsed.label,
+          performedBy: session.user.email,
         },
       });
 
@@ -192,6 +196,8 @@ export async function confirmRecurringDueAction(transactionId: string): Promise<
     const creatorCanApprove = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
     const approval = resolveExpenseApprovalOnCreate(totalAmount, creatorCanApprove, session.user.id);
 
+    const auditMeta = await captureAuditRequestContext();
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: expense.id },
@@ -204,38 +210,40 @@ export async function confirmRecurringDueAction(transactionId: string): Promise<
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "RECURRING_EXPENSE_DISBURSED",
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "RECURRING_EXPENSE_DISBURSED",
+        entity: "Transaction",
+        entityId: expense.id,
+        userId: session.user.id,
+        details: {
+          code: expense.code,
+          templateCode: recurringDue.templateCode,
+          dueDate: recurringDue.dueDate,
+          periodLabel: recurringDue.periodLabel,
+          totalAmount,
+          approvalStatus: approval.approvalStatus,
+          requiresApproval: requiresExpenseApproval(totalAmount),
+          performedBy: session.user.email,
+        },
+      });
+
+      if (approval.approvalStatus === "PENDING") {
+        await writeAuditLog({
+          tx,
+          requestMeta: auditMeta,
+          captureRequest: false,
+          action: "EXPENSE_APPROVAL_REQUESTED",
           entity: "Transaction",
           entityId: expense.id,
           userId: session.user.id,
           details: {
             code: expense.code,
-            templateCode: recurringDue.templateCode,
-            dueDate: recurringDue.dueDate,
-            periodLabel: recurringDue.periodLabel,
             totalAmount,
-            approvalStatus: approval.approvalStatus,
-            requiresApproval: requiresExpenseApproval(totalAmount),
+            source: "recurring_due",
             performedBy: session.user.email,
-          },
-        },
-      });
-
-      if (approval.approvalStatus === "PENDING") {
-        await tx.auditLog.create({
-          data: {
-            action: "EXPENSE_APPROVAL_REQUESTED",
-            entity: "Transaction",
-            entityId: expense.id,
-            userId: session.user.id,
-            details: {
-              code: expense.code,
-              totalAmount,
-              source: "recurring_due",
-              performedBy: session.user.email,
-            },
           },
         });
       }

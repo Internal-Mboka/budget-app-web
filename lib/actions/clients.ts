@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { captureAuditRequestContext, writeAuditLog, buildAuditChangeDetails } from "@/lib/audit";
 import { requirePermission, requireSession, hasAnyPermission } from "@/lib/auth/session";
 import { parseClientsImportCsv } from "@/lib/clients/import";
 import {
@@ -102,6 +103,8 @@ export async function createClientAction(formData: FormData): Promise<ClientActi
     }
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   const created = await prisma.$transaction(async (tx) => {
     const client = await tx.client.create({
       data: {
@@ -112,19 +115,20 @@ export async function createClientAction(formData: FormData): Promise<ClientActi
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "CLIENT_CREATED",
-        entity: "Client",
-        entityId: client.id,
-        userId: session.user.id,
-        details: {
-          name: client.name,
-          category: client.category,
-          phone: client.phone,
-          email: client.email,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "CLIENT_CREATED",
+      entity: "Client",
+      entityId: client.id,
+      userId: session.user.id,
+      details: {
+        name: client.name,
+        category: client.category,
+        phone: client.phone,
+        email: client.email,
+        performedBy: session.user.email,
       },
     });
 
@@ -188,12 +192,20 @@ export async function updateClientAction(formData: FormData): Promise<ClientActi
 
   const { id, name, category, phone, email, address, notes } = parsed.data;
 
-  const existing = await prisma.client.findUnique({
+  const existingClient = await prisma.client.findUnique({
     where: { id },
-    select: { id: true },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      phone: true,
+      email: true,
+      address: true,
+      notes: true,
+    },
   });
 
-  if (!existing) {
+  if (!existingClient) {
     return { success: false, error: "Client introuvable." };
   }
 
@@ -217,6 +229,8 @@ export async function updateClientAction(formData: FormData): Promise<ClientActi
     }
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   const updated = await prisma.$transaction(async (tx) => {
     const client = await tx.client.update({
       where: { id },
@@ -230,22 +244,33 @@ export async function updateClientAction(formData: FormData): Promise<ClientActi
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "CLIENT_UPDATED",
-        entity: "Client",
-        entityId: client.id,
-        userId: session.user.id,
-        details: {
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "CLIENT_UPDATED",
+      entity: "Client",
+      entityId: client.id,
+      userId: session.user.id,
+      details: buildAuditChangeDetails(
+        {
+          name: existingClient.name,
+          category: existingClient.category,
+          phone: existingClient.phone,
+          email: existingClient.email,
+          address: existingClient.address,
+          notes: existingClient.notes,
+        },
+        {
           name: client.name,
           category: client.category,
           phone: client.phone,
           email: client.email,
           address: client.address,
           notes: client.notes,
-          performedBy: session.user.email,
         },
-      },
+        session.user.email
+      ),
     });
 
     return client;
@@ -334,6 +359,7 @@ export async function importClientsAction(formData: FormData): Promise<ImportCli
   let created = 0;
   let skipped = 0;
   const importErrors = [...errors];
+  const auditMeta = await captureAuditRequestContext();
 
   for (const row of rows) {
     const duplicateByName = await findDuplicateClientByName(row.name);
@@ -366,18 +392,19 @@ export async function importClientsAction(formData: FormData): Promise<ImportCli
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          action: "CLIENT_IMPORTED",
-          entity: "Client",
-          entityId: client.id,
-          userId: session.user.id,
-          details: {
-            name: client.name,
-            category: client.category,
-            performedBy: session.user.email,
-            source: "csv-import",
-          },
+      await writeAuditLog({
+        tx,
+        requestMeta: auditMeta,
+        captureRequest: false,
+        action: "CLIENT_IMPORTED",
+        entity: "Client",
+        entityId: client.id,
+        userId: session.user.id,
+        details: {
+          name: client.name,
+          category: client.category,
+          performedBy: session.user.email,
+          source: "csv-import",
         },
       });
     });
@@ -437,6 +464,8 @@ export async function addClientTagAction(formData: FormData): Promise<ClientTags
 
   const nextTags = mergeUniqueTags(client.tags, tag);
 
+  const auditMeta = await captureAuditRequestContext();
+
   const updated = await prisma.$transaction(async (tx) => {
     const saved = await tx.client.update({
       where: { id: clientId },
@@ -444,17 +473,19 @@ export async function addClientTagAction(formData: FormData): Promise<ClientTags
       select: { tags: true },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "CLIENT_TAG_ADDED",
-        entity: "Client",
-        entityId: clientId,
-        userId: session.user.id,
-        details: {
-          clientName: client.name,
-          tag,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "CLIENT_TAG_ADDED",
+      entity: "Client",
+      entityId: clientId,
+      userId: session.user.id,
+      details: {
+        ...buildAuditChangeDetails({ tags: client.tags }, { tags: nextTags }),
+        clientName: client.name,
+        tag,
+        performedBy: session.user.email,
       },
     });
 
@@ -496,6 +527,8 @@ export async function removeClientTagAction(formData: FormData): Promise<ClientT
     return { success: false, error: "Tag introuvable sur ce client." };
   }
 
+  const auditMeta = await captureAuditRequestContext();
+
   const updated = await prisma.$transaction(async (tx) => {
     const saved = await tx.client.update({
       where: { id: clientId },
@@ -503,17 +536,19 @@ export async function removeClientTagAction(formData: FormData): Promise<ClientT
       select: { tags: true },
     });
 
-    await tx.auditLog.create({
-      data: {
-        action: "CLIENT_TAG_REMOVED",
-        entity: "Client",
-        entityId: clientId,
-        userId: session.user.id,
-        details: {
-          clientName: client.name,
-          tag,
-          performedBy: session.user.email,
-        },
+    await writeAuditLog({
+      tx,
+      requestMeta: auditMeta,
+      captureRequest: false,
+      action: "CLIENT_TAG_REMOVED",
+      entity: "Client",
+      entityId: clientId,
+      userId: session.user.id,
+      details: {
+        ...buildAuditChangeDetails({ tags: client.tags }, { tags: nextTags }),
+        clientName: client.name,
+        tag,
+        performedBy: session.user.email,
       },
     });
 

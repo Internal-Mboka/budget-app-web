@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
 
 import { revokeCurrentSessionOnLogout } from "@/lib/actions/sessions";
+import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { recordFailedLoginAttempt } from "@/lib/audit/failed-login";
 import { signIn, signOut } from "@/lib/auth/instance";
 import { validateUserCredentials } from "@/lib/auth/credentials";
@@ -139,7 +140,11 @@ export async function completeTwoFactorLoginAction(
       return { error: "challenge-expired" };
     }
 
+    const auditMeta = await captureAuditRequestContext();
+
     await writeAuditLog({
+      requestMeta: auditMeta,
+      captureRequest: false,
       action: "USER_LOGIN_2FA",
       entity: "User",
       entityId: user.id,
