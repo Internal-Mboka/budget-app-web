@@ -32,7 +32,7 @@ export function ExportsHistoryFilters({ from, to, kind }: ExportsHistoryFiltersP
     >
       <div className="flex items-center gap-2">
         <Filter className="size-4 text-sky-600 dark:text-sky-400" />
-        <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Filtres</p>
+        <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Affiner la liste</p>
       </div>
 
       <form
@@ -69,14 +69,14 @@ export function ExportsHistoryFilters({ from, to, kind }: ExportsHistoryFiltersP
           </Field>
           <Field>
             <FieldLabel htmlFor="kind" className={mbokaLabelClassName}>
-              Type de document
+              Type de fichier
             </FieldLabel>
             <MbokaSelect
               id="kind"
               name="kind"
               defaultValue={kind ?? "all"}
               options={[
-                { value: "all", label: "Tous les exports" },
+                { value: "all", label: "Tous les documents" },
                 ...GENERATED_EXPORT_KINDS.map((entry) => ({
                   value: entry,
                   label: getGeneratedExportKindLabel(entry),

@@ -18,7 +18,7 @@ describe("Mboka Budget — SPEC 8 US-59 Historique exports", () => {
     cy.get('[data-testid="exports-history-link"]').click();
     cy.location("pathname").should("eq", "/exports/history");
     cy.get('[data-testid="exports-history-filters"]').should("be.visible");
-    cy.get('[data-testid="exports-history-table"]').should("exist");
+    cy.get('[data-testid="exports-history-empty"], [data-testid="exports-history-table"]').should("exist");
   });
 
   it("archive un export CSV et l'affiche dans l'historique", () => {

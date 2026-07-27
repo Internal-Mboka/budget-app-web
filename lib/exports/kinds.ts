@@ -10,13 +10,13 @@ export const GENERATED_EXPORT_KINDS: GeneratedExportKind[] = [
 export function getGeneratedExportKindLabel(kind: GeneratedExportKind): string {
   switch (kind) {
     case "FINANCIAL_CSV":
-      return "Registre comptable (CSV)";
+      return "Registre comptable";
     case "EXPENSE_RECAP_PDF":
-      return "Récapitulatif dépenses (PDF)";
+      return "Récapitulatif des dépenses";
     case "PERIOD_BALANCE_PDF":
-      return "Bilan mensuel (PDF)";
+      return "Bilan mensuel";
     case "FISCAL_PERIOD_BALANCE_PDF":
-      return "Bilan trimestriel (PDF)";
+      return "Bilan trimestriel";
     default:
       return kind;
   }

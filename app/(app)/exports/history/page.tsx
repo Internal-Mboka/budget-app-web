@@ -31,13 +31,16 @@ export default async function ExportsHistoryPage({ searchParams }: ExportsHistor
 
       <MbokaPageHeader
         eyebrow="Archives & exports"
-        title="Historique des exports"
-        description="Retrouvez les PDF et CSV déjà générés, avec leur taille et date de création. Téléchargez l'archive ou régénérez le document à partir des données source."
+        title="Documents exportés"
+        description="Retrouvez ici les PDF et CSV déjà produits. Téléchargez la copie enregistrée, ou regénérez le document si les chiffres ont changé depuis."
       />
 
       <ExportsHistoryFilters from={filters.from} to={filters.to} kind={filters.kind} />
 
-      <ExportsHistoryTable exports={exports} />
+      <ExportsHistoryTable
+        exports={exports}
+        hasActiveFilters={Boolean(filters.from || filters.to || filters.kind)}
+      />
     </div>
   );
 }

@@ -80,14 +80,14 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
       <MbokaPageHeader
         eyebrow="Archives & exports"
         title="Exports comptables"
-        description="Exportez vos registres comptables et vos documents PDF pour la période de votre choix."
+        description="Choisissez une période, puis exportez vos registres et bilans en CSV ou PDF."
         descriptionAside={
           <Link
             href="/exports/history"
             className="text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
             data-testid="exports-history-link"
           >
-            Voir l&apos;historique des exports
+            Voir les documents exportés
           </Link>
         }
       />

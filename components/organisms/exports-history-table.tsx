@@ -2,7 +2,8 @@
 
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, FileArchive, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 type ExportsHistoryTableProps = {
   exports: ExportHistoryItem[];
+  hasActiveFilters?: boolean;
 };
 
 function CreatedAtLabel({ isoDate }: { isoDate: string }) {
@@ -31,18 +33,42 @@ function CreatedAtLabel({ isoDate }: { isoDate: string }) {
   return <span suppressHydrationWarning>{label || "—"}</span>;
 }
 
-export function ExportsHistoryTable({ exports: items }: ExportsHistoryTableProps) {
+export function ExportsHistoryTable({ exports: items, hasActiveFilters = false }: ExportsHistoryTableProps) {
   if (items.length === 0) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="exports-history-empty">
-        Aucun export archivé pour ces filtres. Générez un document depuis la page Exports pour alimenter
-        l&apos;historique.
-      </p>
+      <section className="space-y-3" data-testid="exports-history-table">
+        <div
+          className={cn(
+            mbokaPanelClassName,
+            "mx-auto flex max-w-lg flex-col items-center justify-center px-6 py-16 text-center"
+          )}
+          data-testid="exports-history-empty"
+        >
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-sky-50 text-[#10579F] dark:bg-slate-800 dark:text-sky-300">
+            <FileArchive className="size-7" />
+          </div>
+          <p className="mt-4 text-base font-semibold text-[#10579F] dark:text-sky-50">
+            {hasActiveFilters ? "Aucun document ne correspond" : "Rien à afficher pour l'instant"}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+            {hasActiveFilters
+              ? "Élargissez la période ou changez le type de fichier, puis réessayez."
+              : "Dès que vous exportez un registre ou un PDF, il apparaît ici pour être retéléchargé plus tard."}
+          </p>
+          <Link
+            href="/exports"
+            className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+          >
+            Aller créer un export
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </section>
     );
   }
 
   const countLabel =
-    items.length === 1 ? "1 document archivé" : `${items.length} documents archivés`;
+    items.length === 1 ? "1 document enregistré" : `${items.length} documents enregistrés`;
 
   return (
     <section className="space-y-3" data-testid="exports-history-table">
@@ -80,9 +106,10 @@ export function ExportsHistoryTable({ exports: items }: ExportsHistoryTableProps
                   href={`/api/exports/${item.id}/download?regenerate=1`}
                   className={cn(mbokaButtonOutlineClassName, "min-w-36")}
                   data-testid={`export-history-regenerate-${item.id}`}
+                  title="Produit une nouvelle version du document avec les chiffres actuels"
                 >
                   <RefreshCw className="size-4" />
-                  Régénérer
+                  Regénérer
                 </a>
               </div>
             </div>
