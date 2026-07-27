@@ -294,8 +294,8 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 | US-68 | Toggle Période / Global sur les cartes KPI principales | `[x]` |
 | US-69 | Carte « Encaissements réels sur la période » | `[x]` |
 | US-70 | Mode comptable : Engagement vs Encaissement | `[x]` |
-| US-71 | Propagation mode comptable aux graphiques & comparatifs N/N-1 | `[ ]` |
-| US-72 | KPI « Solde caisse ouvert » (clôture + mouvements du jour) | `[ ]` |
+| US-71 | Propagation mode comptable aux graphiques & comparatifs N/N-1 | `[x]` |
+| US-72 | KPI « Solde caisse ouvert » (clôture + mouvements du jour) | `[x]` |
 | US-73 | Trésorerie globale ventilée par canal de paiement | `[ ]` |
 
 <!-- US-67 : Aujourd'hui CA/Dépenses = période (createdAt) alors que Trésorerie/Créances = global → confusion UX (capture dashboard juillet 2026). Deux sous-grilles ou séparateurs visuels dans `dashboard-financial-section` sans changer les calculs. -->

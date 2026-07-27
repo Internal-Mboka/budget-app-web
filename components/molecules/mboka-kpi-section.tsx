@@ -48,7 +48,8 @@ export function MbokaKpiBoard({
             </p>
             <p>
               <strong className="font-medium text-slate-700 dark:text-slate-200">Position trésorerie</strong> — solde net
-              encaissé et créances ouvertes <em>à l&apos;instant T</em>, indépendamment de la période filtrée.
+              encaissé, créances ouvertes et solde caisse ouvert (espèces + Mobile Money) <em>à l&apos;instant T</em>,
+              indépendamment de la période filtrée.
             </p>
           </MbokaInfoPopover>
         </div>

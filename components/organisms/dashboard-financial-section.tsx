@@ -137,6 +137,15 @@ export function DashboardFinancialSection({
             size="stat"
             testId="dashboard-kpi-receivables"
           />
+          <MbokaKpiCard
+            label="Solde caisse ouvert"
+            value={kpis.openCashBalance}
+            hint={kpis.openCashBalanceHint}
+            scope="global"
+            size="stat"
+            testId="dashboard-kpi-open-cash-balance"
+            className="sm:col-span-2"
+          />
         </MbokaKpiBoardGroup>
       </MbokaKpiBoard>
 
