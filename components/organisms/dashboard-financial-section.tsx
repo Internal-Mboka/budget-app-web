@@ -2,7 +2,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
-import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-card";
+import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
+import { MbokaKpiSection } from "@/components/molecules/mboka-kpi-section";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
@@ -35,6 +36,7 @@ export function DashboardFinancialSection({
   projectionScenario,
 }: DashboardFinancialSectionProps) {
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
+  const periodHint = kpis.periodLabel;
 
   return (
     <>
@@ -42,42 +44,59 @@ export function DashboardFinancialSection({
         Données calculées au {updatedLabel}
       </p>
 
-      <MbokaKpiGrid>
-        <MbokaKpiCard
-          label="Chiffre d'affaires"
-          value={kpis.revenueTotal}
-          hint={kpis.periodLabel}
-          testId="dashboard-kpi-revenue"
-          delta={{
-            percentChange: comparison.revenue.percentChange,
-            comparisonLabel: comparison.revenue.comparisonLabel,
-            polarity: "higher-is-better",
-          }}
-        />
-        <MbokaKpiCard
-          label="Dépenses totales"
-          value={kpis.expenseTotal}
-          hint={kpis.periodLabel}
-          testId="dashboard-kpi-expenses"
-          delta={{
-            percentChange: comparison.expenses.percentChange,
-            comparisonLabel: comparison.expenses.comparisonLabel,
-            polarity: "lower-is-better",
-          }}
-        />
-        <MbokaKpiCard
-          label="Trésorerie nette"
-          value={kpis.netTreasury}
-          hint="Encaissements − décaissements (global)"
-          testId="dashboard-kpi-treasury"
-        />
-        <MbokaKpiCard
-          label="Créances restant dues"
-          value={kpis.receivables}
-          hint="Soldes impayés clients"
-          testId="dashboard-kpi-receivables"
-        />
-      </MbokaKpiGrid>
+      <div className="space-y-6" data-testid="dashboard-kpi-grid">
+        <MbokaKpiSection
+          title="Activité enregistrée"
+          description={`Montants saisis sur la période sélectionnée (${periodHint.toLowerCase()}). Basés sur la date d'enregistrement des transactions.`}
+          testId="dashboard-kpi-section-activity"
+        >
+          <MbokaKpiCard
+            label="Chiffre d'affaires"
+            value={kpis.revenueTotal}
+            hint={periodHint}
+            scope="period"
+            testId="dashboard-kpi-revenue"
+            delta={{
+              percentChange: comparison.revenue.percentChange,
+              comparisonLabel: comparison.revenue.comparisonLabel,
+              polarity: "higher-is-better",
+            }}
+          />
+          <MbokaKpiCard
+            label="Dépenses totales"
+            value={kpis.expenseTotal}
+            hint={periodHint}
+            scope="period"
+            testId="dashboard-kpi-expenses"
+            delta={{
+              percentChange: comparison.expenses.percentChange,
+              comparisonLabel: comparison.expenses.comparisonLabel,
+              polarity: "lower-is-better",
+            }}
+          />
+        </MbokaKpiSection>
+
+        <MbokaKpiSection
+          title="Position de trésorerie"
+          description="Instantané global — toutes périodes confondues. Reflète la trésorerie réellement encaissée et les créances ouvertes."
+          testId="dashboard-kpi-section-position"
+        >
+          <MbokaKpiCard
+            label="Trésorerie nette"
+            value={kpis.netTreasury}
+            hint="Encaissements payés − décaissements payés"
+            scope="global"
+            testId="dashboard-kpi-treasury"
+          />
+          <MbokaKpiCard
+            label="Créances restant dues"
+            value={kpis.receivables}
+            hint="Soldes impayés clients"
+            scope="global"
+            testId="dashboard-kpi-receivables"
+          />
+        </MbokaKpiSection>
+      </div>
 
       <DashboardAnalyticsPanel
         basePath={basePath}

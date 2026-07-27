@@ -9,6 +9,7 @@ type MbokaKpiCardProps = {
   label: string;
   value: number;
   hint?: string;
+  scope?: "period" | "global";
   delta?: KpiTrendDelta;
   testId?: string;
   className?: string;
@@ -19,6 +20,7 @@ export function MbokaKpiCard({
   label,
   value,
   hint,
+  scope,
   delta,
   testId,
   className,
@@ -41,7 +43,22 @@ export function MbokaKpiCard({
       )}
       data-testid={testId}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+        {scope ? (
+          <span
+            className={cn(
+              "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              scope === "period"
+                ? "bg-sky-100 text-[#10579F] dark:bg-sky-950/60 dark:text-sky-200"
+                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            )}
+            data-testid={testId ? `${testId}-scope` : undefined}
+          >
+            {scope === "period" ? "Période" : "Global"}
+          </span>
+        ) : null}
+      </div>
       <p className="mt-3 text-2xl font-semibold text-[#10579F] dark:text-sky-50">{displayValue}</p>
       {delta ? <MbokaKpiTrend delta={delta} testId={testId ? `${testId}-delta` : undefined} /> : null}
       {hint ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p> : null}

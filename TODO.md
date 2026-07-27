@@ -290,7 +290,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-67 | Segmentation visuelle KPI : « Activité (période) » vs « Position (global) » | `[ ]` |
+| US-67 | Segmentation visuelle KPI : « Activité (période) » vs « Position (global) » | `[x]` |
 | US-68 | Toggle Période / Global sur les cartes KPI principales | `[ ]` |
 | US-69 | Carte « Encaissements réels sur la période » | `[ ]` |
 | US-70 | Mode comptable : Engagement vs Encaissement | `[ ]` |
