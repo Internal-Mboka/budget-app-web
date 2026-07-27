@@ -4,16 +4,39 @@ import Link from "next/link";
 import { formatFiscalPeriodRange } from "@/lib/fiscal-period/format";
 import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
 import { getFiscalPeriodStatusLabel } from "@/lib/fiscal-period/status";
+import {
+  canApproveFiscalPeriodClosingAsPdg,
+  canVisaFiscalPeriodClosingAsAccountant,
+} from "@/lib/fiscal-period/closing-workflow";
+import type { RoleName } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 type FiscalPeriodClosingBannerProps = {
   period: FiscalPeriodRecord;
   showClosingLink?: boolean;
+  roleName?: RoleName;
 };
+
+function getClosingBannerLinkLabel(roleName?: RoleName): string {
+  if (!roleName) {
+    return "Voir la clôture";
+  }
+
+  if (canApproveFiscalPeriodClosingAsPdg(roleName)) {
+    return "Valider la clôture";
+  }
+
+  if (canVisaFiscalPeriodClosingAsAccountant(roleName)) {
+    return "Traiter la clôture";
+  }
+
+  return "Voir la clôture";
+}
 
 export function FiscalPeriodClosingBanner({
   period,
   showClosingLink = false,
+  roleName,
 }: FiscalPeriodClosingBannerProps) {
   const rangeLabel = formatFiscalPeriodRange(period.startDate, period.endDate);
   const statusLabel = getFiscalPeriodStatusLabel(period.status);
@@ -45,7 +68,7 @@ export function FiscalPeriodClosingBanner({
           className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-[#10579F] px-4 py-2 text-sm font-medium text-white no-underline transition hover:bg-[#0d4a87]"
           data-testid="fiscal-period-closing-banner-link"
         >
-          Valider la clôture
+          {getClosingBannerLinkLabel(roleName)}
         </Link>
       ) : null}
     </div>

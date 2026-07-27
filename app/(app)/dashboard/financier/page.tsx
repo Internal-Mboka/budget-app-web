@@ -36,6 +36,7 @@ import {
 } from "@/lib/cash-closing/load-pending-reviews";
 import { countPendingRecurringDues, loadPendingRecurringDues } from "@/lib/expenses/load-recurring-dues";
 import { PERMISSIONS } from "@/lib/permissions";
+import { loadActiveFiscalPeriod } from "@/lib/fiscal-period/load-fiscal-periods";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +58,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
+  const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews, activeFiscalPeriod] =
     await Promise.all([
       loadDashboardKpis(kpiPeriod, undefined, kpiScope, accountingMode),
       loadDashboardKpiComparison(kpiPeriod, undefined, accountingMode),
@@ -78,6 +79,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
             ([items, totalPending]) => ({ items, totalPending })
           )
         : Promise.resolve(null),
+      loadActiveFiscalPeriod(),
     ]);
 
   const series = enrichRevenueExpenseSeriesWithComparison(rawSeries);
@@ -101,6 +103,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         granularity={granularity}
         projectionPeriod={projectionPeriod}
         projectionScenario={projectionScenario}
+        activeFiscalPeriod={activeFiscalPeriod}
       />
 
       <DashboardTreasuryProjectionPanel

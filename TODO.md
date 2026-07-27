@@ -327,7 +327,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 | US-77 | Passage automatique OPEN → CLOSING à l'échéance trimestrielle | `[x]` |
 | US-78 | Workflow validation clôture (PDG + Comptable) & notifications | `[x]` |
 | US-79 | Ouverture automatique T+1 après validation & report créances | `[x]` |
-| US-80 | Affichage dashboard « Trimestre comptable Mboka » | `[ ]` |
+| US-80 | Affichage dashboard « Trimestre comptable Mboka » | `[x]` |
 
 <!-- US-74 : Tables suggérées — `FiscalPeriod` (id, label T1/T2…, startDate, endDate, status: PENDING_SETUP|OPEN|CLOSING|CLOSED, closedAt, validatedByPdgId, validatedByAccountantId, openingBalanceCash?, openingBalanceMobile?, openingBalanceBank?, skipOpeningBalance boolean). Index sur status + dates. Migration additive. -->
 

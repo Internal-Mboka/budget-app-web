@@ -35,6 +35,7 @@ import {
   loadPendingExpenseApprovals,
 } from "@/lib/expenses/load-pending-approvals";
 import { PERMISSIONS } from "@/lib/permissions";
+import { loadActiveFiscalPeriod } from "@/lib/fiscal-period/load-fiscal-periods";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -63,7 +64,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const projectionScenario = parseProjectionScenario(query.projectionScenario);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
+  const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, activeFiscalPeriod] =
     await Promise.all([
     loadDashboardKpis(kpiPeriod, undefined, kpiScope, accountingMode),
     loadDashboardKpiComparison(kpiPeriod, undefined, accountingMode),
@@ -82,6 +83,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           })
         )
       : Promise.resolve(null),
+    loadActiveFiscalPeriod(),
   ]);
 
   const series = enrichRevenueExpenseSeriesWithComparison(rawSeries);
@@ -109,6 +111,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         occupancyPeriod={occupancyPeriod}
         projectionPeriod={projectionPeriod}
         projectionScenario={projectionScenario}
+        activeFiscalPeriod={activeFiscalPeriod}
       />
 
       <DashboardRevenueBreakdownPanel

@@ -125,7 +125,9 @@ export function FiscalPeriodClosingPanel({
             {totalPending > 0
               ? `${totalPending} trimestre${totalPending > 1 ? "s" : ""} en attente de validation.`
               : "Aucun trimestre en clôture pour le moment."}
-            {pdgSolo ? " Mode PDG seul activé (visa comptable optionnel)." : " Double validation : Comptable puis PDG."}
+            {pdgSolo
+              ? " Mode PDG seul activé (visa comptable optionnel)."
+              : " Validation en deux temps : visa comptable, puis approbation du PDG."}
           </p>
         </div>
       </div>

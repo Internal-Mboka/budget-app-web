@@ -3,6 +3,7 @@ import { fr } from "date-fns/locale";
 
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
 import { DashboardKpiScopeSwitch } from "@/components/molecules/dashboard-kpi-scope-switch";
+import { FiscalPeriodCurrentBanner } from "@/components/molecules/fiscal-period-current-banner";
 import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
 import { MbokaKpiBoard, MbokaKpiBoardGroupLabel } from "@/components/molecules/mboka-kpi-section";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
@@ -12,6 +13,7 @@ import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
 import type { DashboardKpiScope } from "@/lib/dashboard/kpi-scope";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
+import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
 
 type DashboardFinancialSectionProps = {
   basePath: "/dashboard" | "/dashboard/financier";
@@ -26,6 +28,7 @@ type DashboardFinancialSectionProps = {
   occupancyPeriod?: DashboardKpiPeriod;
   projectionPeriod?: DashboardKpiPeriod;
   projectionScenario?: TreasuryProjectionScenario;
+  activeFiscalPeriod?: FiscalPeriodRecord | null;
 };
 
 export function DashboardFinancialSection({
@@ -41,6 +44,7 @@ export function DashboardFinancialSection({
   occupancyPeriod,
   projectionPeriod,
   projectionScenario,
+  activeFiscalPeriod,
 }: DashboardFinancialSectionProps) {
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
   const activityScope = kpiScope === "global" ? "global" : "period";
@@ -49,6 +53,8 @@ export function DashboardFinancialSection({
 
   return (
     <>
+      {activeFiscalPeriod ? <FiscalPeriodCurrentBanner period={activeFiscalPeriod} /> : null}
+
       <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="dashboard-updated-at">
         Données calculées au {updatedLabel}
       </p>

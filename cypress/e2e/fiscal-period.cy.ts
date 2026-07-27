@@ -42,4 +42,14 @@ describe("Mboka Budget — SPEC 10 US-75 Onboarding trimestre comptable", () => 
       }
     });
   });
+
+  it("affiche le bandeau trimestre comptable Mboka sur le dashboard (US-80)", function () {
+    cy.task("resetFiscalPeriodOpen");
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="fiscal-period-current-banner"]').should("be.visible");
+    cy.contains("Trimestre comptable :").should("be.visible");
+    cy.get('[data-testid="fiscal-period-current-banner"]').contains("Ouvert");
+  });
 });

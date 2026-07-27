@@ -38,7 +38,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     >
       {needsFiscalPeriodSetup ? <FiscalPeriodSetupBanner roleName={session.user.roleName} /> : null}
       {showClosingBanner ? (
-        <FiscalPeriodClosingBanner period={closingPeriod} showClosingLink={showClosingBannerLink} />
+        <FiscalPeriodClosingBanner
+          period={closingPeriod}
+          showClosingLink={showClosingBannerLink}
+          roleName={session.user.roleName}
+        />
       ) : null}
       {children}
     </AppShell>

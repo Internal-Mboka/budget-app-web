@@ -22,7 +22,10 @@ describe("Mboka Budget — SPEC 10 US-78 Validation clôture trimestrielle", () 
     cy.dismissPwaPrompt();
 
     cy.get('[data-testid="fiscal-period-closing-banner"]').should("be.visible");
-    cy.get('[data-testid="fiscal-period-closing-banner-link"]').should("be.visible").click();
+    cy.get('[data-testid="fiscal-period-closing-banner-link"]')
+      .should("be.visible")
+      .contains("Voir la clôture")
+      .click();
 
     cy.location("pathname").should("eq", "/dashboard/cloture-trimestre");
     cy.get('[data-testid="fiscal-period-closing-panel"]').should("be.visible");

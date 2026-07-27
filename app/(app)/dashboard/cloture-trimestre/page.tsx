@@ -56,7 +56,7 @@ export default async function FiscalPeriodClosingPage({ searchParams }: FiscalPe
       <MbokaPageHeader
         eyebrow="Trimestre comptable"
         title="Clôture trimestrielle"
-        description="Validez les trimestres arrivés à échéance : visa Comptable, puis validation PDG uniquement."
+        description="Validez les trimestres arrivés à échéance : visa comptable, puis approbation du PDG."
       />
 
       <FiscalPeriodClosingPanel
