@@ -194,7 +194,7 @@
 | US | Titre | Statut |
 |----|-------|--------|
 | US-46 | Dashboard financier global temps réel | `[x]` |
-| US-47 | Vue macro Observateurs | `[ ]` |
+| US-47 | Vue macro Observateurs | `[x]` |
 | US-48 | Ventilation CA par activité | `[ ]` |
 | US-49 | Taux d'occupation espaces studio | `[ ]` |
 | US-50 | Créances & factures impayées | `[ ]` |

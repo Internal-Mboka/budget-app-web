@@ -1,8 +1,15 @@
+import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
+import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
+import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import {
+  parseDashboardChartGranularity,
+  parseDashboardKpiPeriod,
+} from "@/lib/dashboard/periods";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
   countPendingExpenseApprovals,
@@ -17,57 +24,53 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
-export default async function FinancialDashboardPage() {
+type FinancialDashboardPageProps = {
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string }>;
+};
+
+export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
   const session = await requirePermission(PERMISSIONS.DASHBOARD_FINANCIAL);
+  const query = await searchParams;
+  const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
+  const granularity = parseDashboardChartGranularity(query.granularity);
   const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [recurringDues, recurringDueCount] = await Promise.all([
-    loadPendingRecurringDues(3),
-    countPendingRecurringDues(),
-  ]);
-
-  const pendingPanel = canApproveExpenses
-    ? await (async () => {
-        const [items, totalPending] = await Promise.all([
-          loadPendingExpenseApprovals(5),
-          countPendingExpenseApprovals(),
-        ]);
-
-        return (
-          <ExpensePendingApprovalsPanel
-            items={items}
-            totalPending={totalPending}
-            approvalThreshold={getExpenseApprovalThreshold()}
-          />
-        );
-      })()
-    : null;
-
-  const pendingClosingReviewsPanel = canApproveClosings
-    ? await (async () => {
-        const [items, totalPending] = await Promise.all([
-          loadPendingCashClosingReviews(5),
-          countPendingCashClosingReviews(),
-        ]);
-
-        return (
-          <CashClosingPendingReviewsPanel items={items} totalPending={totalPending} />
-        );
-      })()
-    : null;
+  const [kpis, series, recurringDues, recurringDueCount, pendingApprovals, pendingClosingReviews] =
+    await Promise.all([
+      loadDashboardKpis(kpiPeriod),
+      loadRevenueExpenseSeries(granularity),
+      loadPendingRecurringDues(3),
+      countPendingRecurringDues(),
+      canApproveExpenses
+        ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
+            ([items, totalPending]) => ({ items, totalPending })
+          )
+        : Promise.resolve(null),
+      canApproveClosings
+        ? Promise.all([loadPendingCashClosingReviews(5), countPendingCashClosingReviews()]).then(
+            ([items, totalPending]) => ({ items, totalPending })
+          )
+        : Promise.resolve(null),
+    ]);
 
   return (
-    <section className="space-y-6">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-[0.28em] text-sky-500">Dashboard</p>
-        <h1 className="mt-2 text-3xl font-semibold text-primary">Vue financière</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Espace comptable de {session.user.name} — registre, caisse et charges récurrentes.
-        </p>
-      </div>
+    <section className="space-y-8">
+      <MbokaPageHeader
+        eyebrow="Dashboard"
+        title="Vue financière"
+        description={`Espace comptable de ${session.user.name} — indicateurs, caisse et charges.`}
+      />
+
+      <DashboardFinancialSection
+        basePath="/dashboard/financier"
+        kpis={kpis}
+        series={series}
+        kpiPeriod={kpiPeriod}
+        granularity={granularity}
+      />
 
       {recurringDueCount > 0 ? (
         <section
@@ -88,8 +91,20 @@ export default async function FinancialDashboardPage() {
         </section>
       ) : null}
 
-      {pendingPanel}
-      {pendingClosingReviewsPanel}
+      {pendingApprovals ? (
+        <ExpensePendingApprovalsPanel
+          items={pendingApprovals.items}
+          totalPending={pendingApprovals.totalPending}
+          approvalThreshold={getExpenseApprovalThreshold()}
+        />
+      ) : null}
+
+      {pendingClosingReviews ? (
+        <CashClosingPendingReviewsPanel
+          items={pendingClosingReviews.items}
+          totalPending={pendingClosingReviews.totalPending}
+        />
+      ) : null}
     </section>
   );
 }

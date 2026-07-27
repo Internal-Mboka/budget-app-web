@@ -10,9 +10,19 @@ type MbokaKpiCardProps = {
   hint?: string;
   testId?: string;
   className?: string;
+  format?: "money" | "percent";
 };
 
-export function MbokaKpiCard({ label, value, hint, testId, className }: MbokaKpiCardProps) {
+export function MbokaKpiCard({
+  label,
+  value,
+  hint,
+  testId,
+  className,
+  format = "money",
+}: MbokaKpiCardProps) {
+  const displayValue = format === "percent" ? `${value.toLocaleString("fr-FR")} %` : formatMoney(value);
+
   return (
     <article
       className={cn(
@@ -22,7 +32,7 @@ export function MbokaKpiCard({ label, value, hint, testId, className }: MbokaKpi
       data-testid={testId}
     >
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="mt-3 text-2xl font-semibold text-[#10579F] dark:text-sky-50">{formatMoney(value)}</p>
+      <p className="mt-3 text-2xl font-semibold text-[#10579F] dark:text-sky-50">{displayValue}</p>
       {hint ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p> : null}
     </article>
   );

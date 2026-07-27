@@ -2,14 +2,16 @@ import { Prisma } from "@prisma/client";
 import {
   addDays,
   addMonths,
+  addQuarters,
   addWeeks,
   startOfDay,
   startOfMonth,
+  startOfQuarter,
   startOfWeek,
 } from "date-fns";
 
-import type { DashboardChartGranularity } from "@/lib/dashboard/periods";
-import { formatChartBucketLabel, getChartRange, getCurrentMonthRange } from "@/lib/dashboard/periods";
+import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
+import { formatChartBucketLabel, getChartRange, getKpiPeriodRange } from "@/lib/dashboard/periods";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -40,7 +42,10 @@ const ACTIVE_REVENUE_WHERE: Prisma.TransactionWhereInput = {
   status: { not: "LITIGE_ANNULE" },
 };
 
-function sumDecimal(values: Array<{ totalAmount: Prisma.Decimal | null; paidAmount?: Prisma.Decimal | null }>, field: "totalAmount" | "paidAmount") {
+function sumDecimal(
+  values: Array<{ totalAmount: Prisma.Decimal | null; paidAmount?: Prisma.Decimal | null }>,
+  field: "totalAmount" | "paidAmount"
+) {
   return roundMoney(
     values.reduce((sum, row) => sum + decimalToNumber(field === "paidAmount" ? row.paidAmount : row.totalAmount), 0)
   );
@@ -60,6 +65,11 @@ function buildBucketStarts(granularity: DashboardChartGranularity, from: Date, b
       continue;
     }
 
+    if (granularity === "quarter") {
+      starts.push(startOfQuarter(addQuarters(from, index)));
+      continue;
+    }
+
     starts.push(startOfMonth(addMonths(from, index)));
   }
 
@@ -75,13 +85,20 @@ function getBucketStart(date: Date, granularity: DashboardChartGranularity) {
     return startOfWeek(date, { weekStartsOn: 1 });
   }
 
+  if (granularity === "quarter") {
+    return startOfQuarter(date);
+  }
+
   return startOfMonth(date);
 }
 
-export async function loadDashboardKpis(reference = new Date()): Promise<DashboardKpis> {
-  const { from, to } = getCurrentMonthRange(reference);
+export async function loadDashboardKpis(
+  kpiPeriod: DashboardKpiPeriod = "month",
+  reference = new Date()
+): Promise<DashboardKpis> {
+  const { from, to, label } = getKpiPeriodRange(kpiPeriod, reference);
 
-  const [monthRevenues, monthExpenses, paidRevenues, paidExpenses, receivableRows] = await Promise.all([
+  const [periodRevenues, periodExpenses, paidRevenues, paidExpenses, receivableRows] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         ...ACTIVE_REVENUE_WHERE,
@@ -114,13 +131,13 @@ export async function loadDashboardKpis(reference = new Date()): Promise<Dashboa
   ]);
 
   return {
-    revenueTotal: sumDecimal(monthRevenues, "totalAmount"),
-    expenseTotal: sumDecimal(monthExpenses, "totalAmount"),
+    revenueTotal: sumDecimal(periodRevenues, "totalAmount"),
+    expenseTotal: sumDecimal(periodExpenses, "totalAmount"),
     netTreasury: roundMoney(sumDecimal(paidRevenues, "paidAmount") - sumDecimal(paidExpenses, "paidAmount")),
     receivables: roundMoney(
       receivableRows.reduce((sum, row) => sum + decimalToNumber(row.remainingAmount), 0)
     ),
-    periodLabel: "Mois en cours",
+    periodLabel: label,
   };
 }
 
