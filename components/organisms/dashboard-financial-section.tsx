@@ -12,6 +12,7 @@ type DashboardFinancialSectionProps = {
   series: RevenueExpensePoint[];
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
+  categoryPeriod?: DashboardKpiPeriod;
 };
 
 export function DashboardFinancialSection({
@@ -20,6 +21,7 @@ export function DashboardFinancialSection({
   series,
   kpiPeriod,
   granularity,
+  categoryPeriod,
 }: DashboardFinancialSectionProps) {
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
 
@@ -60,6 +62,7 @@ export function DashboardFinancialSection({
         basePath={basePath}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
+        categoryPeriod={categoryPeriod}
         series={series}
       />
     </>

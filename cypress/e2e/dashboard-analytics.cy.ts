@@ -46,6 +46,35 @@ describe("Mboka Budget — SPEC 7 US-46 Dashboard financier global", () => {
   });
 });
 
+describe("Mboka Budget — SPEC 7 US-48 Ventilation CA par activité", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("affiche le graphique CA par activité avec filtre de période", () => {
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="dashboard-revenue-breakdown-panel"]').should("be.visible");
+    cy.get('[data-testid="dashboard-revenue-by-category-chart"]').should("be.visible");
+    cy.get('[data-testid="dashboard-category-period-switch"]').should("be.visible");
+
+    cy.get('[data-testid="dashboard-category-period-switch-quarter"]').click();
+    cy.location("search").should("include", "categoryPeriod=quarter");
+    cy.get('[data-testid="dashboard-revenue-by-category-chart"]').should("be.visible");
+
+    cy.get('[data-testid="dashboard-category-period-switch-year"]').click();
+    cy.location("search").should("include", "categoryPeriod=year");
+  });
+});
+
 describe("Mboka Budget — SPEC 7 US-47 Vue macro Observateur", () => {
   beforeEach(function () {
     const email = Cypress.env("OBSERVATEUR_EMAIL");

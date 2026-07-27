@@ -3,6 +3,7 @@ import type { DashboardChartGranularity, DashboardKpiPeriod, MacroKpiPeriod } fr
 export type DashboardHrefParams = {
   kpiPeriod?: DashboardKpiPeriod;
   granularity?: DashboardChartGranularity;
+  categoryPeriod?: DashboardKpiPeriod;
 };
 
 export type MacroHrefParams = {
@@ -29,6 +30,10 @@ export function buildFinancialDashboardHref(
   return appendParams(basePath, [
     ["kpiPeriod", params.kpiPeriod && params.kpiPeriod !== "month" ? params.kpiPeriod : undefined],
     ["granularity", params.granularity && params.granularity !== "month" ? params.granularity : undefined],
+    [
+      "categoryPeriod",
+      params.categoryPeriod && params.categoryPeriod !== "month" ? params.categoryPeriod : undefined,
+    ],
   ]);
 }
 

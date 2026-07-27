@@ -1,9 +1,12 @@
 import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
+import { DashboardRevenueBreakdownPanel } from "@/components/organisms/dashboard-revenue-breakdown-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import { loadRevenueByCategory } from "@/lib/dashboard/load-revenue-by-category";
 import {
+  parseCategoryPeriod,
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
 } from "@/lib/dashboard/periods";
@@ -15,7 +18,7 @@ import {
 import { PERMISSIONS } from "@/lib/permissions";
 
 type DashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string }>;
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; categoryPeriod?: string }>;
 };
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -23,11 +26,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const query = await searchParams;
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const granularity = parseDashboardChartGranularity(query.granularity);
+  const categoryPeriod = parseCategoryPeriod(query.categoryPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, series, pendingApprovals] = await Promise.all([
+  const [kpis, series, revenueBreakdown, pendingApprovals] = await Promise.all([
     loadDashboardKpis(kpiPeriod),
     loadRevenueExpenseSeries(granularity),
+    loadRevenueByCategory(categoryPeriod),
     canApproveExpenses
       ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
           ([items, totalPending]) => ({
@@ -52,6 +57,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         series={series}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
+        categoryPeriod={categoryPeriod}
+      />
+
+      <DashboardRevenueBreakdownPanel
+        categoryPeriod={categoryPeriod}
+        kpiPeriod={kpiPeriod}
+        granularity={granularity}
+        points={revenueBreakdown.points}
+        periodLabel={revenueBreakdown.periodLabel}
+        total={revenueBreakdown.total}
       />
 
       {pendingApprovals ? (

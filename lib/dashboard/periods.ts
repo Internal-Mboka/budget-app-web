@@ -56,6 +56,19 @@ export function parseMacroKpiPeriod(value?: string | string[]): MacroKpiPeriod {
   return "month";
 }
 
+export function parseCategoryPeriod(
+  value: string | string[] | undefined,
+  fallback: DashboardKpiPeriod = "month"
+): DashboardKpiPeriod {
+  const raw = Array.isArray(value) ? value[0] : value;
+
+  if (raw && KPI_PERIOD_VALUES.includes(raw as DashboardKpiPeriod)) {
+    return raw as DashboardKpiPeriod;
+  }
+
+  return fallback;
+}
+
 export function getKpiPeriodRange(period: DashboardKpiPeriod, reference = new Date()) {
   switch (period) {
     case "quarter":

@@ -11,6 +11,7 @@ type DashboardAnalyticsPanelProps = {
   basePath: "/dashboard" | "/dashboard/financier";
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
+  categoryPeriod?: DashboardKpiPeriod;
   series: RevenueExpensePoint[];
 };
 
@@ -21,6 +22,7 @@ export function DashboardAnalyticsPanel({
   basePath,
   kpiPeriod,
   granularity,
+  categoryPeriod,
   series,
 }: DashboardAnalyticsPanelProps) {
   return (
@@ -34,7 +36,9 @@ export function DashboardAnalyticsPanel({
             value,
             label: getKpiPeriodLabel(value),
           }))}
-          buildHref={(value) => buildFinancialDashboardHref(basePath, { kpiPeriod: value, granularity })}
+          buildHref={(value) =>
+            buildFinancialDashboardHref(basePath, { kpiPeriod: value, granularity, categoryPeriod })
+          }
         />
 
         <MbokaPeriodSwitch
@@ -45,7 +49,9 @@ export function DashboardAnalyticsPanel({
             value,
             label: getGranularityLabel(value),
           }))}
-          buildHref={(value) => buildFinancialDashboardHref(basePath, { kpiPeriod, granularity: value })}
+          buildHref={(value) =>
+            buildFinancialDashboardHref(basePath, { kpiPeriod, granularity: value, categoryPeriod })
+          }
         />
       </div>
 
