@@ -37,29 +37,31 @@ export function DashboardAnalyticsPanel({
 }: DashboardAnalyticsPanelProps) {
   return (
     <div className="space-y-4" data-testid="dashboard-analytics-panel">
-      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
-        {kpiScope === "period" ? (
-          <MbokaPeriodSwitch
-            label="Période des indicateurs"
-            testId="dashboard-kpi-period-switch"
-            value={kpiPeriod}
-            options={KPI_PERIOD_OPTIONS.map((value) => ({
-              value,
-              label: getKpiPeriodLabel(value),
-            }))}
-            buildHref={(value) =>
-              buildFinancialDashboardHref(basePath, {
-                kpiPeriod: value,
-                kpiScope,
-                granularity,
-                categoryPeriod,
-                occupancyPeriod,
-                projectionPeriod,
-                projectionScenario,
-              })
-            }
-          />
-        ) : null}
+      <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="min-w-0">
+          {kpiScope === "period" ? (
+            <MbokaPeriodSwitch
+              label="Période des indicateurs"
+              testId="dashboard-kpi-period-switch"
+              value={kpiPeriod}
+              options={KPI_PERIOD_OPTIONS.map((value) => ({
+                value,
+                label: getKpiPeriodLabel(value),
+              }))}
+              buildHref={(value) =>
+                buildFinancialDashboardHref(basePath, {
+                  kpiPeriod: value,
+                  kpiScope,
+                  granularity,
+                  categoryPeriod,
+                  occupancyPeriod,
+                  projectionPeriod,
+                  projectionScenario,
+                })
+              }
+            />
+          ) : null}
+        </div>
 
         <MbokaPeriodSwitch
           label="Granularité du graphique"

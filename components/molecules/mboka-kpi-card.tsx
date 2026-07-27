@@ -18,15 +18,15 @@ type MbokaKpiCardProps = {
 };
 
 const scopeSurfaceClassName = {
-  period: "border border-sky-100/80 bg-sky-50/50 dark:border-sky-900/80 dark:bg-sky-950/25",
-  global: "border border-slate-100/80 bg-slate-50/60 dark:border-slate-800/80 dark:bg-slate-800/30",
+  period: "border border-sky-100/80 bg-sky-50/50 dark:border-sky-900/80 dark:bg-sky-950/30",
+  global: "border border-sky-100/80 bg-sky-50/40 dark:border-sky-900/80 dark:bg-slate-800/25",
 } as const;
 
 const scopeBadgeClassName = {
   period:
-    "rounded-xl border border-sky-100 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#10579F] shadow-sm ring-1 ring-sky-100 dark:border-sky-900 dark:bg-slate-800 dark:text-sky-100 dark:ring-sky-900",
+    "rounded-xl border border-sky-100 bg-sky-100/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#10579F] dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-100",
   global:
-    "rounded-xl border border-sky-100 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm ring-1 ring-slate-100 dark:border-sky-900 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-800",
+    "rounded-xl border border-sky-100 bg-slate-100/80 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:border-sky-900 dark:bg-slate-800/60 dark:text-slate-300",
 } as const;
 
 export function MbokaKpiCard({

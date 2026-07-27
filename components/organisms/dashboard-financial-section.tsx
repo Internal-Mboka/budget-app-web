@@ -42,12 +42,7 @@ export function DashboardFinancialSection({
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
   const activityScope = kpiScope === "global" ? "global" : "period";
   const showActivityDelta = kpiScope === "period";
-  const periodLabelLower = kpis.periodLabel.toLowerCase();
-  const activityGroupLabel = kpiScope === "global" ? "Activité cumulée" : "Activité sur la période";
-  const activityGroupDescription =
-    kpiScope === "global"
-      ? "Total historique des montants enregistrés (date de saisie)"
-      : `Montants enregistrés · ${periodLabelLower}`;
+  const activityGroupLabel = kpiScope === "global" ? "Activité cumulée" : "Activité";
 
   return (
     <>
@@ -71,7 +66,6 @@ export function DashboardFinancialSection({
       >
         <MbokaKpiBoardGroup
           label={activityGroupLabel}
-          description={activityGroupDescription}
           scope={activityScope}
           testId="dashboard-kpi-section-activity"
         >
@@ -110,8 +104,7 @@ export function DashboardFinancialSection({
         </MbokaKpiBoardGroup>
 
         <MbokaKpiBoardGroup
-          label="Position trésorerie"
-          description="Solde instantané · toutes périodes confondues"
+          label="Trésorerie"
           scope="global"
           testId="dashboard-kpi-section-position"
         >

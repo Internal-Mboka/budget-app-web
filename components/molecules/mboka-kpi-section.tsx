@@ -25,13 +25,8 @@ export function MbokaKpiBoard({
       data-testid={testId}
       aria-label="Indicateurs financiers"
     >
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Activité enregistrée et position de trésorerie en un coup d&apos;œil.
-          </p>
-        </div>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
 
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {headerAction}
@@ -61,7 +56,6 @@ export function MbokaKpiBoard({
 
 type MbokaKpiBoardGroupProps = {
   label: string;
-  description?: string;
   scope: "period" | "global";
   testId: string;
   children: ReactNode;
@@ -73,7 +67,7 @@ const groupScopeIcon = {
   global: Globe2,
 } as const;
 
-export function MbokaKpiBoardGroup({ label, description, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
+export function MbokaKpiBoardGroup({ label, scope, testId, children, className }: MbokaKpiBoardGroupProps) {
   const headingId = `${testId}-heading`;
   const ScopeIcon = groupScopeIcon[scope];
 
@@ -84,16 +78,11 @@ export function MbokaKpiBoardGroup({ label, description, scope, testId, children
       data-scope={scope}
       aria-labelledby={headingId}
     >
-      <div>
-        <div className="flex items-center gap-1.5">
-          <ScopeIcon className="size-4 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
-          <p id={headingId} className="text-sm font-medium text-[#10579F] dark:text-sky-50">
-            {label}
-          </p>
-        </div>
-        {description ? (
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-        ) : null}
+      <div className="flex items-center gap-1.5">
+        <ScopeIcon className="size-4 shrink-0 text-sky-400 dark:text-sky-500" aria-hidden="true" />
+        <p id={headingId} className="text-sm font-medium text-[#10579F] dark:text-sky-50">
+          {label}
+        </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">{children}</div>
     </div>
