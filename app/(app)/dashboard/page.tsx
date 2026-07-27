@@ -4,6 +4,7 @@ import { DashboardStudioOccupancyPanel } from "@/components/organisms/dashboard-
 import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboard-treasury-projection-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
+import { DashboardOfflineSnapshotBridge } from "@/components/molecules/dashboard-offline-snapshot-bridge";
 import { DashboardUpdatedAt } from "@/components/molecules/dashboard-updated-at";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { FiscalPeriodInitializedBanner } from "@/components/molecules/fiscal-period-init-notice";
@@ -98,6 +99,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         title="Vue complète"
         description={`Bienvenue ${session.user.name}. Pilotage financier du studio — PDG et DT.`}
         descriptionAside={<DashboardUpdatedAt />}
+      />
+
+      <DashboardOfflineSnapshotBridge
+        path="/dashboard"
+        periodLabel={kpis.periodLabel}
+        kpis={{
+          revenueTotal: kpis.revenueTotal,
+          expenseTotal: kpis.expenseTotal,
+          netTreasury: kpis.netTreasury,
+          receivables: kpis.receivables,
+          cashCollections: kpis.cashCollections,
+        }}
+        overdueCount={overdueCount}
+        fiscalPeriodLabel={activeFiscalPeriod?.label ?? null}
       />
 
       <DashboardFinancialSection

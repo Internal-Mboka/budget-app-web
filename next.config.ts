@@ -5,8 +5,35 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: false,
+  cacheOnFrontEndNav: true,
+  reloadOnOnline: true,
+  dynamicStartUrl: true,
+  dynamicStartUrlRedirect: "/login",
   fallbacks: {
     document: "/offline",
+  },
+  workboxOptions: {
+    extendDefaultRuntimeCaching: true,
+    runtimeCaching: [
+      {
+        urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+          sameOrigin &&
+          (url.pathname.startsWith("/dashboard") ||
+            url.pathname.startsWith("/revenues") ||
+            url.pathname.startsWith("/expenses") ||
+            url.pathname.startsWith("/clients")),
+        handler: "NetworkFirst",
+        method: "GET",
+        options: {
+          cacheName: "mboka-essential-pages",
+          expiration: {
+            maxEntries: 64,
+            maxAgeSeconds: 72 * 60 * 60,
+          },
+          networkTimeoutSeconds: 8,
+        },
+      },
+    ],
   },
 });
 

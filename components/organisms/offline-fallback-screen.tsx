@@ -69,8 +69,8 @@ export function OfflineFallbackScreen() {
             <p className="text-xs font-semibold tracking-[0.28em] text-sky-400 uppercase">Hors connexion</p>
             <h1 className="text-2xl font-semibold text-[#10579F] dark:text-sky-50">Vous êtes hors ligne</h1>
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-              La connexion internet est momentanément indisponible. Mboka Budget conserve l&apos;interface en cache, mais
-              les données en direct ne peuvent pas être chargées.
+              La connexion internet est momentanément indisponible. Mboka Budget conserve l&apos;interface et les
+              dernières données consultées en cache, mais les chiffres en direct ne peuvent pas être chargés.
             </p>
           </div>
         </div>
