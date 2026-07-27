@@ -158,7 +158,7 @@ export function FinancialExportsPanel({
             router.push(query ? `/exports?${query}` : "/exports");
           }}
         >
-          <FieldGroup className="gap-4 sm:grid sm:grid-cols-2">
+          <FieldGroup className="gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="from" className={mbokaLabelClassName}>
                 Du
@@ -187,23 +187,7 @@ export function FinancialExportsPanel({
                 onBlur={tryApplyDateFilters}
               />
             </Field>
-          </FieldGroup>
-
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            La période filtre le CSV, la liste PDF des revenus et le bilan mensuel.
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
-              Appliquer la période
-            </button>
-            <Link href="/exports" className={mbokaButtonOutlineClassName}>
-              Réinitialiser
-            </Link>
-          </div>
-
-          <div className="border-t border-sky-100 pt-4 dark:border-sky-900">
-            <Field>
+            <Field className="sm:col-span-2 lg:col-span-1">
               <FieldLabel htmlFor="register" className={mbokaLabelClassName}>
                 Registre CSV
               </FieldLabel>
@@ -214,10 +198,21 @@ export function FinancialExportsPanel({
                 options={REGISTER_OPTIONS}
                 onValueChange={(value) => applyExportFilters(value as FinancialExportRegister)}
               />
-              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                Modifie uniquement le bloc « Export CSV » ci-dessous — pas la liste PDF.
-              </p>
             </Field>
+          </FieldGroup>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            La période filtre le CSV, les PDF revenus et le bilan. Le registre CSV ne modifie que le
+            téléchargement du fichier.
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
+              Appliquer la période
+            </button>
+            <Link href="/exports" className={mbokaButtonOutlineClassName}>
+              Réinitialiser
+            </Link>
           </div>
         </form>
       </section>
