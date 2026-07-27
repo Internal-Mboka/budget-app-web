@@ -5,6 +5,7 @@ import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pen
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
+import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import {
@@ -46,7 +47,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, kpiComparison, series, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
+  const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
     await Promise.all([
     loadDashboardKpis(kpiPeriod),
     loadDashboardKpiComparison(kpiPeriod),
@@ -65,6 +66,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         )
       : Promise.resolve(null),
   ]);
+
+  const series = enrichRevenueExpenseSeriesWithComparison(rawSeries);
 
   return (
     <div className="space-y-8">
@@ -93,6 +96,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         points={revenueBreakdown.points}
         periodLabel={revenueBreakdown.periodLabel}
         total={revenueBreakdown.total}
+        totalPercentChange={revenueBreakdown.totalPercentChange}
+        comparisonLabel={revenueBreakdown.comparisonLabel}
       />
 
       <DashboardStudioOccupancyPanel

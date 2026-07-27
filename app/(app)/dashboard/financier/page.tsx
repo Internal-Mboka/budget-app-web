@@ -6,6 +6,7 @@ import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
+import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import {
@@ -46,7 +47,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [kpis, kpiComparison, series, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
+  const [kpis, kpiComparison, rawSeries, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
       loadDashboardKpis(kpiPeriod),
       loadDashboardKpiComparison(kpiPeriod),
@@ -67,6 +68,8 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
           )
         : Promise.resolve(null),
     ]);
+
+  const series = enrichRevenueExpenseSeriesWithComparison(rawSeries);
 
   return (
     <section className="space-y-8">

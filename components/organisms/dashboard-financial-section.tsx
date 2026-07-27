@@ -4,14 +4,15 @@ import { fr } from "date-fns/locale";
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
 import { MbokaKpiCard, MbokaKpiGrid } from "@/components/molecules/mboka-kpi-card";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
-import type { DashboardKpis, RevenueExpensePoint } from "@/lib/dashboard/load-analytics";
+import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
+import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 
 type DashboardFinancialSectionProps = {
   basePath: "/dashboard" | "/dashboard/financier";
   kpis: DashboardKpis;
   comparison: DashboardKpiComparison;
-  series: RevenueExpensePoint[];
+  series: RevenueExpenseComparisonPoint[];
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;

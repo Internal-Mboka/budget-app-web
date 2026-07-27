@@ -2,7 +2,7 @@
 
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { RevenueExpenseChart } from "@/components/molecules/revenue-expense-chart";
-import type { RevenueExpensePoint } from "@/lib/dashboard/load-analytics";
+import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getGranularityLabel, getKpiPeriodLabel } from "@/lib/dashboard/periods";
@@ -13,7 +13,7 @@ type DashboardAnalyticsPanelProps = {
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
-  series: RevenueExpensePoint[];
+  series: RevenueExpenseComparisonPoint[];
 };
 
 const KPI_PERIOD_OPTIONS: DashboardKpiPeriod[] = ["month", "quarter", "year"];
@@ -67,7 +67,7 @@ export function DashboardAnalyticsPanel({
         />
       </div>
 
-      <RevenueExpenseChart data={series} />
+      <RevenueExpenseChart data={series} granularity={granularity} />
     </div>
   );
 }

@@ -15,6 +15,8 @@ type DashboardRevenueBreakdownPanelProps = {
   points: RevenueCategoryBreakdownPoint[];
   periodLabel: string;
   total: number;
+  totalPercentChange: number | null;
+  comparisonLabel: string;
 };
 
 const CATEGORY_PERIOD_OPTIONS: DashboardKpiPeriod[] = ["month", "quarter", "year"];
@@ -27,6 +29,8 @@ export function DashboardRevenueBreakdownPanel({
   points,
   periodLabel,
   total,
+  totalPercentChange,
+  comparisonLabel,
 }: DashboardRevenueBreakdownPanelProps) {
   return (
     <div className="space-y-4" data-testid="dashboard-revenue-breakdown-panel">
@@ -50,7 +54,13 @@ export function DashboardRevenueBreakdownPanel({
         />
       </div>
 
-      <RevenueByCategoryChart data={points} periodLabel={periodLabel} total={total} />
+      <RevenueByCategoryChart
+        data={points}
+        periodLabel={periodLabel}
+        total={total}
+        totalPercentChange={totalPercentChange}
+        comparisonLabel={comparisonLabel}
+      />
     </div>
   );
 }

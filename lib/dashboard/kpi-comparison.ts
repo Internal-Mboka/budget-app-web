@@ -1,7 +1,7 @@
 import type { DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiComparisonLabel, getKpiPeriodRange, getPreviousKpiPeriodRange } from "@/lib/dashboard/periods";
 import { loadPeriodFinancialTotals } from "@/lib/dashboard/load-analytics";
-import { roundMoney } from "@/lib/transactions/decimal";
+import { computePercentChange } from "@/lib/dashboard/percent-change";
 
 export type KpiMetricComparison = {
   current: number;
@@ -14,14 +14,6 @@ export type DashboardKpiComparison = {
   revenue: KpiMetricComparison;
   expenses: KpiMetricComparison;
 };
-
-export function computePercentChange(current: number, previous: number): number | null {
-  if (previous === 0) {
-    return current === 0 ? 0 : null;
-  }
-
-  return roundMoney(((current - previous) / previous) * 100);
-}
 
 export async function loadDashboardKpiComparison(
   kpiPeriod: DashboardKpiPeriod = "month",

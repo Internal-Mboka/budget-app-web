@@ -1,5 +1,6 @@
 import type { DashboardKpiPeriod } from "@/lib/dashboard/periods";
-import { countDaysInclusive, getKpiPeriodRange } from "@/lib/dashboard/periods";
+import { countDaysInclusive, getKpiComparisonLabel, getKpiPeriodRange, getPreviousKpiPeriodRange } from "@/lib/dashboard/periods";
+import { computePercentChange } from "@/lib/dashboard/percent-change";
 import {
   STUDIO_OPENING_HOURS_PER_DAY,
   estimateStudioCapacityHours,
@@ -22,6 +23,8 @@ export type StudioOccupancySnapshot = {
   occupancyRate: number;
   periodLabel: string;
   rooms: StudioRoomOccupancyPoint[];
+  occupancyPercentChange: number | null;
+  comparisonLabel: string;
 };
 
 function extractDurationHours(metadata: unknown): number {
@@ -57,7 +60,25 @@ export async function loadStudioOccupancy(
   period: DashboardKpiPeriod = "month",
   reference = new Date()
 ): Promise<StudioOccupancySnapshot> {
-  const { from, to, label } = getKpiPeriodRange(period, reference);
+  const currentRange = getKpiPeriodRange(period, reference);
+  const previousRange = getPreviousKpiPeriodRange(period, reference);
+  const comparisonLabel = getKpiComparisonLabel(period);
+
+  const [current, previousRate] = await Promise.all([
+    loadStudioOccupancyForRange(currentRange.from, currentRange.to, currentRange.label),
+    loadStudioOccupancyForRange(previousRange.from, previousRange.to, previousRange.label).then(
+      (snapshot) => snapshot.occupancyRate
+    ),
+  ]);
+
+  return {
+    ...current,
+    occupancyPercentChange: computePercentChange(current.occupancyRate, previousRate),
+    comparisonLabel,
+  };
+}
+
+async function loadStudioOccupancyForRange(from: Date, to: Date, label: string) {
   const daysInPeriod = countDaysInclusive(from, to);
   const capacityPerRoom = roundMoney(daysInPeriod * STUDIO_OPENING_HOURS_PER_DAY);
   const totalCapacity = estimateStudioCapacityHours(daysInPeriod);
@@ -112,5 +133,7 @@ export async function loadStudioOccupancy(
     occupancyRate: computeOccupancyRate(soldHours, totalCapacity),
     periodLabel: label,
     rooms,
+    occupancyPercentChange: null,
+    comparisonLabel: "",
   };
 }

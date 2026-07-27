@@ -54,6 +54,11 @@ export function DashboardStudioOccupancyPanel({
           hint={`${snapshot.periodLabel} — ${snapshot.soldHours} h vendues`}
           testId="dashboard-occupancy-kpi-rate"
           format="percent"
+          delta={{
+            percentChange: snapshot.occupancyPercentChange,
+            comparisonLabel: snapshot.comparisonLabel,
+            polarity: "higher-is-better",
+          }}
         />
         <MbokaKpiCard
           label="Heures vendues"

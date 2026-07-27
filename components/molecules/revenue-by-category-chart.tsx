@@ -11,7 +11,9 @@ import {
   YAxis,
 } from "recharts";
 
+import { MbokaKpiTrend } from "@/components/molecules/mboka-kpi-trend";
 import { formatMoney } from "@/lib/currency";
+import { formatPercentChangeLabel } from "@/lib/dashboard/percent-change";
 import type { RevenueCategoryBreakdownPoint } from "@/lib/dashboard/load-revenue-by-category";
 import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -27,15 +29,19 @@ type RevenueByCategoryChartProps = {
   data: RevenueCategoryBreakdownPoint[];
   periodLabel: string;
   total: number;
+  totalPercentChange: number | null;
+  comparisonLabel: string;
   className?: string;
 };
 
 function ChartTooltip({
   active,
   payload,
+  comparisonLabel,
 }: {
   active?: boolean;
   payload?: Array<{ payload?: RevenueCategoryBreakdownPoint }>;
+  comparisonLabel: string;
 }) {
   const point = payload?.[0]?.payload;
 
@@ -48,11 +54,21 @@ function ChartTooltip({
       <p className="mb-1 font-medium text-slate-700 dark:text-slate-200">{point.label}</p>
       <p className="text-slate-600 dark:text-slate-300">{formatMoney(point.amount)}</p>
       <p className="text-slate-500 dark:text-slate-400">{point.share.toFixed(1)} % du CA</p>
+      <p className="mt-1 text-slate-500 dark:text-slate-400">
+        {formatPercentChangeLabel(point.percentChange)} {comparisonLabel}
+      </p>
     </div>
   );
 }
 
-export function RevenueByCategoryChart({ data, periodLabel, total, className }: RevenueByCategoryChartProps) {
+export function RevenueByCategoryChart({
+  data,
+  periodLabel,
+  total,
+  totalPercentChange,
+  comparisonLabel,
+  className,
+}: RevenueByCategoryChartProps) {
   return (
     <section
       className={cn(mbokaPanelClassName, "space-y-4 p-5 sm:p-6", className)}
@@ -64,6 +80,14 @@ export function RevenueByCategoryChart({ data, periodLabel, total, className }: 
           Répartition des revenus par type de prestation — {periodLabel.toLowerCase()}.
           {total > 0 ? ` Total : ${formatMoney(total)}.` : " Aucun revenu enregistré sur cette période."}
         </p>
+        <MbokaKpiTrend
+          delta={{
+            percentChange: totalPercentChange,
+            comparisonLabel,
+            polarity: "higher-is-better",
+          }}
+          testId="dashboard-category-total-delta"
+        />
       </div>
 
       <div className="h-64 w-full min-w-0">
@@ -76,7 +100,7 @@ export function RevenueByCategoryChart({ data, periodLabel, total, className }: 
             <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-sky-100 dark:stroke-slate-800" />
             <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(value) => formatMoney(Number(value))} />
             <YAxis type="category" dataKey="label" width={108} tick={{ fontSize: 11 }} />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(16, 87, 159, 0.06)" }} />
+            <Tooltip content={<ChartTooltip comparisonLabel={comparisonLabel} />} cursor={{ fill: "rgba(16, 87, 159, 0.06)" }} />
             <Bar dataKey="amount" name="Chiffre d'affaires" radius={[0, 8, 8, 0]} maxBarSize={28}>
               {data.map((entry) => (
                 <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category]} />
