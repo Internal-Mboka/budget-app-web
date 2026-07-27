@@ -1,6 +1,3 @@
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
 import { DashboardKpiScopeSwitch } from "@/components/molecules/dashboard-kpi-scope-switch";
 import { FiscalPeriodCurrentBanner } from "@/components/molecules/fiscal-period-current-banner";
@@ -46,7 +43,6 @@ export function DashboardFinancialSection({
   projectionScenario,
   activeFiscalPeriod,
 }: DashboardFinancialSectionProps) {
-  const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
   const activityScope = kpiScope === "global" ? "global" : "period";
   const showActivityDelta = kpiScope === "period";
   const activityGroupLabel = kpiScope === "global" ? "Activité cumulée" : "Activité";
@@ -54,10 +50,6 @@ export function DashboardFinancialSection({
   return (
     <>
       {activeFiscalPeriod ? <FiscalPeriodCurrentBanner period={activeFiscalPeriod} /> : null}
-
-      <p className="text-xs text-slate-500 dark:text-slate-400" data-testid="dashboard-updated-at">
-        Données calculées au {updatedLabel}
-      </p>
 
       <MbokaKpiBoard
         headerAction={

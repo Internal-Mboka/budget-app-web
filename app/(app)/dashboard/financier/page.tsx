@@ -3,6 +3,7 @@ import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboa
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
+import { DashboardUpdatedAt } from "@/components/molecules/dashboard-updated-at";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
@@ -90,6 +91,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         eyebrow="Dashboard"
         title="Vue financière"
         description={`Espace comptable de ${session.user.name} — indicateurs, caisse et charges.`}
+        descriptionAside={<DashboardUpdatedAt />}
       />
 
       <DashboardFinancialSection
