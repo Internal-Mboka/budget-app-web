@@ -21,7 +21,7 @@ import {
 import type { PaginationMeta } from "@/lib/pagination";
 import type { UserDeviceGroup } from "@/lib/sessions/device-groups";
 import { buildSessionsListHref } from "@/lib/sessions/list-url";
-import { MAX_ACTIVE_SESSIONS_PER_USER } from "@/lib/sessions/service";
+import { MAX_ACTIVE_SESSIONS_PER_USER } from "@/lib/sessions/constants";
 import { cn } from "@/lib/utils";
 
 function formatRelativeDate(date: Date) {
@@ -36,11 +36,11 @@ type ActiveSessionsPanelProps = {
   totalDevices: number;
 };
 
-function RelativeTime({ date }: { date: Date }) {
+function RelativeTime({ date }: { date: string }) {
   const [label, setLabel] = useState("");
 
   useEffect(() => {
-    setLabel(formatRelativeDate(date));
+    setLabel(formatRelativeDate(new Date(date)));
   }, [date]);
 
   return (

@@ -2,14 +2,15 @@ import { randomUUID } from "crypto";
 
 import { prisma } from "@/lib/prisma";
 
+import {
+  ACTIVE_TOUCH_INTERVAL_MS,
+  MAX_ACTIVE_SESSIONS_PER_USER,
+  SESSION_REUSE_WINDOW_MS,
+  STALE_SESSION_MAX_AGE_MS,
+} from "./constants";
 import type { SessionClientMeta } from "./user-agent";
 
-const ACTIVE_TOUCH_INTERVAL_MS = 5 * 60 * 1000;
-const SESSION_REUSE_WINDOW_MS = 24 * 60 * 60 * 1000;
-const STALE_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-
-/** Limite douce OWASP-inspired — au-delà, les sessions les plus anciennes sont retirées. */
-export const MAX_ACTIVE_SESSIONS_PER_USER = 10;
+export { MAX_ACTIVE_SESSIONS_PER_USER } from "./constants";
 
 export type ActiveSessionRow = {
   id: string;

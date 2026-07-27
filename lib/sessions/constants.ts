@@ -1,0 +1,4 @@
+export const MAX_ACTIVE_SESSIONS_PER_USER = 10;
+export const SESSION_REUSE_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const STALE_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+export const ACTIVE_TOUCH_INTERVAL_MS = 5 * 60 * 1000;

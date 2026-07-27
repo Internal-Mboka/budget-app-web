@@ -7,7 +7,8 @@ export type UserDeviceGroup = {
   ipAddress: string;
   sessionCount: number;
   sessionIds: string[];
-  lastActiveAt: Date;
+  /** ISO 8601 — sérialisable Server → Client */
+  lastActiveAt: string;
   isCurrentDevice: boolean;
 };
 
@@ -42,8 +43,8 @@ export function groupSessionsByDevice(
       existing.sessionIds.push(session.id);
       existing.sessionCount += 1;
 
-      if (session.lastActiveAt > existing.lastActiveAt) {
-        existing.lastActiveAt = session.lastActiveAt;
+      if (session.lastActiveAt > new Date(existing.lastActiveAt)) {
+        existing.lastActiveAt = session.lastActiveAt.toISOString();
       }
 
       if (session.id === currentSessionId) {
@@ -60,12 +61,12 @@ export function groupSessionsByDevice(
       ipAddress: session.ipAddress,
       sessionCount: 1,
       sessionIds: [session.id],
-      lastActiveAt: session.lastActiveAt,
+      lastActiveAt: session.lastActiveAt.toISOString(),
       isCurrentDevice: session.id === currentSessionId,
     });
   }
 
   return Array.from(groups.values()).sort(
-    (left, right) => right.lastActiveAt.getTime() - left.lastActiveAt.getTime()
+    (left, right) => new Date(right.lastActiveAt).getTime() - new Date(left.lastActiveAt).getTime()
   );
 }
