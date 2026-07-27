@@ -91,6 +91,19 @@ export async function loadOpenFiscalPeriod(): Promise<FiscalPeriodRecord | null>
   return row ? mapFiscalPeriodRow(row) : null;
 }
 
+export async function loadFiscalPeriodContainingDate(date: Date): Promise<FiscalPeriodRecord | null> {
+  const row = await prisma.fiscalPeriod.findFirst({
+    where: {
+      startDate: { lte: date },
+      endDate: { gte: date },
+    },
+    orderBy: [{ startDate: "desc" }],
+    select: fiscalPeriodSelect,
+  });
+
+  return row ? mapFiscalPeriodRow(row) : null;
+}
+
 /** Période opérationnelle courante (OPEN ou CLOSING). */
 export async function loadActiveFiscalPeriod(): Promise<FiscalPeriodRecord | null> {
   const row = await prisma.fiscalPeriod.findFirst({

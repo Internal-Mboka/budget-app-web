@@ -12,6 +12,7 @@ import {
 import type { ExpenseCategory, PaymentMethod } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { generateTransactionCode } from "@/lib/transactions/code";
+import { assertOpenFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 
 type RecurringTemplateRow = {
   id: string;
@@ -77,6 +78,12 @@ async function createDueInstance(template: RecurringTemplateRow, dueDate: string
 }
 
 export async function syncRecurringExpenseDues(referenceDate = new Date()): Promise<number> {
+  const fiscalLock = await assertOpenFiscalPeriodForFinancialWrite();
+
+  if (!fiscalLock.ok) {
+    return 0;
+  }
+
   const templates = await prisma.transaction.findMany({
     where: {
       type: "EXPENSE",

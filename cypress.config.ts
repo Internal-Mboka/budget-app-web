@@ -15,6 +15,33 @@ export default defineConfig({
       PDG_PASSWORD: process.env.SEED_PDG_PASSWORD ?? process.env.SEED_DT_PASSWORD,
     },
     setupNodeEvents(on, config) {
+      on("task", {
+        async setFiscalPeriodStatus(status: "OPEN" | "CLOSING" | "CLOSED") {
+          const { prisma } = await import("./lib/prisma");
+          const period = await prisma.fiscalPeriod.findFirst({
+            orderBy: { startDate: "desc" },
+            select: { id: true },
+          });
+
+          if (!period) {
+            throw new Error("Aucun trimestre comptable en base pour le test.");
+          }
+
+          await prisma.fiscalPeriod.update({
+            where: { id: period.id },
+            data: { status },
+          });
+          await prisma.$disconnect();
+          return null;
+        },
+        async resetFiscalPeriodOpen() {
+          const { prisma } = await import("./lib/prisma");
+          await prisma.fiscalPeriod.updateMany({ data: { status: "OPEN" } });
+          await prisma.$disconnect();
+          return null;
+        },
+      });
+
       return config;
     },
   },

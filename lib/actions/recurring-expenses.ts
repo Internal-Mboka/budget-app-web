@@ -13,6 +13,7 @@ import { syncRecurringExpenseDues } from "@/lib/expenses/generate-recurring-dues
 import { parseRecurringDueMetadata } from "@/lib/expenses/recurring";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
+import { assertFinancialWriteLocks, assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { generateTransactionCode } from "@/lib/transactions/code";
@@ -68,6 +69,12 @@ export async function createRecurringExpenseTemplateAction(
   }
 
   const totalAmount = roundMoney(parsed.totalAmount);
+
+  const writeLock = await assertFinancialWriteLocks();
+
+  if (!writeLock.ok) {
+    return { success: false, error: writeLock.error };
+  }
 
   try {
     const auditMeta = await captureAuditRequestContext();
@@ -175,6 +182,7 @@ export async function confirmRecurringDueAction(transactionId: string): Promise<
         totalAmount: true,
         metadata: true,
         expenseCategory: true,
+        createdAt: true,
       },
     });
 
@@ -190,6 +198,12 @@ export async function confirmRecurringDueAction(transactionId: string): Promise<
 
     if (expense.status === "SOLDE") {
       return { success: false, error: "Cette échéance est déjà réglée." };
+    }
+
+    const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", expense.createdAt);
+
+    if (!fiscalPeriodLock.ok) {
+      return { success: false, error: fiscalPeriodLock.error };
     }
 
     const totalAmount = roundMoney(decimalToNumber(expense.totalAmount));

@@ -323,7 +323,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — s'appuiera sur Fis
 |----|-------|--------|
 | US-74 | Modèle Prisma `FiscalPeriod` & soldes d'ouverture optionnels | `[x]` |
 | US-75 | Onboarding : initialisation manuelle du 1er trimestre (T1) | `[x]` |
-| US-76 | Verrous métier selon état période (OPEN / CLOSING / CLOSED) | `[ ]` |
+| US-76 | Verrous métier selon état période (OPEN / CLOSING / CLOSED) | `[x]` |
 | US-77 | Passage automatique OPEN → CLOSING à l'échéance trimestrielle | `[ ]` |
 | US-78 | Workflow validation clôture (PDG + Comptable) & notifications | `[ ]` |
 | US-79 | Ouverture automatique T+1 après validation & report créances | `[ ]` |

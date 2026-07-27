@@ -20,6 +20,7 @@ import {
   mergeCashAdvanceWorkflowStatus,
   parseCashAdvanceMetadata,
 } from "@/lib/expenses/cash-advance";
+import { assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { saveExpenseAttachmentFile } from "@/lib/storage/expense-attachments";
@@ -87,11 +88,18 @@ export async function uploadExpenseAttachmentAction(
       code: true,
       metadata: true,
       expenseCategory: true,
+      createdAt: true,
     },
   });
 
   if (!expense) {
     return { success: false, error: "Dépense introuvable." };
+  }
+
+  const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", expense.createdAt);
+
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   if (isCashAdvanceCategory(expense.expenseCategory)) {

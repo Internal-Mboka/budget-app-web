@@ -15,7 +15,7 @@ import {
   createInstallmentPaymentEntry,
 } from "@/lib/revenues/payment-history";
 import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
-import { assertOpenFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
+import { assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { withRevenueRealized, parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { resolvePaymentStatus } from "@/lib/revenues/status";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -74,6 +74,7 @@ async function loadRevenueTransaction(transactionId: string) {
       status: true,
       paymentMethod: true,
       metadata: true,
+      createdAt: true,
       clientId: true,
       client: { select: { id: true, name: true } },
     },
@@ -110,7 +111,7 @@ export async function recordRevenuePaymentAction(
     return { success: false, error: "Impossible d'encaisser un revenu annulé." };
   }
 
-  const fiscalPeriodLock = await assertOpenFiscalPeriodForFinancialWrite();
+  const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", transaction.createdAt);
   if (!fiscalPeriodLock.ok) {
     return { success: false, error: fiscalPeriodLock.error };
   }
@@ -268,6 +269,11 @@ export async function markRevenueRealizedAction(
 
   if (fulfillment.fulfillmentStatus === "REALIZED") {
     return { success: false, error: "Cette prestation est déjà marquée comme réalisée." };
+  }
+
+  const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", transaction.createdAt);
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   const metadata = withRevenueRealized(transaction.metadata);

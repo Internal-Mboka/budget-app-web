@@ -16,6 +16,7 @@ import {
 } from "@/lib/revenues/cancellation";
 import { parseRevenueFulfillment } from "@/lib/revenues/fulfillment";
 import { canCancelRevenue, isBookableRevenueCategory } from "@/lib/revenues/status";
+import { assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
@@ -81,6 +82,7 @@ export async function cancelRevenueAction(formData: FormData): Promise<CancelRev
       remainingAmount: true,
       status: true,
       metadata: true,
+      createdAt: true,
       clientId: true,
       client: { select: { id: true, name: true } },
     },
@@ -103,6 +105,12 @@ export async function cancelRevenueAction(formData: FormData): Promise<CancelRev
         ? "Impossible d'annuler une prestation soldée et déjà réalisée."
         : "Impossible d'annuler un revenu déjà soldé. Utilisez un avoir si besoin.",
     };
+  }
+
+  const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", transaction.createdAt);
+
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   const currentTotal = decimalToNumber(transaction.totalAmount);

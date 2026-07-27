@@ -11,8 +11,7 @@ import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import { resolveExpenseApprovalOnCreate, requiresExpenseApproval } from "@/lib/expenses/approval";
-import { assertTodayCashDayOpen } from "@/lib/cash-closing/lock";
-import { assertOpenFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
+import { assertFinancialWriteLocks } from "@/lib/fiscal-period/lock";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import { parseStaffPayrollMetadata } from "@/lib/expenses/staff-payroll";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -82,14 +81,9 @@ export async function createExpenseAction(formData: FormData): Promise<CreateExp
   const creatorCanApprove = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const approval = resolveExpenseApprovalOnCreate(totalAmount, creatorCanApprove, session.user.id);
 
-  const fiscalPeriodLock = await assertOpenFiscalPeriodForFinancialWrite();
-  if (!fiscalPeriodLock.ok) {
-    return { success: false, error: fiscalPeriodLock.error };
-  }
-
-  const cashDayLock = await assertTodayCashDayOpen();
-  if (!cashDayLock.ok) {
-    return { success: false, error: cashDayLock.error };
+  const writeLock = await assertFinancialWriteLocks();
+  if (!writeLock.ok) {
+    return { success: false, error: writeLock.error };
   }
 
   try {

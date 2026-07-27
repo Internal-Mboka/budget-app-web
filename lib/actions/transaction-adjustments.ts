@@ -11,6 +11,7 @@ import { getHighValueAdjustmentThreshold } from "@/lib/alerts/config";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
+import { assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { assertFinancialPeriodWritable } from "@/lib/period-closure/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -116,6 +117,12 @@ export async function createTransactionAdjustmentAction(
 
   if (!parent) {
     return { success: false, error: "Enregistrement introuvable ou déjà régularisé." };
+  }
+
+  const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("adjustment", parent.createdAt);
+
+  if (!fiscalPeriodLock.ok) {
+    return { success: false, error: fiscalPeriodLock.error };
   }
 
   const periodLock = await assertFinancialPeriodWritable({

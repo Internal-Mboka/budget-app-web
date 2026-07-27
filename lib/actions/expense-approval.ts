@@ -13,6 +13,7 @@ import {
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
 import type { ExpenseMetadata } from "@/lib/expenses/metadata";
 import { Prisma } from "@prisma/client";
+import { assertFiscalPeriodForFinancialWrite } from "@/lib/fiscal-period/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/transactions/decimal";
@@ -94,6 +95,7 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
         expenseCategory: true,
         totalAmount: true,
         metadata: true,
+        createdAt: true,
       },
     });
 
@@ -103,6 +105,12 @@ export async function approveExpenseAction(transactionId: string): Promise<Expen
 
     if (expense.approvalStatus !== "PENDING") {
       return { success: false, error: "Cette dépense n'est pas en attente d'approbation." };
+    }
+
+    const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", expense.createdAt);
+
+    if (!fiscalPeriodLock.ok) {
+      return { success: false, error: fiscalPeriodLock.error };
     }
 
     const isCashAdvance = isCashAdvanceCategory(expense.expenseCategory);
@@ -174,6 +182,7 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
         expenseCategory: true,
         totalAmount: true,
         metadata: true,
+        createdAt: true,
       },
     });
 
@@ -183,6 +192,12 @@ export async function rejectExpenseAction(transactionId: string): Promise<Expens
 
     if (expense.approvalStatus !== "PENDING") {
       return { success: false, error: "Cette dépense n'est pas en attente d'approbation." };
+    }
+
+    const fiscalPeriodLock = await assertFiscalPeriodForFinancialWrite("update", expense.createdAt);
+
+    if (!fiscalPeriodLock.ok) {
+      return { success: false, error: fiscalPeriodLock.error };
     }
 
     const isCashAdvance = isCashAdvanceCategory(expense.expenseCategory);
