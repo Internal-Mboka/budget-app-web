@@ -51,6 +51,21 @@ function sumDecimal(
   );
 }
 
+export async function loadCurrentNetTreasury(): Promise<number> {
+  const [paidRevenues, paidExpenses] = await Promise.all([
+    prisma.transaction.findMany({
+      where: ACTIVE_REVENUE_WHERE,
+      select: { paidAmount: true },
+    }),
+    prisma.transaction.findMany({
+      where: ACTIVE_EXPENSE_WHERE,
+      select: { paidAmount: true },
+    }),
+  ]);
+
+  return roundMoney(sumDecimal(paidRevenues, "paidAmount") - sumDecimal(paidExpenses, "paidAmount"));
+}
+
 function buildBucketStarts(granularity: DashboardChartGranularity, from: Date, bucketCount: number) {
   const starts: Date[] = [];
 
@@ -99,15 +114,8 @@ export async function loadDashboardKpis(
   const { from, to, label } = getKpiPeriodRange(kpiPeriod, reference);
   const periodTotals = await loadPeriodFinancialTotals(from, to);
 
-  const [paidRevenues, paidExpenses, receivableRows] = await Promise.all([
-    prisma.transaction.findMany({
-      where: ACTIVE_REVENUE_WHERE,
-      select: { paidAmount: true },
-    }),
-    prisma.transaction.findMany({
-      where: ACTIVE_EXPENSE_WHERE,
-      select: { paidAmount: true },
-    }),
+  const [netTreasury, receivableRows] = await Promise.all([
+    loadCurrentNetTreasury(),
     prisma.transaction.findMany({
       where: {
         ...ACTIVE_REVENUE_WHERE,
@@ -120,7 +128,7 @@ export async function loadDashboardKpis(
   return {
     revenueTotal: periodTotals.revenueTotal,
     expenseTotal: periodTotals.expenseTotal,
-    netTreasury: roundMoney(sumDecimal(paidRevenues, "paidAmount") - sumDecimal(paidExpenses, "paidAmount")),
+    netTreasury,
     receivables: roundMoney(
       receivableRows.reduce((sum, row) => sum + decimalToNumber(row.remainingAmount), 0)
     ),

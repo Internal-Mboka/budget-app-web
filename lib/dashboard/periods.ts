@@ -78,6 +78,52 @@ export function parseOccupancyPeriod(
   return parseCategoryPeriod(value, fallback);
 }
 
+export function parseProjectionPeriod(
+  value: string | string[] | undefined,
+  fallback: DashboardKpiPeriod = "month"
+): DashboardKpiPeriod {
+  return parseCategoryPeriod(value, fallback);
+}
+
+export function getProjectionHorizonRange(period: DashboardKpiPeriod, reference = new Date()) {
+  const from = startOfDay(reference);
+
+  switch (period) {
+    case "quarter":
+      return {
+        from,
+        to: endOfDay(addDays(from, 89)),
+        label: "90 prochains jours",
+        bucket: "week" as const,
+      };
+    case "year":
+      return {
+        from,
+        to: endOfDay(addMonths(from, 11)),
+        label: "12 prochains mois",
+        bucket: "month" as const,
+      };
+    default:
+      return {
+        from,
+        to: endOfDay(addDays(from, 29)),
+        label: "30 prochains jours",
+        bucket: "day" as const,
+      };
+  }
+}
+
+export function formatProjectionBucketLabel(date: Date, bucket: "day" | "week" | "month"): string {
+  switch (bucket) {
+    case "week":
+      return format(date, "'S'w MMM yyyy", { locale: fr });
+    case "month":
+      return format(date, "MMM yyyy", { locale: fr });
+    default:
+      return format(date, "d MMM", { locale: fr });
+  }
+}
+
 export function getKpiPeriodRange(period: DashboardKpiPeriod, reference = new Date()) {
   switch (period) {
     case "quarter":

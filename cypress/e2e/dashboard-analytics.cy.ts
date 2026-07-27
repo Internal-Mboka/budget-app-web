@@ -144,6 +144,35 @@ describe("Mboka Budget — SPEC 7 US-50 Créances en souffrance", () => {
   });
 });
 
+describe("Mboka Budget — SPEC 7 US-52 Projection trésorerie", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("affiche la projection de trésorerie avec filtre d'horizon", () => {
+    cy.visit("/dashboard");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="dashboard-treasury-projection-panel"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-kpi-current"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-kpi-expected"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-kpi-end"]').should("be.visible");
+    cy.get('[data-testid="dashboard-treasury-projection-chart"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-period-switch"]').should("be.visible");
+
+    cy.get('[data-testid="dashboard-projection-period-switch-quarter"]').click();
+    cy.location("search").should("include", "projectionPeriod=quarter");
+    cy.get('[data-testid="dashboard-treasury-projection-chart"]').should("be.visible");
+  });
+});
+
 describe("Mboka Budget — SPEC 7 US-47 Vue macro Observateur", () => {
   beforeEach(function () {
     const email = Cypress.env("OBSERVATEUR_EMAIL");

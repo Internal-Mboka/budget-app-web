@@ -13,6 +13,7 @@ type DashboardStudioOccupancyPanelProps = {
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
   categoryPeriod: DashboardKpiPeriod;
+  projectionPeriod: DashboardKpiPeriod;
   snapshot: StudioOccupancySnapshot;
 };
 
@@ -23,6 +24,7 @@ export function DashboardStudioOccupancyPanel({
   kpiPeriod,
   granularity,
   categoryPeriod,
+  projectionPeriod,
   snapshot,
 }: DashboardStudioOccupancyPanelProps) {
   return (
@@ -42,6 +44,7 @@ export function DashboardStudioOccupancyPanel({
               granularity,
               categoryPeriod,
               occupancyPeriod: value,
+              projectionPeriod,
             })
           }
         />

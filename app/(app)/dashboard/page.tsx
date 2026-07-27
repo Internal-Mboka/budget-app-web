@@ -1,6 +1,7 @@
 import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
 import { DashboardRevenueBreakdownPanel } from "@/components/organisms/dashboard-revenue-breakdown-panel";
 import { DashboardStudioOccupancyPanel } from "@/components/organisms/dashboard-studio-occupancy-panel";
+import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboard-treasury-projection-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
@@ -16,11 +17,13 @@ import {
 } from "@/lib/dashboard/load-overdue-receivables";
 import { loadRevenueByCategory } from "@/lib/dashboard/load-revenue-by-category";
 import { loadStudioOccupancy } from "@/lib/dashboard/load-studio-occupancy";
+import { loadTreasuryProjection } from "@/lib/dashboard/load-treasury-projection";
 import {
   parseCategoryPeriod,
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
   parseOccupancyPeriod,
+  parseProjectionPeriod,
 } from "@/lib/dashboard/periods";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
@@ -35,6 +38,7 @@ type DashboardPageProps = {
     kpiPeriod?: string;
     categoryPeriod?: string;
     occupancyPeriod?: string;
+    projectionPeriod?: string;
   }>;
 };
 
@@ -45,15 +49,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const granularity = parseDashboardChartGranularity(query.granularity);
   const categoryPeriod = parseCategoryPeriod(query.categoryPeriod, kpiPeriod);
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
+  const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
-  const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
+  const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
     await Promise.all([
     loadDashboardKpis(kpiPeriod),
     loadDashboardKpiComparison(kpiPeriod),
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
     loadStudioOccupancy(occupancyPeriod),
+    loadTreasuryProjection(projectionPeriod),
     loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
     countOverdueReceivables(),
     getOverdueReceivablesTotal(),
@@ -86,6 +92,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
+        projectionPeriod={projectionPeriod}
       />
 
       <DashboardRevenueBreakdownPanel
@@ -93,6 +100,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         occupancyPeriod={occupancyPeriod}
+        projectionPeriod={projectionPeriod}
         points={revenueBreakdown.points}
         periodLabel={revenueBreakdown.periodLabel}
         total={revenueBreakdown.total}
@@ -105,7 +113,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
+        projectionPeriod={projectionPeriod}
         snapshot={studioOccupancy}
+      />
+
+      <DashboardTreasuryProjectionPanel
+        basePath="/dashboard"
+        projectionPeriod={projectionPeriod}
+        kpiPeriod={kpiPeriod}
+        granularity={granularity}
+        categoryPeriod={categoryPeriod}
+        occupancyPeriod={occupancyPeriod}
+        snapshot={treasuryProjection}
       />
 
       <OverdueReceivablesPanel

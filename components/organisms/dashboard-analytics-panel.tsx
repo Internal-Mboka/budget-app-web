@@ -13,6 +13,7 @@ type DashboardAnalyticsPanelProps = {
   granularity: DashboardChartGranularity;
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
+  projectionPeriod?: DashboardKpiPeriod;
   series: RevenueExpenseComparisonPoint[];
 };
 
@@ -25,6 +26,7 @@ export function DashboardAnalyticsPanel({
   granularity,
   categoryPeriod,
   occupancyPeriod,
+  projectionPeriod,
   series,
 }: DashboardAnalyticsPanelProps) {
   return (
@@ -44,6 +46,7 @@ export function DashboardAnalyticsPanel({
               granularity,
               categoryPeriod,
               occupancyPeriod,
+              projectionPeriod,
             })
           }
         />
@@ -62,6 +65,7 @@ export function DashboardAnalyticsPanel({
               granularity: value,
               categoryPeriod,
               occupancyPeriod,
+              projectionPeriod,
             })
           }
         />

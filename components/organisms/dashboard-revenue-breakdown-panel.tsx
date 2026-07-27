@@ -12,6 +12,7 @@ type DashboardRevenueBreakdownPanelProps = {
   kpiPeriod: DashboardKpiPeriod;
   granularity: DashboardChartGranularity;
   occupancyPeriod: DashboardKpiPeriod;
+  projectionPeriod: DashboardKpiPeriod;
   points: RevenueCategoryBreakdownPoint[];
   periodLabel: string;
   total: number;
@@ -26,6 +27,7 @@ export function DashboardRevenueBreakdownPanel({
   kpiPeriod,
   granularity,
   occupancyPeriod,
+  projectionPeriod,
   points,
   periodLabel,
   total,
@@ -49,6 +51,7 @@ export function DashboardRevenueBreakdownPanel({
               granularity,
               categoryPeriod: value,
               occupancyPeriod,
+              projectionPeriod,
             })
           }
         />

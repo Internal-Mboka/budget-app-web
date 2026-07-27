@@ -1,4 +1,5 @@
 import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
+import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboard-treasury-projection-panel";
 import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
 import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
@@ -9,6 +10,7 @@ import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expens
 import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
 import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
+import { loadTreasuryProjection } from "@/lib/dashboard/load-treasury-projection";
 import {
   countOverdueReceivables,
   DASHBOARD_OVERDUE_PREVIEW_LIMIT,
@@ -18,6 +20,7 @@ import {
 import {
   parseDashboardChartGranularity,
   parseDashboardKpiPeriod,
+  parseProjectionPeriod,
 } from "@/lib/dashboard/periods";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
@@ -34,7 +37,7 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type FinancialDashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string }>;
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; projectionPeriod?: string }>;
 };
 
 export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
@@ -42,16 +45,18 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
   const query = await searchParams;
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const granularity = parseDashboardChartGranularity(query.granularity);
+  const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
   const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
 
   await ensureRecurringExpenseDuesSynced();
 
-  const [kpis, kpiComparison, rawSeries, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
+  const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews] =
     await Promise.all([
       loadDashboardKpis(kpiPeriod),
       loadDashboardKpiComparison(kpiPeriod),
       loadRevenueExpenseSeries(granularity),
+      loadTreasuryProjection(projectionPeriod),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
       loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
@@ -86,6 +91,15 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         series={series}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
+        projectionPeriod={projectionPeriod}
+      />
+
+      <DashboardTreasuryProjectionPanel
+        basePath="/dashboard/financier"
+        projectionPeriod={projectionPeriod}
+        kpiPeriod={kpiPeriod}
+        granularity={granularity}
+        snapshot={treasuryProjection}
       />
 
       <OverdueReceivablesPanel
