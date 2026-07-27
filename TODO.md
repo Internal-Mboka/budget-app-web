@@ -205,7 +205,7 @@
 
 | US | Titre | Statut |
 |----|-------|--------|
-| US-53 | Export données comptables & factures | `[ ]` |
+| US-53 | Export données comptables & factures | `[x]` |
 | US-54 | Webhooks & alertes événements critiques | `[ ]` |
 | US-55 | Installation PWA & prompt contextuel | `[ ]` |
 | US-56 | Mode hors-ligne partiel & sync | `[ ]` |

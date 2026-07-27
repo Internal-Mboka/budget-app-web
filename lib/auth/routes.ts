@@ -19,6 +19,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionSlug> = {
   "/clients": PERMISSIONS.FINANCE_CREATE_REVENUE,
   "/revenues": PERMISSIONS.FINANCE_CREATE_REVENUE,
   "/expenses": PERMISSIONS.FINANCE_CREATE_EXPENSE,
+  "/exports": PERMISSIONS.DASHBOARD_FINANCIAL,
 };
 
 export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: PermissionSlug }> = [
@@ -27,6 +28,7 @@ export const ROUTE_PREFIX_PERMISSIONS: Array<{ prefix: string; permission: Permi
   { prefix: "/clients", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },
   { prefix: "/revenues", permission: PERMISSIONS.FINANCE_CREATE_REVENUE },
   { prefix: "/expenses", permission: PERMISSIONS.FINANCE_CREATE_EXPENSE },
+  { prefix: "/exports", permission: PERMISSIONS.DASHBOARD_FINANCIAL },
 ];
 
 type DashboardSessionUser = {

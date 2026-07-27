@@ -2,7 +2,7 @@ import type { Session } from "next-auth";
 
 import { AppSidebar } from "@/components/organisms/app-sidebar";
 import { getDefaultDashboardPath } from "@/lib/auth/routes";
-import { hasPermission } from "@/lib/auth/session";
+import { hasAnyPermission, hasPermission } from "@/lib/auth/session";
 import { mbokaPageClassName } from "@/lib/design-tokens";
 import { PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,10 @@ export function AppShell({ user, children }: AppShellProps) {
   const canManageExpenses = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_EXPENSE);
   const canCloseCash = hasPermission(user.permissions, PERMISSIONS.CASH_CLOSE);
   const canViewAudit = hasPermission(user.permissions, PERMISSIONS.AUDIT_VIEW);
+  const canExportFinancial = hasAnyPermission(user.permissions, [
+    PERMISSIONS.DASHBOARD_FULL,
+    PERMISSIONS.DASHBOARD_FINANCIAL,
+  ]);
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden", mbokaPageClassName)}>
@@ -31,6 +35,7 @@ export function AppShell({ user, children }: AppShellProps) {
         canManageExpenses={canManageExpenses}
         canCloseCash={canCloseCash}
         canViewAudit={canViewAudit}
+        canExportFinancial={canExportFinancial}
       />
 
       <div className="flex min-h-0 flex-1 flex-col lg:pl-72">

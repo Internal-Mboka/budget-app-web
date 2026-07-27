@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Download,
   Fingerprint,
   KeyRound,
   Landmark,
@@ -47,6 +48,7 @@ type AppSidebarProps = {
   canManageExpenses: boolean;
   canCloseCash: boolean;
   canViewAudit: boolean;
+  canExportFinancial: boolean;
 };
 
 function getInitials(name: string): string {
@@ -83,6 +85,10 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  if (href === "/exports") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   if (href === "/account/password") {
     return pathname === href;
   }
@@ -107,6 +113,7 @@ export function AppSidebar({
   canManageExpenses,
   canCloseCash,
   canViewAudit,
+  canExportFinancial,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -153,11 +160,14 @@ export function AppSidebar({
         { href: "/account/two-factor", label: "2FA", icon: Fingerprint, testId: "nav-two-factor" },
       ],
     },
-    ...(canManageUsers || canViewAudit
+    ...(canManageUsers || canViewAudit || canExportFinancial
       ? [
           {
             title: "Administration",
             items: [
+              ...(canExportFinancial
+                ? [{ href: "/exports", label: "Exports", icon: Download, testId: "nav-exports" }]
+                : []),
               ...(canManageUsers
                 ? [
                     { href: "/admin/users", label: "Utilisateurs", icon: Users, testId: "nav-utilisateurs" },
