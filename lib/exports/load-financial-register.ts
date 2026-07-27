@@ -184,7 +184,7 @@ export async function loadJournalForExport(filters: FinancialExportFilters): Pro
 
 export async function loadRevenuePdfExportItems(
   filters: FinancialExportFilters,
-  limit = 200
+  pagination?: { skip: number; take: number }
 ): Promise<RevenuePdfExportItem[]> {
   const rows = await prisma.transaction.findMany({
     where: {
@@ -192,7 +192,8 @@ export async function loadRevenuePdfExportItems(
       ...buildPeriodWhere(filters),
     },
     orderBy: [{ createdAt: "desc" }, { code: "desc" }],
-    take: limit,
+    skip: pagination?.skip,
+    take: pagination?.take,
     select: {
       id: true,
       code: true,

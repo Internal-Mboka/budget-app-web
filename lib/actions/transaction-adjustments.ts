@@ -11,6 +11,7 @@ import { getHighValueAdjustmentThreshold } from "@/lib/alerts/config";
 import { getSession } from "@/lib/auth/get-session";
 import { hasPermission } from "@/lib/auth/session";
 import { getExpenseCategoryLabel } from "@/lib/expenses/categories";
+import { assertFinancialPeriodWritable } from "@/lib/period-closure/lock";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { getRevenueCategoryLabel } from "@/lib/revenues/categories";
@@ -108,12 +109,22 @@ export async function createTransactionAdjustmentAction(
       paymentMethod: true,
       metadata: true,
       clientId: true,
+      createdAt: true,
       client: { select: { id: true, name: true } },
     },
   });
 
   if (!parent) {
     return { success: false, error: "Enregistrement introuvable ou déjà régularisé." };
+  }
+
+  const periodLock = await assertFinancialPeriodWritable({
+    transactionDate: parent.createdAt,
+    permissions: session.user.permissions,
+  });
+
+  if (!periodLock.ok) {
+    return { success: false, error: periodLock.error };
   }
 
   const existingAdjustments = await prisma.transaction.findMany({

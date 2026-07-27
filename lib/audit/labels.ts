@@ -57,6 +57,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   FISCAL_PERIOD_CLOSING_REQUESTED: "Clôture trimestrielle demandée",
   FISCAL_PERIOD_CLOSING_APPROVED: "Clôture trimestrielle validée",
   FINANCIAL_REGISTER_EXPORTED: "Export registre comptable",
+  FINANCIAL_PERIOD_CLOSED: "Clôture mensuelle — bilan périodique",
   CRITICAL_ALERT_DISPATCHED: "Alerte critique envoyée",
   AUDIT_LOG_EXPORTED: "Export des journaux d'audit",
 };
@@ -67,6 +68,7 @@ const AUDIT_ENTITY_LABELS: Record<string, string> = {
   Transaction: "Revenu ou dépense",
   CashClosing: "Clôture de caisse",
   FiscalPeriod: "Trimestre comptable",
+  FinancialPeriodClosure: "Clôture mensuelle",
   Role: "Rôle",
   AuditLog: "Journal d'audit",
   UserSession: "Session",

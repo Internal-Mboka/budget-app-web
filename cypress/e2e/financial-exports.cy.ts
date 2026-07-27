@@ -46,4 +46,31 @@ describe("Mboka Budget — SPEC 8 US-53 Exports comptables", () => {
       expect(response.body).to.include("Code");
     });
   });
+
+  it("affiche la pagination PDF quand il y a assez de revenus", () => {
+    cy.visit("/exports?from=2026-01-01&to=2026-12-31&pageSize=10");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="financial-export-pdf"]').should("be.visible");
+    cy.get('[data-testid="mboka-pagination"]').should("exist");
+  });
+
+  it("affiche le bilan périodique pour un mois civil complet", () => {
+    cy.visit("/exports?from=2026-07-01&to=2026-07-31");
+    cy.dismissPwaPrompt();
+
+    cy.get('[data-testid="financial-export-period-balance"]').should("be.visible");
+    cy.get('[data-testid="financial-export-period-balance-preview"]').should("be.visible");
+  });
+
+  it("génère un aperçu PDF bilan périodique", () => {
+    cy.request({
+      url: "/api/exports/period-balance/pdf?from=2026-07-01&to=2026-07-31&preview=1",
+      encoding: "binary",
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.headers["content-type"]).to.include("application/pdf");
+    });
+  });
 });

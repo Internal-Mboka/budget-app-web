@@ -2,15 +2,17 @@
 
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Lock, Scale } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import { MbokaSelect } from "@/components/molecules/mboka-select";
 import { formatMoney } from "@/lib/currency";
 import type { FinancialExportFilters, FinancialExportRegister } from "@/lib/exports/filters";
+import { buildExportsListHref } from "@/lib/exports/list-url";
 import type { RevenuePdfExportItem } from "@/lib/exports/load-financial-register";
 import {
   mbokaButtonOutlineClassName,
@@ -19,13 +21,18 @@ import {
   mbokaLabelClassName,
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
+import { isFullCivilMonthPeriod } from "@/lib/period-closure/dates";
+import type { FinancialPeriodClosureRecord } from "@/lib/period-closure/load-closures";
+import type { PaginationMeta } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
 type FinancialExportsPanelProps = {
   filters: FinancialExportFilters;
   revenueDocuments: RevenuePdfExportItem[];
-  revenueDocumentTotal: number;
+  revenueDocumentsPagination: PaginationMeta;
   exportRowCount: number;
+  periodClosure: FinancialPeriodClosureRecord | null;
+  canClosePeriod: boolean;
 };
 
 const REGISTER_OPTIONS: Array<{ value: FinancialExportRegister; label: string }> = [
@@ -51,19 +58,45 @@ function formatDisplayDate(isoDate: string): string {
 export function FinancialExportsPanel({
   filters,
   revenueDocuments,
-  revenueDocumentTotal,
+  revenueDocumentsPagination,
   exportRowCount,
+  periodClosure,
+  canClosePeriod,
 }: FinancialExportsPanelProps) {
   const router = useRouter();
   const registerLabel =
     REGISTER_OPTIONS.find((option) => option.value === filters.register)?.label ?? "Registre";
+  const isFullMonth = isFullCivilMonthPeriod(filters);
+
+  function buildListHref(page: number, pageSize?: number) {
+    return buildExportsListHref({
+      page,
+      pageSize: pageSize ?? revenueDocumentsPagination.pageSize,
+      from: filters.from,
+      to: filters.to,
+      register: filters.register,
+    });
+  }
+
+  function buildPeriodBalancePdfHref(preview = false) {
+    const params = new URLSearchParams({
+      from: filters.from,
+      to: filters.to,
+    });
+
+    if (preview) {
+      params.set("preview", "1");
+    }
+
+    return `/api/exports/period-balance/pdf?${params.toString()}`;
+  }
 
   return (
     <div className="space-y-6">
       <section className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")} data-testid="financial-export-filters">
         <div className="flex items-center gap-2">
           <FileSpreadsheet className="size-4 text-sky-600 dark:text-sky-400" />
-          <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Période et registre</p>
+          <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Choisir la période</p>
         </div>
 
         <form
@@ -114,7 +147,7 @@ export function FinancialExportsPanel({
             </Field>
             <Field className="sm:col-span-2 lg:col-span-1">
               <FieldLabel htmlFor="register" className={mbokaLabelClassName}>
-                Registre à exporter
+                Contenu à exporter
               </FieldLabel>
               <MbokaSelect
                 id="register"
@@ -127,7 +160,7 @@ export function FinancialExportsPanel({
 
           <div className="flex flex-wrap gap-2">
             <button type="submit" className={mbokaButtonOutlineClassName} data-testid="financial-export-apply">
-              Appliquer la période
+              Afficher
             </button>
             <Link href="/exports" className={mbokaButtonOutlineClassName}>
               Réinitialiser
@@ -139,14 +172,17 @@ export function FinancialExportsPanel({
       <section className={cn(mbokaPanelClassName, "space-y-3 p-4 sm:p-5")} data-testid="financial-export-csv">
         <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Export CSV</p>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Génération côté serveur pour la période{" "}
+          <span className="font-medium">{registerLabel}</span>
+          {" · du "}
           <span className="font-medium">{formatDisplayDate(`${filters.from}T12:00:00`)}</span>
-          {" → "}
+          {" au "}
           <span className="font-medium">{formatDisplayDate(`${filters.to}T12:00:00`)}</span>
           {" · "}
-          <span className="font-medium">{registerLabel}</span>
-          {" · "}
-          <span className="font-medium">{exportRowCount.toLocaleString("fr-FR")} ligne(s)</span>
+          <span className="font-medium">
+            {exportRowCount.toLocaleString("fr-FR")}{" "}
+            {exportRowCount > 1 ? "entrées" : "entrée"}
+          </span>
+          .
         </p>
         <a
           href={buildCsvExportHref(filters)}
@@ -164,11 +200,11 @@ export function FinancialExportsPanel({
           <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Factures & reçus PDF</p>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Proformas et reçus générés dynamiquement pour les revenus de la période filtrée
-          {revenueDocumentTotal > revenueDocuments.length
-            ? ` (${revenueDocuments.length} affichés sur ${revenueDocumentTotal})`
-            : ` (${revenueDocumentTotal})`}
-          .
+          <span className="font-medium">
+            {revenueDocumentsPagination.total.toLocaleString("fr-FR")}{" "}
+            {revenueDocumentsPagination.total > 1 ? "revenus" : "revenu"}
+          </span>
+          {" sur cette période — téléchargez la proforma ou le reçu de chaque opération."}
         </p>
 
         {revenueDocuments.length === 0 ? (
@@ -197,7 +233,7 @@ export function FinancialExportsPanel({
                       {formatMoney(revenue.totalAmount)}
                       {revenue.paidAmount > 0 ? (
                         <span className="ml-1 text-xs text-slate-500">
-                          (enc. {formatMoney(revenue.paidAmount)})
+                          (dont {formatMoney(revenue.paidAmount)} encaissé)
                         </span>
                       ) : null}
                     </td>
@@ -227,7 +263,88 @@ export function FinancialExportsPanel({
             </table>
           </div>
         )}
+
+        <MbokaPagination meta={revenueDocumentsPagination} buildHref={buildListHref} />
       </section>
+
+      {isFullMonth ? (
+        <section
+          className={cn(mbokaPanelClassName, "space-y-4 p-4 sm:p-5")}
+          data-testid="financial-export-period-balance"
+        >
+          <div className="flex items-center gap-2">
+            <Scale className="size-4 text-sky-600 dark:text-sky-400" />
+            <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">Bilan périodique PDF</p>
+          </div>
+
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Récapitulatif mensuel du{" "}
+            <span className="font-medium">{formatDisplayDate(`${filters.from}T12:00:00`)}</span>
+            {" au "}
+            <span className="font-medium">{formatDisplayDate(`${filters.to}T12:00:00`)}</span>
+            {" : revenus, dépenses, avoirs et solde net."}
+          </p>
+
+          {periodClosure ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+              <Lock className="size-4 shrink-0" />
+              <span>
+                Période clôturée le{" "}
+                {format(parseISO(periodClosure.closedAt), "d MMM yyyy HH:mm", { locale: fr })}
+                {" · "}
+                {periodClosure.documentCode}
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Ce mois n&apos;est pas encore clôturé. Après clôture, seul le PDG pourra modifier les
+              opérations passées.
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {!periodClosure ? (
+              <>
+                <a
+                  href={buildPeriodBalancePdfHref(true)}
+                  className={cn(mbokaButtonOutlineClassName, "inline-flex no-underline")}
+                  data-testid="financial-export-period-balance-preview"
+                >
+                  <Download className="size-4" />
+                  Aperçu avant clôture
+                </a>
+
+                {canClosePeriod ? (
+                  <form action="/api/exports/period-balance/close" method="post">
+                    <input type="hidden" name="from" value={filters.from} />
+                    <input type="hidden" name="to" value={filters.to} />
+                    <button
+                      type="submit"
+                      className={cn(
+                        mbokaButtonPrimaryClassName,
+                        "border-amber-200 text-amber-900 dark:border-amber-900 dark:text-amber-100"
+                      )}
+                      data-testid="financial-export-period-balance-close"
+                    >
+                      <Lock className="size-4" />
+                      Clôturer le mois
+                    </button>
+                  </form>
+                ) : null}
+              </>
+            ) : (
+              <a
+                href={buildPeriodBalancePdfHref(false)}
+                className={cn(mbokaButtonPrimaryClassName, "inline-flex no-underline")}
+                data-testid="financial-export-period-balance-download"
+              >
+                <Download className="size-4" />
+                Télécharger le bilan archivé
+              </a>
+            )}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

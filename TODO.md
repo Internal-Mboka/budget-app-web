@@ -209,7 +209,7 @@
 | US-54 | Webhooks & alertes événements critiques | `[x]` |
 | US-55 | Installation PWA & prompt contextuel | `[ ]` |
 | US-56 | Mode hors-ligne partiel & sync | `[ ]` |
-| US-57 | Bilan financier périodique | `[ ]` |
+| US-57 | Bilan financier périodique | `[x]` |
 | US-58 | Personnalisation alertes Push/Webhooks | `[ ]` |
 | US-59 | Historique exports & stockage | `[ ]` |
 | US-60 | Queue sync hors-ligne transactions | `[ ]` |

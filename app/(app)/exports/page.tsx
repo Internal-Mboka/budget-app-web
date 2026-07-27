@@ -6,6 +6,9 @@ import {
   countFinancialExportRows,
   loadRevenuePdfExportItems,
 } from "@/lib/exports/load-financial-register";
+import { loadFinancialPeriodClosureForFilters } from "@/lib/period-closure/load-closures";
+import { isFullCivilMonthPeriod } from "@/lib/period-closure/dates";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { PERMISSIONS } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 
@@ -14,6 +17,8 @@ type ExportsPageProps = {
     from?: string;
     to?: string;
     register?: string;
+    page?: string;
+    pageSize?: string;
   }>;
 };
 
@@ -31,11 +36,27 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
 
   const query = await searchParams;
   const filters = parseFinancialExportFilters(query);
+  const paginationParams = parsePagination(query);
 
-  const [revenueDocuments, revenueDocumentTotal, exportRowCount] = await Promise.all([
-    loadRevenuePdfExportItems(filters),
+  const [revenueDocuments, revenueDocumentTotal, exportRowCount, periodClosure] = await Promise.all([
+    loadRevenuePdfExportItems(filters, {
+      skip: paginationParams.skip,
+      take: paginationParams.take,
+    }),
     countFinancialExportRows(filters, "revenues"),
     countFinancialExportRows(filters, filters.register),
+    isFullCivilMonthPeriod(filters) ? loadFinancialPeriodClosureForFilters(filters) : Promise.resolve(null),
+  ]);
+
+  const revenueDocumentsPagination = buildPaginationMeta(
+    revenueDocumentTotal,
+    paginationParams.page,
+    paginationParams.pageSize
+  );
+
+  const canClosePeriod = hasAnyPermission(session.user.permissions, [
+    PERMISSIONS.DASHBOARD_FULL,
+    PERMISSIONS.DASHBOARD_FINANCIAL,
   ]);
 
   return (
@@ -43,14 +64,16 @@ export default async function ExportsPage({ searchParams }: ExportsPageProps) {
       <MbokaPageHeader
         eyebrow="Archives & exports"
         title="Exports comptables"
-        description="Téléchargez les registres CSV et les factures PDF pour la période choisie — archivage externe et transmission comptable."
+        description="Exportez vos registres comptables et vos documents PDF pour la période de votre choix."
       />
 
       <FinancialExportsPanel
         filters={filters}
         revenueDocuments={revenueDocuments}
-        revenueDocumentTotal={revenueDocumentTotal}
+        revenueDocumentsPagination={revenueDocumentsPagination}
         exportRowCount={exportRowCount}
+        periodClosure={periodClosure}
+        canClosePeriod={canClosePeriod}
       />
     </div>
   );
