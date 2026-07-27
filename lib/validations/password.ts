@@ -12,6 +12,7 @@ export const changePasswordSchema = z
     newPassword: passwordComplexitySchema,
     confirmPassword: z.string().min(1, "Confirmation requise"),
     requireCurrentPassword: z.coerce.boolean().default(true),
+    revokeOtherDevices: z.coerce.boolean().default(true),
   })
   .superRefine((data, ctx) => {
     if (data.newPassword !== data.confirmPassword) {

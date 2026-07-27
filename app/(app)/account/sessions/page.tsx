@@ -2,6 +2,7 @@ import { ActiveSessionsPanel } from "@/components/organisms/active-sessions-pane
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { auth } from "@/lib/auth";
 import { paginateArray, parsePagination } from "@/lib/pagination";
+import { groupSessionsByDevice } from "@/lib/sessions/device-groups";
 import { listUserSessions } from "@/lib/sessions/service";
 
 type AccountSessionsPageProps = {
@@ -18,8 +19,9 @@ export default async function AccountSessionsPage({ searchParams }: AccountSessi
   const params = await searchParams;
   const pagination = parsePagination(params);
   const allSessions = await listUserSessions(session.user.id);
-  const { rows: sessions, meta: paginationMeta } = paginateArray(
-    allSessions,
+  const allDeviceGroups = groupSessionsByDevice(allSessions, session.user.sessionId);
+  const { rows: deviceGroups, meta: paginationMeta } = paginateArray(
+    allDeviceGroups,
     pagination.page,
     pagination.pageSize
   );
@@ -33,9 +35,11 @@ export default async function AccountSessionsPage({ searchParams }: AccountSessi
       />
 
       <ActiveSessionsPanel
-        initialSessions={sessions}
+        deviceGroups={deviceGroups}
         currentSessionId={session.user.sessionId}
         pagination={paginationMeta}
+        totalSessions={allSessions.length}
+        totalDevices={allDeviceGroups.length}
       />
     </div>
   );

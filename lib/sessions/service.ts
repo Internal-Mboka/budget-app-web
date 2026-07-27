@@ -8,6 +8,9 @@ const ACTIVE_TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 const SESSION_REUSE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const STALE_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Limite douce OWASP-inspired — au-delà, les sessions les plus anciennes sont retirées. */
+export const MAX_ACTIVE_SESSIONS_PER_USER = 10;
+
 export type ActiveSessionRow = {
   id: string;
   deviceType: string;
@@ -126,6 +129,57 @@ export async function revokeOtherUserSessions(userId: string, currentSessionId: 
     where: {
       userId,
       id: { not: currentSessionId },
+    },
+  });
+}
+
+export async function countUserSessions(userId: string): Promise<number> {
+  return prisma.session.count({ where: { userId } });
+}
+
+export async function enforceSessionLimit(userId: string, keepSessionId: string) {
+  const sessions = await prisma.session.findMany({
+    where: { userId },
+    orderBy: [{ lastActiveAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true },
+  });
+
+  if (sessions.length <= MAX_ACTIVE_SESSIONS_PER_USER) {
+    return { deleted: 0, limited: false };
+  }
+
+  const keepIds = new Set<string>([keepSessionId]);
+
+  for (const session of sessions) {
+    if (keepIds.size >= MAX_ACTIVE_SESSIONS_PER_USER) {
+      break;
+    }
+
+    keepIds.add(session.id);
+  }
+
+  const result = await prisma.session.deleteMany({
+    where: {
+      userId,
+      id: { notIn: Array.from(keepIds) },
+    },
+  });
+
+  return { deleted: result.count, limited: result.count > 0 };
+}
+
+export async function revokeUserDeviceSessions(
+  userId: string,
+  device: { browser: string; deviceType: string; ipAddress: string },
+  keepSessionId?: string
+) {
+  return prisma.session.deleteMany({
+    where: {
+      userId,
+      browser: device.browser,
+      deviceType: device.deviceType,
+      ipAddress: device.ipAddress,
+      ...(keepSessionId ? { id: { not: keepSessionId } } : {}),
     },
   });
 }

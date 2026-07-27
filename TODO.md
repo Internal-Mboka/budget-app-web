@@ -404,6 +404,24 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 
 ---
 
+## Refactor — Sessions & appareils (post-livraison v2.0)
+
+> **Standards :** OWASP Session Management — sessions = unité de sécurité, appareils = regroupement UX, révocation des *autres* sessions après changement de mot de passe, limite douce des sessions concurrentes.
+> **Statut :** implémenté en continu (retours terrain).
+
+| ID | Titre | Statut |
+|----|-------|--------|
+| REF-S01 | Vue groupée par appareil (1 carte = 1 device, révocation de toutes les sessions de l'appareil) | `[x]` |
+| REF-S02 | Compteur « X appareils · Y sessions » + pagination par appareil | `[x]` |
+| REF-S03 | Réutilisation session même poste (24 h) + purge 30 j inactive | `[x]` |
+| REF-S04 | Limite douce 10 sessions max avec retrait auto des plus anciennes | `[x]` |
+| REF-S05 | Changement mot de passe → option « Déconnecter les autres appareils » (OWASP 3.3.3) | `[x]` |
+| REF-S06 | Conserver la session courante après changement de mot de passe (plus de déconnexion forcée) | `[x]` |
+
+<!-- REF-S01–S06 : lib/sessions/device-groups.ts, active-sessions-panel, enforceSessionLimit, changePasswordAction + checkbox. -->
+
+---
+
 ## Phase 5 — Backlog post-livraison (v2.1+)
 
 > **Contexte :** la feuille de route v2.0 (SPEC 1 → 10) est implémentée. Cette section recense les évolutions **hors scope livraison actuelle**, identifiées dans le code, les specs ou la dette technique restante.

@@ -1,4 +1,4 @@
-export { handlers, auth, signIn, signOut } from "./instance";
+export { handlers, auth, signIn, signOut, update } from "./instance";
 export { getSession } from "./get-session";
 export { authConfig } from "./auth.config";
 export {

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { readAuditRequestMeta } from "@/lib/audit/request-context";
 import {
+  enforceSessionLimit,
   findOrCreateUserSession,
   isUserSessionActive,
   pruneStaleUserSessions,
@@ -31,6 +32,7 @@ async function attachSessionRecord(userId: string, token: Record<string, unknown
     const dbSession = await findOrCreateUserSession(userId, meta);
 
     await pruneStaleUserSessions(userId, dbSession.id);
+    await enforceSessionLimit(userId, dbSession.id);
 
     token.sessionId = dbSession.id;
     token.lastActiveBump = Date.now();
@@ -41,7 +43,7 @@ async function attachSessionRecord(userId: string, token: Record<string, unknown
   return token;
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, update } = NextAuth({
   ...authConfig,
   providers: [credentialsProvider],
   callbacks: {

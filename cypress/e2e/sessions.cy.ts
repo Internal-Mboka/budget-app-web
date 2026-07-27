@@ -13,7 +13,9 @@ describe("Mboka Budget — US-07 Sessions actives", () => {
   it("affiche la page sessions actives", () => {
     cy.visit("/account/sessions", { retryOnStatusCodeFailure: true, timeout: 30000 });
     cy.contains("Sessions actives").scrollIntoView().should("be.visible");
-    cy.get('[data-testid="current-session-badge"]').should("be.visible");
+    cy.get('[data-testid="current-session-badge"]').should("be.visible").and("contain.text", "Appareil actuel");
+    cy.get('[data-testid="active-devices-list"]').should("be.visible");
+    cy.get('[data-testid="active-sessions-summary"]').should("contain.text", "appareil");
   });
 
   it("affiche la navigation sessions", () => {
@@ -34,6 +36,6 @@ describe("Mboka Budget — US-07 Sessions actives", () => {
     cy.visit("/account/sessions", { retryOnStatusCodeFailure: true, timeout: 30000 });
     cy.get('[data-testid="revoke-other-sessions"]')
       .should("exist")
-      .and("contain.text", "Se déconnecter de tous les autres appareils");
+      .and("contain.text", "Déconnecter tous les autres appareils");
   });
 });

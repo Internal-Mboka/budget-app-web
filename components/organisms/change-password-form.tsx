@@ -37,8 +37,12 @@ export function ChangePasswordForm({ requireCurrentPassword }: ChangePasswordFor
       return;
     }
 
-    toast.success("Mot de passe mis à jour. Reconnectez-vous.");
-    router.push(result.redirectTo ?? "/login");
+    toast.success(
+      requireCurrentPassword
+        ? "Mot de passe mis à jour."
+        : "Mot de passe enregistré. Bienvenue !"
+    );
+    router.push(result.redirectTo ?? "/account/profile");
     router.refresh();
   }
 
@@ -75,6 +79,29 @@ export function ChangePasswordForm({ requireCurrentPassword }: ChangePasswordFor
         </label>
         <PasswordInput id="confirmPassword" name="confirmPassword" required />
       </div>
+
+      {requireCurrentPassword ? (
+        <label className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 dark:border-sky-900 dark:bg-slate-800/40">
+          <input
+            type="checkbox"
+            name="revokeOtherDevices"
+            defaultChecked
+            className="mt-1 size-4 rounded border-sky-200 text-[#10579F] focus:ring-sky-200 dark:border-sky-800 dark:bg-slate-900"
+            data-testid="revoke-other-devices-checkbox"
+          />
+          <span className="space-y-1">
+            <span className="block text-sm font-medium text-[#10579F] dark:text-sky-50">
+              Déconnecter les autres appareils
+            </span>
+            <span className="block text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Recommandé après un changement de mot de passe — coupe les sessions sur les autres
+              navigateurs tout en vous laissant connecté ici.
+            </span>
+          </span>
+        </label>
+      ) : (
+        <input type="hidden" name="revokeOtherDevices" value="false" />
+      )}
 
       <button type="submit" className={mbokaButtonPrimaryClassName} disabled={isSubmitting}>
         {isSubmitting ? (

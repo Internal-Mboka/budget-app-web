@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { MbokaPagination } from "@/components/molecules/mboka-pagination";
 import {
+  revokeDeviceSessionsAction,
   revokeOtherSessionsAction,
   revokeSessionAction,
 } from "@/lib/actions/sessions";
@@ -18,8 +19,9 @@ import {
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
 import type { PaginationMeta } from "@/lib/pagination";
+import type { UserDeviceGroup } from "@/lib/sessions/device-groups";
 import { buildSessionsListHref } from "@/lib/sessions/list-url";
-import type { ActiveSessionRow } from "@/lib/sessions/service";
+import { MAX_ACTIVE_SESSIONS_PER_USER } from "@/lib/sessions/service";
 import { cn } from "@/lib/utils";
 
 function formatRelativeDate(date: Date) {
@@ -27,9 +29,11 @@ function formatRelativeDate(date: Date) {
 }
 
 type ActiveSessionsPanelProps = {
-  initialSessions: ActiveSessionRow[];
+  deviceGroups: UserDeviceGroup[];
   currentSessionId?: string;
   pagination: PaginationMeta;
+  totalSessions: number;
+  totalDevices: number;
 };
 
 function RelativeTime({ date }: { date: Date }) {
@@ -46,48 +50,75 @@ function RelativeTime({ date }: { date: Date }) {
   );
 }
 
+function getDeviceActionLabel(group: UserDeviceGroup): string {
+  if (group.isCurrentDevice && group.sessionCount === 1) {
+    return "Se déconnecter";
+  }
+
+  if (group.isCurrentDevice) {
+    return "Nettoyer cet appareil";
+  }
+
+  return "Révoquer cet appareil";
+}
+
 export function ActiveSessionsPanel({
-  initialSessions,
+  deviceGroups,
   currentSessionId,
   pagination,
+  totalSessions,
+  totalDevices,
 }: ActiveSessionsPanelProps) {
   const router = useRouter();
-  const [sessions, setSessions] = useState(initialSessions);
-  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [pendingFingerprint, setPendingFingerprint] = useState<string | null>(null);
   const [isRevokingOthers, setIsRevokingOthers] = useState(false);
 
-  useEffect(() => {
-    setSessions(initialSessions);
-  }, [initialSessions]);
-
-  const totalSessions = pagination.total;
   const otherSessionsCount = Math.max(0, totalSessions - (currentSessionId ? 1 : 0));
-  const hasManySessions = totalSessions > 5;
+  const otherDevicesCount = Math.max(0, totalDevices - (currentSessionId ? 1 : 0));
+  const isNearSessionLimit = totalSessions >= MAX_ACTIVE_SESSIONS_PER_USER - 2;
+  const isAtSessionLimit = totalSessions >= MAX_ACTIVE_SESSIONS_PER_USER;
 
-  async function handleRevokeSession(sessionId: string) {
-    setPendingSessionId(sessionId);
+  async function handleRevokeDevice(group: UserDeviceGroup) {
+    setPendingFingerprint(group.fingerprint);
 
-    const formData = new FormData();
-    formData.set("sessionId", sessionId);
+    const logoutCurrent = group.isCurrentDevice && group.sessionCount === 1;
 
-    const result = await revokeSessionAction(formData);
+    if (logoutCurrent && group.sessionIds[0]) {
+      const formData = new FormData();
+      formData.set("sessionId", group.sessionIds[0]);
 
-    if (!result.success) {
-      toast.error(result.error);
-      setPendingSessionId(null);
-      return;
-    }
+      const result = await revokeSessionAction(formData);
 
-    if (sessionId === currentSessionId) {
+      if (!result.success) {
+        toast.error(result.error);
+        setPendingFingerprint(null);
+        return;
+      }
+
       toast.success("Session fermée.");
       router.push("/login");
       router.refresh();
       return;
     }
 
-    setSessions((current) => current.filter((session) => session.id !== sessionId));
-    toast.success("Appareil déconnecté.");
-    setPendingSessionId(null);
+    const formData = new FormData();
+    formData.set("fingerprint", group.fingerprint);
+    formData.set("isCurrentDevice", group.isCurrentDevice ? "true" : "false");
+
+    const result = await revokeDeviceSessionsAction(formData);
+
+    if (!result.success) {
+      toast.error(result.error);
+      setPendingFingerprint(null);
+      return;
+    }
+
+    toast.success(
+      group.isCurrentDevice
+        ? "Sessions en double retirées sur cet appareil."
+        : "Appareil déconnecté."
+    );
+    setPendingFingerprint(null);
     router.refresh();
   }
 
@@ -102,9 +133,6 @@ export function ActiveSessionsPanel({
       return;
     }
 
-    setSessions((current) =>
-      current.filter((session) => session.id === currentSessionId)
-    );
     toast.success("Tous les autres appareils ont été déconnectés.");
     setIsRevokingOthers(false);
     router.refresh();
@@ -117,20 +145,34 @@ export function ActiveSessionsPanel({
         data-testid="active-sessions-summary"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 space-y-1">
+          <div className="min-w-0 space-y-2">
             <p className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
-              {totalSessions === 1
-                ? "1 session enregistrée"
-                : `${totalSessions} sessions enregistrées`}
+              {totalDevices === 1 ? "1 appareil connecté" : `${totalDevices} appareils connectés`}
+              {" · "}
+              {totalSessions === 1 ? "1 session active" : `${totalSessions} sessions actives`}
             </p>
             <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Chaque connexion depuis un navigateur ou un appareil est listée ici. Sur le même
-              poste, une seule session devrait rester active après nettoyage.
+              Un appareil regroupe les connexions d&apos;un même navigateur sur un poste. La
+              révocation coupe toutes les sessions associées à cet appareil.
             </p>
-            {hasManySessions ? (
-              <p className="text-xs leading-5 text-amber-700 dark:text-amber-300">
-                Beaucoup d&apos;entrées ? Les tests automatiques ou les anciennes connexions
-                peuvent s&apos;accumuler — utilisez le bouton ci-contre pour nettoyer.
+            {isAtSessionLimit ? (
+              <p
+                className="text-xs leading-5 text-amber-700 dark:text-amber-300"
+                data-testid="session-limit-notice"
+              >
+                Limite de {MAX_ACTIVE_SESSIONS_PER_USER} sessions atteinte — les connexions les
+                plus anciennes sont retirées automatiquement à chaque nouvelle activité.
+              </p>
+            ) : isNearSessionLimit ? (
+              <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                Limite douce : {MAX_ACTIVE_SESSIONS_PER_USER} sessions maximum par compte.
+              </p>
+            ) : null}
+            {otherDevicesCount > 0 ? (
+              <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                {otherDevicesCount} autre{otherDevicesCount > 1 ? "s" : ""} appareil
+                {otherDevicesCount > 1 ? "s" : ""} peu{otherDevicesCount > 1 ? "vent" : "t"} être
+                déconnecté{otherDevicesCount > 1 ? "s" : ""} ci-dessous.
               </p>
             ) : null}
           </div>
@@ -153,25 +195,25 @@ export function ActiveSessionsPanel({
                 Déconnexion...
               </>
             ) : (
-              "Se déconnecter de tous les autres appareils"
+              "Déconnecter tous les autres appareils"
             )}
           </button>
         </div>
       </section>
 
-      <section className="space-y-3">
-        {sessions.map((session) => {
-          const isCurrent = session.id === currentSessionId;
-          const isPending = pendingSessionId === session.id;
+      <section className="space-y-3" data-testid="active-devices-list">
+        {deviceGroups.map((group) => {
+          const isPending = pendingFingerprint === group.fingerprint;
+          const isLogoutAction = group.isCurrentDevice && group.sessionCount === 1;
 
           return (
             <article
-              key={session.id}
-              data-testid={`session-row-${session.id}`}
+              key={group.fingerprint}
+              data-testid={`device-row-${group.fingerprint}`}
               className={cn(
                 mbokaPanelClassName,
                 "flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between",
-                isCurrent && "ring-1 ring-sky-200 dark:ring-sky-800"
+                group.isCurrentDevice && "ring-1 ring-sky-200 dark:ring-sky-800"
               )}
             >
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -182,36 +224,41 @@ export function ActiveSessionsPanel({
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-sm font-semibold text-[#10579F] dark:text-sky-50">
-                      {session.browser}
+                      {group.browser}
                     </h2>
-                    {isCurrent ? (
+                    {group.isCurrentDevice ? (
                       <span
                         data-testid="current-session-badge"
                         className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                       >
-                        Session actuelle
+                        Appareil actuel
+                      </span>
+                    ) : null}
+                    {group.sessionCount > 1 ? (
+                      <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-slate-800 dark:text-sky-300">
+                        {group.sessionCount} sessions
                       </span>
                     ) : null}
                   </div>
 
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {session.deviceType} · IP {session.ipAddress}
+                    {group.deviceType} · IP {group.ipAddress}
                   </p>
-                  <RelativeTime date={session.lastActiveAt} />
+                  <RelativeTime date={group.lastActiveAt} />
                 </div>
               </div>
 
               <button
                 type="button"
-                data-testid={`revoke-session-${session.id}`}
+                data-testid={`revoke-device-${group.fingerprint}`}
                 className={cn(
                   mbokaButtonPrimaryClassName,
-                  "w-full shrink-0 self-start whitespace-nowrap lg:min-w-[9.5rem] lg:w-auto",
-                  isCurrent && "bg-rose-600 hover:bg-rose-700"
+                  "w-full shrink-0 self-start whitespace-nowrap lg:min-w-[10.5rem] lg:w-auto",
+                  isLogoutAction && "bg-rose-600 hover:bg-rose-700"
                 )}
                 disabled={isPending}
                 onClick={() => {
-                  void handleRevokeSession(session.id);
+                  void handleRevokeDevice(group);
                 }}
               >
                 {isPending ? (
@@ -219,10 +266,8 @@ export function ActiveSessionsPanel({
                     <Loader2 className="size-4 animate-spin" />
                     Traitement...
                   </>
-                ) : isCurrent ? (
-                  "Se déconnecter"
                 ) : (
-                  "Révoquer"
+                  getDeviceActionLabel(group)
                 )}
               </button>
             </article>

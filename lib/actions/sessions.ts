@@ -7,9 +7,11 @@ import { auth, signOut } from "@/lib/auth/instance";
 import { requireSession } from "@/lib/auth/session";
 import {
   revokeOtherUserSessions,
+  revokeUserDeviceSessions,
   revokeUserSession,
 } from "@/lib/sessions/service";
-import { revokeSessionSchema } from "@/lib/validations/session";
+import { parseDeviceFingerprint } from "@/lib/sessions/device-groups";
+import { revokeDeviceSchema, revokeSessionSchema } from "@/lib/validations/session";
 
 export type SessionActionResult = { success: true } | { success: false; error: string };
 
@@ -84,6 +86,58 @@ export async function revokeOtherSessionsAction(): Promise<SessionActionResult> 
     details: {
       revokedCount: result.count,
       keptSessionId: currentSessionId,
+      performedBy: session.user.email,
+    },
+  });
+
+  revalidatePath("/account/sessions");
+
+  return { success: true };
+}
+
+export async function revokeDeviceSessionsAction(formData: FormData): Promise<SessionActionResult> {
+  const session = await requireSession();
+
+  const parsed = revokeDeviceSchema.safeParse({
+    fingerprint: formData.get("fingerprint"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: "Appareil invalide." };
+  }
+
+  const currentSessionId = session.user.sessionId;
+
+  if (!currentSessionId) {
+    return { success: false, error: "Session actuelle introuvable." };
+  }
+
+  const device = parseDeviceFingerprint(parsed.data.fingerprint);
+  const isCurrentDevice = formData.get("isCurrentDevice") === "true";
+
+  const result = await revokeUserDeviceSessions(
+    session.user.id,
+    device,
+    isCurrentDevice ? currentSessionId : undefined
+  );
+
+  if (result.count === 0) {
+    return { success: false, error: "Aucune session à révoquer pour cet appareil." };
+  }
+
+  const auditMeta = await captureAuditRequestContext();
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "SESSIONS_REVOKED_DEVICE",
+    entity: "User",
+    entityId: session.user.id,
+    userId: session.user.id,
+    details: {
+      fingerprint: parsed.data.fingerprint,
+      revokedCount: result.count,
+      keptSessionId: isCurrentDevice ? currentSessionId : null,
       performedBy: session.user.email,
     },
   });

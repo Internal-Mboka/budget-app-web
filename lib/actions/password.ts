@@ -8,7 +8,7 @@ import {
   writeAuditLog,
   type AuditRequestMeta,
 } from "@/lib/audit";
-import { auth, signOut } from "@/lib/auth/instance";
+import { auth, update } from "@/lib/auth/instance";
 import { requirePermission } from "@/lib/auth/session";
 import {
   notifyPasswordChanged,
@@ -22,7 +22,7 @@ import {
 } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
-import { revokeAllUserSessions } from "@/lib/sessions/service";
+import { revokeAllUserSessions, revokeOtherUserSessions } from "@/lib/sessions/service";
 import {
   adminResetPasswordSchema,
   changePasswordSchema,
@@ -85,13 +85,16 @@ export async function changePasswordAction(formData: FormData): Promise<Password
     newPassword: formData.get("newPassword"),
     confirmPassword: formData.get("confirmPassword"),
     requireCurrentPassword: dbUser.mustChangePassword ? false : true,
+    revokeOtherDevices:
+      formData.get("revokeOtherDevices") === "on" ||
+      formData.get("revokeOtherDevices") === "true",
   });
 
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
 
-  const { currentPassword, newPassword } = parsed.data;
+  const { currentPassword, newPassword, revokeOtherDevices } = parsed.data;
 
   if (!dbUser.mustChangePassword && currentPassword) {
     const currentMatches = await verifyPassword(currentPassword, dbUser.password);
@@ -130,16 +133,31 @@ export async function changePasswordAction(formData: FormData): Promise<Password
     context: dbUser.mustChangePassword ? "first_login" : "self_change",
   });
 
-  revalidatePath("/account/password");
+  if (revokeOtherDevices && session.user.sessionId) {
+    await revokeOtherUserSessions(dbUser.id, session.user.sessionId);
 
-  await revokeAllUserSessions(dbUser.id);
-  await signOut({ redirect: false });
+    await writePasswordAudit(
+      dbUser.id,
+      "SESSIONS_REVOKED_OTHERS",
+      {
+        context: "password_change",
+        keptSessionId: session.user.sessionId,
+        email: dbUser.email,
+      },
+      undefined,
+      auditMeta
+    );
+  }
+
+  await update({ mustChangePassword: false });
+
+  revalidatePath("/account/password");
+  revalidatePath("/account/profile");
+  revalidatePath("/account/sessions");
 
   return {
     success: true,
-    redirectTo: dbUser.mustChangePassword
-      ? "/login?message=password-updated-first-login"
-      : "/login?message=password-updated",
+    redirectTo: dbUser.mustChangePassword ? "/dashboard" : "/account/profile?password-updated=1",
   };
 }
 
