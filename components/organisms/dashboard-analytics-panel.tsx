@@ -6,6 +6,7 @@ import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-serie
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getGranularityLabel, getKpiPeriodLabel } from "@/lib/dashboard/periods";
+import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
 type DashboardAnalyticsPanelProps = {
   basePath: "/dashboard" | "/dashboard/financier";
@@ -14,6 +15,7 @@ type DashboardAnalyticsPanelProps = {
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
   projectionPeriod?: DashboardKpiPeriod;
+  projectionScenario?: TreasuryProjectionScenario;
   series: RevenueExpenseComparisonPoint[];
 };
 
@@ -27,6 +29,7 @@ export function DashboardAnalyticsPanel({
   categoryPeriod,
   occupancyPeriod,
   projectionPeriod,
+  projectionScenario,
   series,
 }: DashboardAnalyticsPanelProps) {
   return (
@@ -47,6 +50,7 @@ export function DashboardAnalyticsPanel({
               categoryPeriod,
               occupancyPeriod,
               projectionPeriod,
+              projectionScenario,
             })
           }
         />
@@ -66,6 +70,7 @@ export function DashboardAnalyticsPanel({
               categoryPeriod,
               occupancyPeriod,
               projectionPeriod,
+              projectionScenario,
             })
           }
         />

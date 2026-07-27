@@ -161,14 +161,21 @@ describe("Mboka Budget — SPEC 7 US-52 Projection trésorerie", () => {
     cy.dismissPwaPrompt();
 
     cy.get('[data-testid="dashboard-treasury-projection-panel"]').should("be.visible");
+    cy.contains("PDG et Directeur Technique").should("be.visible");
     cy.get('[data-testid="dashboard-projection-kpi-current"]').should("be.visible");
     cy.get('[data-testid="dashboard-projection-kpi-expected"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-kpi-disbursements"]').should("be.visible");
     cy.get('[data-testid="dashboard-projection-kpi-end"]').should("be.visible");
     cy.get('[data-testid="dashboard-treasury-projection-chart"]').should("be.visible");
     cy.get('[data-testid="dashboard-projection-period-switch"]').should("be.visible");
+    cy.get('[data-testid="dashboard-projection-scenario-switch"]').should("be.visible");
 
     cy.get('[data-testid="dashboard-projection-period-switch-quarter"]').click();
     cy.location("search").should("include", "projectionPeriod=quarter");
+    cy.get('[data-testid="dashboard-treasury-projection-chart"]').should("be.visible");
+
+    cy.get('[data-testid="dashboard-projection-scenario-switch-conservative"]').click();
+    cy.location("search").should("include", "projectionScenario=conservative");
     cy.get('[data-testid="dashboard-treasury-projection-chart"]').should("be.visible");
   });
 });

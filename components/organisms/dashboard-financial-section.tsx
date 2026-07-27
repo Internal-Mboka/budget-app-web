@@ -7,6 +7,7 @@ import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardKpis } from "@/lib/dashboard/load-analytics";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
+import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
 type DashboardFinancialSectionProps = {
   basePath: "/dashboard" | "/dashboard/financier";
@@ -18,6 +19,7 @@ type DashboardFinancialSectionProps = {
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
   projectionPeriod?: DashboardKpiPeriod;
+  projectionScenario?: TreasuryProjectionScenario;
 };
 
 export function DashboardFinancialSection({
@@ -30,6 +32,7 @@ export function DashboardFinancialSection({
   categoryPeriod,
   occupancyPeriod,
   projectionPeriod,
+  projectionScenario,
 }: DashboardFinancialSectionProps) {
   const updatedLabel = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
 
@@ -83,6 +86,7 @@ export function DashboardFinancialSection({
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
         series={series}
       />
     </>

@@ -6,6 +6,7 @@ import type { RevenueCategoryBreakdownPoint } from "@/lib/dashboard/load-revenue
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiPeriodLabel } from "@/lib/dashboard/periods";
+import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
 type DashboardRevenueBreakdownPanelProps = {
   categoryPeriod: DashboardKpiPeriod;
@@ -13,6 +14,7 @@ type DashboardRevenueBreakdownPanelProps = {
   granularity: DashboardChartGranularity;
   occupancyPeriod: DashboardKpiPeriod;
   projectionPeriod: DashboardKpiPeriod;
+  projectionScenario: TreasuryProjectionScenario;
   points: RevenueCategoryBreakdownPoint[];
   periodLabel: string;
   total: number;
@@ -28,6 +30,7 @@ export function DashboardRevenueBreakdownPanel({
   granularity,
   occupancyPeriod,
   projectionPeriod,
+  projectionScenario,
   points,
   periodLabel,
   total,
@@ -52,6 +55,7 @@ export function DashboardRevenueBreakdownPanel({
               categoryPeriod: value,
               occupancyPeriod,
               projectionPeriod,
+              projectionScenario,
             })
           }
         />

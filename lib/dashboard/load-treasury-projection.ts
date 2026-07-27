@@ -13,7 +13,14 @@ import {
   formatProjectionBucketLabel,
   getProjectionHorizonRange,
 } from "@/lib/dashboard/periods";
+import {
+  applyScenarioAmount,
+  getCollectionWeight,
+  getDisbursementWeight,
+  type TreasuryProjectionScenario,
+} from "@/lib/dashboard/treasury-projection-scenarios";
 import { prisma } from "@/lib/prisma";
+import { parseRecurringDueMetadata } from "@/lib/expenses/recurring";
 import { getRevenueDueDate } from "@/lib/revenues/due-date";
 import { decimalToNumber, roundMoney } from "@/lib/transactions/decimal";
 
@@ -21,16 +28,26 @@ export type TreasuryProjectionPoint = {
   key: string;
   label: string;
   expectedCollections: number;
-  cumulativeCollections: number;
+  expectedDisbursements: number;
+  netFlow: number;
+  cumulativeNetFlow: number;
   projectedTreasury: number;
   reservationCount: number;
+  expenseCount: number;
 };
 
 export type TreasuryProjectionSnapshot = {
+  scenario: TreasuryProjectionScenario;
   currentNetTreasury: number;
   totalExpectedCollections: number;
+  totalExpectedDisbursements: number;
   projectedTreasuryEnd: number;
   reservationCount: number;
+  expenseCount: number;
+  beyondHorizonCollections: number;
+  beyondHorizonDisbursements: number;
+  beyondHorizonReservationCount: number;
+  beyondHorizonExpenseCount: number;
   horizonLabel: string;
   points: TreasuryProjectionPoint[];
 };
@@ -74,14 +91,63 @@ function buildProjectionBucketStarts(
   return starts;
 }
 
+function getExpenseDueDate(metadata: unknown, createdAt: Date, reference: Date): Date {
+  const recurringDue = parseRecurringDueMetadata(metadata);
+
+  if (recurringDue) {
+    return startOfDay(new Date(`${recurringDue.dueDate}T12:00:00`));
+  }
+
+  const pendingEstimate = startOfDay(addDays(reference, 14));
+  return createdAt > pendingEstimate ? startOfDay(createdAt) : pendingEstimate;
+}
+
+function clampDueDateToHorizonStart(dueDate: Date, today: Date): Date {
+  return startOfDay(dueDate) < today ? today : startOfDay(dueDate);
+}
+
+type FlowBucket = {
+  collections: number;
+  disbursements: number;
+  reservationCount: number;
+  expenseCount: number;
+};
+
+function addToBucket(
+  buckets: Map<string, FlowBucket>,
+  dueDate: Date,
+  bucket: "day" | "week" | "month",
+  amount: number,
+  kind: "collection" | "disbursement"
+) {
+  const key = getProjectionBucketStart(dueDate, bucket).toISOString();
+  const entry = buckets.get(key) ?? {
+    collections: 0,
+    disbursements: 0,
+    reservationCount: 0,
+    expenseCount: 0,
+  };
+
+  if (kind === "collection") {
+    entry.collections = roundMoney(entry.collections + amount);
+    entry.reservationCount += 1;
+  } else {
+    entry.disbursements = roundMoney(entry.disbursements + amount);
+    entry.expenseCount += 1;
+  }
+
+  buckets.set(key, entry);
+}
+
 export async function loadTreasuryProjection(
   projectionPeriod: DashboardKpiPeriod = "month",
+  scenario: TreasuryProjectionScenario = "probable",
   reference = new Date()
 ): Promise<TreasuryProjectionSnapshot> {
   const { from, to, label, bucket } = getProjectionHorizonRange(projectionPeriod, reference);
   const today = startOfDay(reference);
 
-  const [currentNetTreasury, rows] = await Promise.all([
+  const [currentNetTreasury, revenueRows, expenseRows] = await Promise.all([
     loadCurrentNetTreasury(),
     prisma.transaction.findMany({
       where: {
@@ -92,64 +158,131 @@ export async function loadTreasuryProjection(
       },
       select: {
         remainingAmount: true,
+        paidAmount: true,
+        status: true,
         revenueCategory: true,
+        metadata: true,
+        createdAt: true,
+      },
+    }),
+    prisma.transaction.findMany({
+      where: {
+        type: "EXPENSE",
+        isAdjustment: false,
+        approvalStatus: { not: "REJECTED" },
+        remainingAmount: { gt: 0 },
+      },
+      select: {
+        remainingAmount: true,
+        approvalStatus: true,
         metadata: true,
         createdAt: true,
       },
     }),
   ]);
 
-  const bucketAmounts = new Map<string, number>();
-  const bucketCounts = new Map<string, number>();
+  const inHorizonBuckets = new Map<string, FlowBucket>();
+  let totalExpectedCollections = 0;
+  let totalExpectedDisbursements = 0;
   let reservationCount = 0;
+  let expenseCount = 0;
+  let beyondHorizonCollections = 0;
+  let beyondHorizonDisbursements = 0;
+  let beyondHorizonReservationCount = 0;
+  let beyondHorizonExpenseCount = 0;
 
-  for (const row of rows) {
-    let dueDate = getRevenueDueDate(row.revenueCategory, row.metadata, row.createdAt);
+  for (const row of revenueRows) {
+    const rawDueDate = getRevenueDueDate(row.revenueCategory, row.metadata, row.createdAt);
+    const isOverdue = startOfDay(rawDueDate) < today;
+    const amount = decimalToNumber(row.remainingAmount);
+    const weightedAmount = applyScenarioAmount(
+      amount,
+      getCollectionWeight(scenario, row.status, decimalToNumber(row.paidAmount), isOverdue)
+    );
 
-    if (startOfDay(dueDate) < today) {
-      dueDate = today;
+    if (weightedAmount <= 0) {
+      continue;
     }
 
-    if (dueDate > to) {
+    if (rawDueDate > to) {
+      beyondHorizonCollections = roundMoney(beyondHorizonCollections + weightedAmount);
+      beyondHorizonReservationCount += 1;
       continue;
     }
 
     reservationCount += 1;
-    const bucketStart = getProjectionBucketStart(dueDate, bucket);
-    const key = bucketStart.toISOString();
-    const amount = decimalToNumber(row.remainingAmount);
+    totalExpectedCollections = roundMoney(totalExpectedCollections + weightedAmount);
+    const dueDate = clampDueDateToHorizonStart(rawDueDate, today);
+    addToBucket(inHorizonBuckets, dueDate, bucket, weightedAmount, "collection");
+  }
 
-    bucketAmounts.set(key, roundMoney((bucketAmounts.get(key) ?? 0) + amount));
-    bucketCounts.set(key, (bucketCounts.get(key) ?? 0) + 1);
+  for (const row of expenseRows) {
+    const isRecurringDue = Boolean(parseRecurringDueMetadata(row.metadata));
+    const rawDueDate = getExpenseDueDate(row.metadata, row.createdAt, reference);
+    const amount = decimalToNumber(row.remainingAmount);
+    const weightedAmount = applyScenarioAmount(
+      amount,
+      getDisbursementWeight(scenario, row.approvalStatus, isRecurringDue)
+    );
+
+    if (weightedAmount <= 0) {
+      continue;
+    }
+
+    if (rawDueDate > to) {
+      beyondHorizonDisbursements = roundMoney(beyondHorizonDisbursements + weightedAmount);
+      beyondHorizonExpenseCount += 1;
+      continue;
+    }
+
+    expenseCount += 1;
+    totalExpectedDisbursements = roundMoney(totalExpectedDisbursements + weightedAmount);
+    const dueDate = clampDueDateToHorizonStart(rawDueDate, today);
+    addToBucket(inHorizonBuckets, dueDate, bucket, weightedAmount, "disbursement");
   }
 
   const bucketStarts = buildProjectionBucketStarts(from, to, bucket);
-  let cumulativeCollections = 0;
+  let cumulativeNetFlow = 0;
 
   const points: TreasuryProjectionPoint[] = bucketStarts.map((start) => {
     const key = start.toISOString();
-    const expectedCollections = bucketAmounts.get(key) ?? 0;
-    cumulativeCollections = roundMoney(cumulativeCollections + expectedCollections);
+    const bucketData = inHorizonBuckets.get(key) ?? {
+      collections: 0,
+      disbursements: 0,
+      reservationCount: 0,
+      expenseCount: 0,
+    };
+    const netFlow = roundMoney(bucketData.collections - bucketData.disbursements);
+    cumulativeNetFlow = roundMoney(cumulativeNetFlow + netFlow);
 
     return {
       key,
       label: formatProjectionBucketLabel(start, bucket),
-      expectedCollections,
-      cumulativeCollections,
-      projectedTreasury: roundMoney(currentNetTreasury + cumulativeCollections),
-      reservationCount: bucketCounts.get(key) ?? 0,
+      expectedCollections: bucketData.collections,
+      expectedDisbursements: bucketData.disbursements,
+      netFlow,
+      cumulativeNetFlow,
+      projectedTreasury: roundMoney(currentNetTreasury + cumulativeNetFlow),
+      reservationCount: bucketData.reservationCount,
+      expenseCount: bucketData.expenseCount,
     };
   });
 
-  const totalExpectedCollections = roundMoney(cumulativeCollections);
   const projectedTreasuryEnd =
     points.length > 0 ? points[points.length - 1].projectedTreasury : currentNetTreasury;
 
   return {
+    scenario,
     currentNetTreasury,
     totalExpectedCollections,
+    totalExpectedDisbursements,
     projectedTreasuryEnd,
     reservationCount,
+    expenseCount,
+    beyondHorizonCollections,
+    beyondHorizonDisbursements,
+    beyondHorizonReservationCount,
+    beyondHorizonExpenseCount,
     horizonLabel: label,
     points,
   };

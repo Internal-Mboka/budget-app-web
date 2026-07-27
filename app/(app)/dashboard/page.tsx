@@ -25,6 +25,7 @@ import {
   parseOccupancyPeriod,
   parseProjectionPeriod,
 } from "@/lib/dashboard/periods";
+import { parseProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
   countPendingExpenseApprovals,
@@ -39,6 +40,7 @@ type DashboardPageProps = {
     categoryPeriod?: string;
     occupancyPeriod?: string;
     projectionPeriod?: string;
+    projectionScenario?: string;
   }>;
 };
 
@@ -50,6 +52,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const categoryPeriod = parseCategoryPeriod(query.categoryPeriod, kpiPeriod);
   const occupancyPeriod = parseOccupancyPeriod(query.occupancyPeriod, kpiPeriod);
   const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
+  const projectionScenario = parseProjectionScenario(query.projectionScenario);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
 
   const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals] =
@@ -59,7 +62,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     loadRevenueExpenseSeries(granularity),
     loadRevenueByCategory(categoryPeriod),
     loadStudioOccupancy(occupancyPeriod),
-    loadTreasuryProjection(projectionPeriod),
+    loadTreasuryProjection(projectionPeriod, projectionScenario),
     loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
     countOverdueReceivables(),
     getOverdueReceivablesTotal(),
@@ -93,6 +96,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
       />
 
       <DashboardRevenueBreakdownPanel
@@ -101,6 +105,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         granularity={granularity}
         occupancyPeriod={occupancyPeriod}
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
         points={revenueBreakdown.points}
         periodLabel={revenueBreakdown.periodLabel}
         total={revenueBreakdown.total}
@@ -114,17 +119,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
         snapshot={studioOccupancy}
       />
 
       <DashboardTreasuryProjectionPanel
         basePath="/dashboard"
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         categoryPeriod={categoryPeriod}
         occupancyPeriod={occupancyPeriod}
         snapshot={treasuryProjection}
+        audienceLabel="PDG et Directeur Technique"
       />
 
       <OverdueReceivablesPanel

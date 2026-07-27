@@ -7,6 +7,7 @@ import type { StudioOccupancySnapshot } from "@/lib/dashboard/load-studio-occupa
 import { buildFinancialDashboardHref } from "@/lib/dashboard/list-url";
 import type { DashboardChartGranularity, DashboardKpiPeriod } from "@/lib/dashboard/periods";
 import { getKpiPeriodLabel } from "@/lib/dashboard/periods";
+import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
 type DashboardStudioOccupancyPanelProps = {
   occupancyPeriod: DashboardKpiPeriod;
@@ -14,6 +15,7 @@ type DashboardStudioOccupancyPanelProps = {
   granularity: DashboardChartGranularity;
   categoryPeriod: DashboardKpiPeriod;
   projectionPeriod: DashboardKpiPeriod;
+  projectionScenario: TreasuryProjectionScenario;
   snapshot: StudioOccupancySnapshot;
 };
 
@@ -25,6 +27,7 @@ export function DashboardStudioOccupancyPanel({
   granularity,
   categoryPeriod,
   projectionPeriod,
+  projectionScenario,
   snapshot,
 }: DashboardStudioOccupancyPanelProps) {
   return (
@@ -45,6 +48,7 @@ export function DashboardStudioOccupancyPanel({
               categoryPeriod,
               occupancyPeriod: value,
               projectionPeriod,
+              projectionScenario,
             })
           }
         />

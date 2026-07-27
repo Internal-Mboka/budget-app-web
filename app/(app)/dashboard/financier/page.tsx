@@ -22,6 +22,7 @@ import {
   parseDashboardKpiPeriod,
   parseProjectionPeriod,
 } from "@/lib/dashboard/periods";
+import { parseProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
 import {
   countPendingExpenseApprovals,
@@ -37,7 +38,7 @@ import { mbokaPanelClassName } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 type FinancialDashboardPageProps = {
-  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; projectionPeriod?: string }>;
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; projectionPeriod?: string; projectionScenario?: string }>;
 };
 
 export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
@@ -46,6 +47,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
   const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
   const granularity = parseDashboardChartGranularity(query.granularity);
   const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
+  const projectionScenario = parseProjectionScenario(query.projectionScenario);
   const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
 
@@ -56,7 +58,7 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
       loadDashboardKpis(kpiPeriod),
       loadDashboardKpiComparison(kpiPeriod),
       loadRevenueExpenseSeries(granularity),
-      loadTreasuryProjection(projectionPeriod),
+      loadTreasuryProjection(projectionPeriod, projectionScenario),
       loadPendingRecurringDues(3),
       countPendingRecurringDues(),
       loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
@@ -92,14 +94,17 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
       />
 
       <DashboardTreasuryProjectionPanel
         basePath="/dashboard/financier"
         projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
         kpiPeriod={kpiPeriod}
         granularity={granularity}
         snapshot={treasuryProjection}
+        audienceLabel="Comptable"
       />
 
       <OverdueReceivablesPanel

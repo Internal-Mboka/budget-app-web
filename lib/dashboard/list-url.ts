@@ -1,4 +1,5 @@
 import type { DashboardChartGranularity, DashboardKpiPeriod, MacroKpiPeriod } from "@/lib/dashboard/periods";
+import type { TreasuryProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
 
 export type DashboardHrefParams = {
   kpiPeriod?: DashboardKpiPeriod;
@@ -6,6 +7,7 @@ export type DashboardHrefParams = {
   categoryPeriod?: DashboardKpiPeriod;
   occupancyPeriod?: DashboardKpiPeriod;
   projectionPeriod?: DashboardKpiPeriod;
+  projectionScenario?: TreasuryProjectionScenario;
 };
 
 export type MacroHrefParams = {
@@ -43,6 +45,12 @@ export function buildFinancialDashboardHref(
     [
       "projectionPeriod",
       params.projectionPeriod && params.projectionPeriod !== "month" ? params.projectionPeriod : undefined,
+    ],
+    [
+      "projectionScenario",
+      params.projectionScenario && params.projectionScenario !== "probable"
+        ? params.projectionScenario
+        : undefined,
     ],
   ]);
 }
