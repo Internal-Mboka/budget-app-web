@@ -1,4 +1,5 @@
 import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analytics-panel";
+import { DashboardAccountingModeSwitch } from "@/components/molecules/dashboard-accounting-mode-switch";
 import { DashboardKpiScopeSwitch } from "@/components/molecules/dashboard-kpi-scope-switch";
 import { FiscalPeriodCurrentBanner } from "@/components/molecules/fiscal-period-current-banner";
 import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
@@ -53,17 +54,30 @@ export function DashboardFinancialSection({
 
       <MbokaKpiBoard
         headerAction={
-          <DashboardKpiScopeSwitch
-            basePath={basePath}
-            kpiPeriod={kpiPeriod}
-            kpiScope={kpiScope}
-            accountingMode={accountingMode}
-            granularity={granularity}
-            categoryPeriod={categoryPeriod}
-            occupancyPeriod={occupancyPeriod}
-            projectionPeriod={projectionPeriod}
-            projectionScenario={projectionScenario}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <DashboardAccountingModeSwitch
+              basePath={basePath}
+              accountingMode={accountingMode}
+              kpiPeriod={kpiPeriod}
+              kpiScope={kpiScope}
+              granularity={granularity}
+              categoryPeriod={categoryPeriod}
+              occupancyPeriod={occupancyPeriod}
+              projectionPeriod={projectionPeriod}
+              projectionScenario={projectionScenario}
+            />
+            <DashboardKpiScopeSwitch
+              basePath={basePath}
+              kpiPeriod={kpiPeriod}
+              kpiScope={kpiScope}
+              accountingMode={accountingMode}
+              granularity={granularity}
+              categoryPeriod={categoryPeriod}
+              occupancyPeriod={occupancyPeriod}
+              projectionPeriod={projectionPeriod}
+              projectionScenario={projectionScenario}
+            />
+          </div>
         }
       >
         <MbokaKpiBoardGroup

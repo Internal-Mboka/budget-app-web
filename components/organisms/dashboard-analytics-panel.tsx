@@ -1,6 +1,5 @@
 "use client";
 
-import { DashboardAccountingModeSwitch } from "@/components/molecules/dashboard-accounting-mode-switch";
 import { MbokaPeriodSwitch } from "@/components/molecules/mboka-period-switch";
 import { RevenueExpenseChart } from "@/components/molecules/revenue-expense-chart";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
@@ -41,42 +40,29 @@ export function DashboardAnalyticsPanel({
 }: DashboardAnalyticsPanelProps) {
   return (
     <div className="space-y-4" data-testid="dashboard-analytics-panel">
-      <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-        <div className="space-y-3">
-          <MbokaPeriodSwitch
-            label="Période des indicateurs"
-            testId="dashboard-kpi-period-switch"
-            value={kpiPeriod}
-            disabled={kpiScope === "global"}
-            options={KPI_PERIOD_OPTIONS.map((value) => ({
-              value,
-              label: getKpiPeriodLabel(value),
-            }))}
-            buildHref={(value) =>
-              buildFinancialDashboardHref(basePath, {
-                kpiPeriod: value,
-                kpiScope,
-                accountingMode,
-                granularity,
-                categoryPeriod,
-                occupancyPeriod,
-                projectionPeriod,
-                projectionScenario,
-              })
-            }
-          />
-          <DashboardAccountingModeSwitch
-            basePath={basePath}
-            accountingMode={accountingMode}
-            kpiPeriod={kpiPeriod}
-            kpiScope={kpiScope}
-            granularity={granularity}
-            categoryPeriod={categoryPeriod}
-            occupancyPeriod={occupancyPeriod}
-            projectionPeriod={projectionPeriod}
-            projectionScenario={projectionScenario}
-          />
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <MbokaPeriodSwitch
+          label="Période des indicateurs"
+          testId="dashboard-kpi-period-switch"
+          value={kpiPeriod}
+          disabled={kpiScope === "global"}
+          options={KPI_PERIOD_OPTIONS.map((value) => ({
+            value,
+            label: getKpiPeriodLabel(value),
+          }))}
+          buildHref={(value) =>
+            buildFinancialDashboardHref(basePath, {
+              kpiPeriod: value,
+              kpiScope,
+              accountingMode,
+              granularity,
+              categoryPeriod,
+              occupancyPeriod,
+              projectionPeriod,
+              projectionScenario,
+            })
+          }
+        />
 
         <MbokaPeriodSwitch
           label="Granularité du graphique"

@@ -25,10 +25,10 @@ export function MbokaKpiBoard({
       data-testid={testId}
       aria-label="Indicateurs financiers"
     >
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Indicateurs financiers</h2>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-end justify-end gap-3">
           {headerAction}
           <MbokaInfoPopover title="Activité vs position trésorerie" testId="dashboard-kpi-info-popover">
             <p>
