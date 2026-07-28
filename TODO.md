@@ -445,39 +445,104 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 
 ### Benchmark — Flow « création compte → première connexion » (juillet 2026)
 
-> **Périmètre :** compte provisionné par un admin (seed bootstrap ou `/admin/users`), jusqu'à la session active post-changement de mot de passe.
+> **Périmètre :** compte provisionné par un admin (seed bootstrap ou `/admin/users`), jusqu'à la session active.
+
+#### Flow industrie le plus conseillé — **invitation par lien magique** (admin invite)
+
+Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saas), [Bento](https://bentonow.com/posts/user-invitation-email-best-practices), [Kotauth](https://docs.kotauth.com/authentication/user-invitations/), [Secure Patterns](https://newsletter.securepatterns.dev/p/designing-a-safe-team-invitation-flow)) :
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. ADMIN crée l'utilisateur (prénom, nom, email, rôle) — PAS de mot de passe │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. SERVEUR : compte pending + token crypto (32 bytes) hashé SHA-256 en BDD   │
+│    TTL : 48–72 h (7 j max) · purpose = INVITE · single-use                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. EMAIL branded : « X vous invite en tant que Comptable » + CTA magic link  │
+│    Lien : /invite/accept?token=…  —  jamais de mot de passe dans l'email     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. UTILISATEUR clique → GET preview (side-effect free, anti email-scanner)    │
+│    Page : email pré-rempli (verrouillé), nom pré-rempli, champ mot de passe  │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5. POST accept : valide token (hash, expiry, single-use, email match)        │
+│    Transaction atomique : MDP hashé · token consommé · mustChangePassword=false│
+│    · audit INVITATION_ACCEPTED · email « mot de passe défini »                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 6. CONNEXION auto (optionnel) ou redirect /login → session JWT → dashboard   │
+│    Option 2FA si activée ultérieurement par l'utilisateur                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Règles sécurité associées :**
+- Token **single-use** + **hashé** en BDD (comme reset MDP)
+- Lien **GET** = preview seulement ; **POST** = consommation (évite les scanners mail)
+- Email invité **verrouillé** à l'acceptation
+- Ré-invitation = invalide les tokens INVITE précédents (pas les reset MDP)
+- Expiration standard : **72 h** (Kotauth) à **7 j** (WorkOS/Bento)
 
 #### Approches comparées
 
-| Approche | Sécurité (OWASP / industrie) | UX admin | UX utilisateur | Complexité impl. | Verdict Mboka |
-| -------- | ---------------------------- | -------- | -------------- | ---------------- | ------------- |
-| **A — Mot de passe temporaire** (admin saisit / seed `.env`, `mustChangePassword`) | Acceptable si MDP **jamais** envoyé par email ; changement forcé au 1er login (ASVS 6.4.5) | Simple | Moyenne (MDP hors bande) | Faible — **déjà en place** | ✅ **MVP actuel** (`createUserAction`, seed DT) |
-| **B — Lien d'invitation single-use** (token 24–72 h → page « choisir mot de passe ») | **Recommandé** (ASVS 6.4.5, Secure Patterns) — pas de secret en clair par email | Bonne | **Meilleure** | Moyenne (table `Invitation`, email Brevo) | ✅ **Cible v2.1** pour `/admin/users` |
-| **C — Mot de passe temporaire par email** | ❌ Déconseillé (WSTG 04-09, ASVS « ne pas envoyer de MDP en clair ») | Simple | Mauvaise (boîte mail = secret) | Faible | ❌ **Interdit** |
-| **D — Magic link à chaque connexion** | Fort pour auth sans MDP ; peu adapté au provisionnement admin B2B interne | N/A | Bonne | Élevée | ❌ Hors scope Mboka (credentials + 2FA) |
-| **E — SSO / IdP entreprise** | Idéal à terme | Dépend IdP | Excellente | Très élevée | 🔮 v3+ |
+| Approche | Sécurité | UX admin | UX utilisateur | Verdict Mboka |
+| -------- | -------- | -------- | -------------- | ------------- |
+| **Invitation magic link** (ci-dessus) | ✅ Recommandé OWASP/ASVS | ✅ Nom + email seulement | ✅ Meilleure | ✅ **Cible immédiate** `/admin/users` |
+| **MDP temporaire** (admin saisit, `mustChangePassword`) | Acceptable si MDP hors email | Simple | Moyenne | ⚠️ MVP actuel — à remplacer |
+| **MDP temporaire par email** | ❌ Interdit | Simple | Mauvaise | ❌ Jamais |
+| **Magic link à chaque login** | Fort (B2C) | N/A | Bonne | ❌ Hors scope (credentials + 2FA) |
+| **SSO / IdP** | Idéal entreprise | IdP | Excellente | 🔮 v3+ |
 
-#### Recommandation Mboka (défense en profondeur)
+#### Faisabilité **maintenant** sur Mboka Budget
 
-1. **Bootstrap (seed)** — DT seul ; `mustChangePassword: true` ; email Brevo **informatif** (rôle, URL login, consigne 1er login) **sans mot de passe** ; MDP initial via canal sécurisé séparé (`.env` / équipe).
-2. **Création admin (`/admin/users`)** — conserver MVP A court terme ; **planifier B** (invitation token) en v2.1 : email « Activez votre compte » → `/invite/[token]` → choix MDP → login.
-3. **Première connexion (commun A et B)** — middleware → `/account/password` si `mustChangePassword` → dashboard par rôle (`getDefaultDashboardPath`).
-4. **Notifications** — email à la création (invitation ou info) + email après changement MDP (`notifyPasswordChanged`, déjà en place).
-5. **Interdits** — mot de passe en clair dans un email ; auto-création de compte au seul clic d'un lien sans session vérifiée.
+| Prérequis | État |
+| --------- | ---- |
+| Brevo + template HTML Mboka (`sendMbokaEmail`, `renderMbokaEmail`) | ✅ **Fait** |
+| Token crypto + hash SHA-256 (`lib/password/index.ts`) | ✅ Réutilisable |
+| Pattern reset MDP (`PasswordResetToken`, page `/login/reset-password`) | ✅ Modèle à dupliquer |
+| `mustChangePassword` + middleware `/account/password` | ✅ En place |
+| Email invitation (`notifyUserInvited`) | ✅ Template prêt, flow non branché |
+| Table `InvitationToken` ou `purpose` sur tokens | ❌ À créer (migration Prisma) |
+| `createUserAction` sans champ password | ❌ À refactorer |
+| Page `/invite/accept` + server action | ❌ À créer |
+| Tests Cypress invitation | ❌ À ajouter |
+
+**Verdict : oui, faisable maintenant** — effort estimé **~1 journée** : migration token invitation, refactor admin form, page accept, brancher `notifyUserInvited`. Aucune dépendance externe manquante.
+
+#### Recommandation Mboka
+
+1. **Bootstrap (seed)** — DT seul ; email informatif sans MDP ; MDP via `.env`.
+2. **`/admin/users`** — migrer vers **invitation magic link** (flow ci-dessus).
+3. **Emails** — template unique `sendMbokaEmail` ; contenu métier seulement.
+4. **Interdits** — MDP en clair par email ; token multi-usage ; acceptation au GET sans POST.
 
 #### Sources
 
-- [OWASP WSTG — Weak password change/reset](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/09-Testing_for_Weak_Password_Change_or_Reset_Functionalities)
-- [OWASP ASVS V6 — Authentication](https://asvs.dev/v5.0.0/V6-Authentication/)
+- [WorkOS — User management B2B SaaS](https://workos.com/blog/user-management-for-b2b-saas)
 - [Secure Patterns — Safe team invitation flow](https://newsletter.securepatterns.dev/p/designing-a-safe-team-invitation-flow)
-- [Security SE — Temp password on registration](https://security.stackexchange.com/questions/7045/sending-temp-password-when-users-first-registered-is-that-good-for-anything)
+- [Bento — User invitation email best practices](https://bentonow.com/posts/user-invitation-email-best-practices)
+- [Kotauth — User invitations](https://docs.kotauth.com/authentication/user-invitations/)
+- [Tolinku — Invite link onboarding](https://tolinku.com/blog/invite-link-onboarding/)
+- [OWASP ASVS V6 — Authentication](https://asvs.dev/v5.0.0/V6-Authentication/)
 
 #### Backlog associé
 
-| ID | Titre | Priorité |
-| -- | ----- | -------- |
-| V2-G05 | Flow invitation `/admin/users` (token single-use + email Brevo) | P1 |
-| V2-G06 | Email notification à la création utilisateur admin (hors MDP) | P2 |
+| ID | Titre | Priorité | Statut |
+| -- | ----- | -------- | ------ |
+| V2-G05 | Flow invitation `/admin/users` (token single-use + page accept) | P1 | `[ ]` |
+| V2-G06 | Template email Mboka HTML réutilisable (`sendMbokaEmail`) | P2 | `[x]` |
 
 ---
 
@@ -743,7 +808,7 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 | V2-G03 | Export RGPD / suppression compte utilisateur avec anonymisation audit                      | P3       | `[ ]`  |
 | V2-G04 | Revue permissions Observateur (accès macro vs fuite de détail opérationnel)                | P3       | `[ ]`  |
 | V2-G05 | Flow invitation `/admin/users` — token single-use, email Brevo, choix MDP sans secret email | P1       | `[ ]`  |
-| V2-G06 | Email notification création compte admin (langage naturel, sans mot de passe)               | P2       | `[ ]`  |
+| V2-G06 | Template email Mboka HTML réutilisable (`sendMbokaEmail`)                                   | P2       | `[x]`  |
 
 
 ---

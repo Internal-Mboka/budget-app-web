@@ -5,7 +5,7 @@ import { getCriticalAlertTypeLabel, type CriticalAlertType } from "@/lib/alerts/
 import { loadAlertRuntimeConfig } from "@/lib/alerts/load-settings";
 import { loadLeadershipAlertRecipients } from "@/lib/alerts/recipients";
 import { writeAuditLog } from "@/lib/audit";
-import { sendTransactionalEmail } from "@/lib/email/send-transactional";
+import { sendMbokaEmail } from "@/lib/email/send-mboka-email";
 
 export type AlertPingResult =
   | {
@@ -97,16 +97,11 @@ export async function sendAlertIntegrationPing(input: {
     if (!config.emailProviderConfigured) {
       emailSent = true;
     } else {
-      emailSent = await sendTransactionalEmail({
-        to: recipients,
+      emailSent = await sendMbokaEmail(recipients, {
         subject: "Mboka Budget — Test alerte",
-        text: `${title}
-
-${message}
-
-Horodatage : ${timestamp}
-
-— Mboka Budget`,
+        previewText: message,
+        greeting: "Bonjour,",
+        paragraphs: [title, message, `Horodatage : ${timestamp}`],
       });
     }
   }

@@ -13,7 +13,7 @@ import {
   loadLeadershipAlertRecipients,
 } from "@/lib/alerts/recipients";
 import { writeAuditLog } from "@/lib/audit";
-import { sendTransactionalEmail } from "@/lib/email/send-transactional";
+import { sendMbokaEmail } from "@/lib/email/send-mboka-email";
 
 export type CriticalAlertPayload = {
   type: CriticalAlertType;
@@ -101,22 +101,25 @@ export async function dispatchCriticalAlert(payload: CriticalAlertPayload): Prom
       return;
     }
 
+
     const timestamp = format(new Date(), "d MMMM yyyy · HH:mm", { locale: fr });
     const subject = `Mboka Budget — Alerte · ${getCriticalAlertTypeLabel(payload.type)}`;
-    const text = `${payload.title}
-
-${payload.message}
-
-Horodatage : ${timestamp}
-Type : ${getCriticalAlertTypeLabel(payload.type)}
-${payload.entity ? `Entité : ${payload.entity}` : ""}
-${payload.entityId ? `Référence : ${payload.entityId}` : ""}
-
-— Mboka Budget`;
 
     const [emailSent, webhookSent] = await Promise.all([
       config.emailEnabled
-        ? sendTransactionalEmail({ to: recipients, subject, text })
+        ? sendMbokaEmail(recipients, {
+            subject,
+            previewText: payload.message,
+            greeting: "Bonjour,",
+            paragraphs: [
+              payload.title,
+              payload.message,
+              `Horodatage : ${timestamp}`,
+              `Type : ${getCriticalAlertTypeLabel(payload.type)}`,
+              ...(payload.entity ? [`Entité : ${payload.entity}`] : []),
+              ...(payload.entityId ? [`Référence : ${payload.entityId}`] : []),
+            ],
+          })
         : Promise.resolve(false),
       postAlertWebhook(payload, recipients, config),
     ]);
