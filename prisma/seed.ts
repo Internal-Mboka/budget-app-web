@@ -100,8 +100,8 @@ async function main() {
     where: { name: "DIRECTEUR_TECHNIQUE" },
   });
 
-  const dtEmail = process.env.SEED_DT_EMAIL ?? "prince.vangu@mboka.studio";
-  const plainPassword = process.env.SEED_DT_PASSWORD;
+  const dtEmail = process.env.SEED_DT_EMAIL ?? "vangu.leprince@gmail.com";
+  const plainPassword = process.env.SEED_DT_PASSWORD ?? "Prince1234";
 
   if (!plainPassword) {
     throw new Error("SEED_DT_PASSWORD est requis pour créer le compte Directeur Technique.");
