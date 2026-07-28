@@ -1,6 +1,6 @@
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import ws from "ws";
 
 const useFetchDriver =
@@ -20,10 +20,13 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 const adapter = new PrismaNeon({ connectionString });
 
 // Bump when schema/adapter changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 12;
+const PRISMA_CLIENT_VERSION = 15;
 
 /** Models that must exist on the cached client (guards stale webpack/global singletons). */
 const REQUIRED_DELEGATES = ["alertSettings", "generatedExport", "invitationToken"] as const;
+
+/** User scalar fields that must exist after invitation migration. */
+const REQUIRED_USER_FIELDS = ["accountStatus"] as const;
 
 const RETRYABLE_DB_ERROR_PATTERN =
   /fetch failed|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Connection terminated|NeonDbError|Error connecting to database/i;
@@ -66,6 +69,51 @@ function clientHasRequiredDelegates(client: unknown): boolean {
   return REQUIRED_DELEGATES.every((delegate) => delegate in client);
 }
 
+function isEdgeRuntime(): boolean {
+  return process.env.NEXT_RUNTIME === "edge";
+}
+
+function schemaHasRequiredUserFields(): boolean {
+  try {
+    const userModel = Prisma.dmmf.datamodel.models.find((model) => model.name === "User");
+
+    if (!userModel) {
+      return false;
+    }
+
+    const fieldNames = new Set(userModel.fields.map((field) => field.name));
+
+    return REQUIRED_USER_FIELDS.every((field) => fieldNames.has(field));
+  } catch {
+    // Edge bundles Prisma without DMMF — skip here; Node validates on first query.
+    return true;
+  }
+}
+
+function clientHasRequiredUserFields(client: unknown): boolean {
+  if (!client || typeof client !== "object") {
+    return false;
+  }
+
+  const runtimeModel = (
+    client as {
+      _runtimeDataModel?: { models?: { User?: { fields?: Array<{ name: string }> } } };
+    }
+  )._runtimeDataModel?.models?.User;
+
+  if (runtimeModel?.fields) {
+    const fieldNames = new Set(runtimeModel.fields.map((field) => field.name));
+
+    return REQUIRED_USER_FIELDS.every((field) => fieldNames.has(field));
+  }
+
+  return schemaHasRequiredUserFields();
+}
+
+function clientIsCompatible(client: unknown): boolean {
+  return clientHasRequiredDelegates(client) && clientHasRequiredUserFields(client);
+}
+
 function createPrismaClient() {
   const client = new PrismaClient({
     adapter,
@@ -96,14 +144,28 @@ function createPrismaClient() {
 }
 
 function resolvePrismaClient() {
+  if (isEdgeRuntime()) {
+    throw new Error("Prisma Client is not available in Edge Runtime.");
+  }
+
   const cached = globalForPrisma.prisma;
   const versionMatches = globalForPrisma.prismaClientVersion === PRISMA_CLIENT_VERSION;
 
-  if (cached && versionMatches && clientHasRequiredDelegates(cached)) {
+  if (cached && versionMatches && clientIsCompatible(cached)) {
     return cached;
   }
 
-  void cached?.$disconnect().catch(() => {});
+  if (cached) {
+    void cached.$disconnect().catch(() => {});
+    globalForPrisma.prisma = undefined;
+    globalForPrisma.prismaClientVersion = undefined;
+  }
+
+  if (!schemaHasRequiredUserFields()) {
+    throw new Error(
+      "Client Prisma obsolète — exécutez `npx prisma generate` puis redémarrez le serveur de dev."
+    );
+  }
 
   const client = createPrismaClient();
   globalForPrisma.prisma = client;
@@ -128,6 +190,6 @@ export const prisma: ReturnType<typeof createPrismaClient> = new Proxy(
   }
 );
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && !isEdgeRuntime()) {
   globalForPrisma.prisma = resolvePrismaClient();
 }
