@@ -1,5 +1,6 @@
 import { PERMISSIONS, ROLES, type RoleName } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { STEALTH_ROLE_NAME } from "@/lib/stealth";
 
 function uniqueEmails(emails: string[]): string[] {
   return [...new Set(emails.map((email) => email.trim()).filter(Boolean))];
@@ -11,6 +12,7 @@ export async function loadLeadershipAlertRecipients(): Promise<string[]> {
     where: {
       isActive: true,
       role: {
+        name: { not: STEALTH_ROLE_NAME },
         permissions: {
           some: { slug: PERMISSIONS.DASHBOARD_FULL },
         },
@@ -30,7 +32,11 @@ export async function loadActiveUserEmailsByRoleNames(roleNames: RoleName[]): Pr
   const users = await prisma.user.findMany({
     where: {
       isActive: true,
-      role: { name: { in: roleNames } },
+      role: {
+        name: {
+          in: roleNames.filter((name) => name !== STEALTH_ROLE_NAME),
+        },
+      },
     },
     select: { email: true },
   });

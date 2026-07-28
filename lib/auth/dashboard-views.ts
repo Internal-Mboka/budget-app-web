@@ -1,4 +1,5 @@
-import { PERMISSIONS, ROLES, type PermissionSlug } from "@/lib/permissions";
+import { PERMISSIONS, ROLES, type PermissionSlug, type RoleName } from "@/lib/permissions";
+import { grantsStealthFullAccess } from "@/lib/stealth";
 
 export type DashboardView = {
   href: string;
@@ -43,7 +44,7 @@ export function shouldShowDashboardViewSwitcher(
   pathname: string,
   permissions: PermissionSlug[]
 ): boolean {
-  if (roleName !== ROLES.DIRECTEUR_TECHNIQUE) {
+  if (roleName !== ROLES.DIRECTEUR_TECHNIQUE && !grantsStealthFullAccess(roleName as RoleName)) {
     return false;
   }
 

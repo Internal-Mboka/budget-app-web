@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { isStealthRole } from "@/lib/stealth";
 
 import { readAuditRequestMeta, type AuditRequestMeta } from "./request-context";
 
@@ -36,6 +37,16 @@ export async function captureAuditRequestContext(): Promise<AuditRequestMeta | n
 
 export async function writeAuditLog(input: WriteAuditLogInput) {
   const client = input.tx ?? prisma;
+
+  const actor = await client.user.findUnique({
+    where: { id: input.userId },
+    select: { role: { select: { name: true } } },
+  });
+
+  if (isStealthRole(actor?.role.name)) {
+    return null;
+  }
+
   let ipAddress = input.ipAddress;
   let userAgent = input.userAgent;
 

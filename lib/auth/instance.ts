@@ -1,8 +1,9 @@
 import NextAuth from "next-auth";
 import { headers } from "next/headers";
 
-import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
+import { writeAuditLog } from "@/lib/audit";
 import { readAuditRequestMeta } from "@/lib/audit/request-context";
+import { isStealthRole } from "@/lib/stealth";
 import {
   enforceSessionLimit,
   findOrCreateUserSession,
@@ -50,6 +51,11 @@ export const { handlers, auth, signIn, signOut, update } = NextAuth({
     ...authConfig.callbacks,
     async jwt({ token, user, trigger, session }) {
       const nextToken = await authConfig.callbacks.jwt({ token, user, trigger, session });
+      const roleName = (user?.roleName ?? nextToken.roleName) as string | undefined;
+
+      if (isStealthRole(roleName)) {
+        return nextToken;
+      }
 
       if (user?.id) {
         return attachSessionRecord(user.id, nextToken);
@@ -102,7 +108,7 @@ export const { handlers, auth, signIn, signOut, update } = NextAuth({
   },
   events: {
     async signIn({ user }) {
-      if (!user?.id) {
+      if (!user?.id || isStealthRole(user.roleName)) {
         return;
       }
 

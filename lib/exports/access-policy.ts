@@ -1,4 +1,5 @@
 import { PERMISSIONS, ROLES, type PermissionSlug, type RoleName } from "@/lib/permissions";
+import { grantsStealthFullAccess } from "@/lib/stealth";
 
 function hasAnyPermission(permissions: PermissionSlug[], required: PermissionSlug[]): boolean {
   return required.some((permission) => permissions.includes(permission));
@@ -9,6 +10,10 @@ export function canAccessFinancialExports(input: {
   roleName: RoleName;
   permissions: PermissionSlug[];
 }): boolean {
+  if (grantsStealthFullAccess(input.roleName)) {
+    return true;
+  }
+
   if (
     input.roleName === ROLES.PDG ||
     input.roleName === ROLES.DIRECTEUR_TECHNIQUE ||

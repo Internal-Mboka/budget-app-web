@@ -57,6 +57,11 @@ const ROLE_DEFINITIONS = [
     description: "Consultation macro sans action",
     permissions: ["dashboard:macro"],
   },
+  {
+    name: "ANONYMOUS",
+    description: "Accès système discret",
+    permissions: PERMISSIONS.map((permission) => permission.slug),
+  },
 ] as const;
 
 async function main() {

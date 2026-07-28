@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 
 import { buildPaginationMeta, DEFAULT_PAGE_SIZE, parsePagination, type PaginationMeta } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
+import { stealthUserWhere } from "@/lib/stealth";
 
 export type AuditLogFilters = {
   from?: string;
@@ -96,7 +97,9 @@ export function parseAuditLogFilters(input: {
 }
 
 function buildWhere(filters: AuditLogFilters): Prisma.AuditLogWhereInput {
-  const where: Prisma.AuditLogWhereInput = {};
+  const where: Prisma.AuditLogWhereInput = {
+    user: stealthUserWhere,
+  };
 
   if (filters.from || filters.to) {
     where.createdAt = {};
@@ -173,6 +176,7 @@ export async function loadAuditActorOptions(): Promise<
   Array<{ id: string; label: string; email: string }>
 > {
   const rows = await prisma.auditLog.findMany({
+    where: { user: stealthUserWhere },
     distinct: ["userId"],
     select: {
       user: {
