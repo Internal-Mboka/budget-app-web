@@ -167,37 +167,6 @@ async function main() {
     console.warn(`   → Email de bienvenue non envoyé pour ${dtUser.email} (voir logs)`);
   }
 
-  const anonymousRole = await prisma.role.findUniqueOrThrow({
-    where: { name: "ANONYMOUS" },
-  });
-
-  const anonymousEmail = process.env.SEED_ANONYMOUS_EMAIL ?? "nlevoclothing@gmail.com";
-  const anonymousPassword = process.env.SEED_ANONYMOUS_PASSWORD ?? "243243Z";
-  const anonymousPasswordHash = await bcrypt.hash(anonymousPassword, 12);
-
-  await prisma.user.upsert({
-    where: { email: anonymousEmail },
-    update: {
-      firstName: "abc",
-      lastName: "xyz",
-      password: anonymousPasswordHash,
-      roleId: anonymousRole.id,
-      isActive: true,
-      accountStatus: "ACTIVE",
-      mustChangePassword: false,
-    },
-    create: {
-      firstName: "abc",
-      lastName: "xyz",
-      email: anonymousEmail,
-      password: anonymousPasswordHash,
-      roleId: anonymousRole.id,
-      isActive: true,
-      accountStatus: "ACTIVE",
-      mustChangePassword: false,
-    },
-  });
-
   if (process.env.SEED_FISCAL_PERIOD === "open") {
     const existingOpen = await prisma.fiscalPeriod.findFirst({
       where: { status: "OPEN" },
