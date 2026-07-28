@@ -22,6 +22,7 @@ export async function findAuthenticatedUser(email: string): Promise<Authenticate
         equals: email,
         mode: "insensitive",
       },
+      accountStatus: "ACTIVE",
     },
     include: {
       role: {
@@ -93,7 +94,7 @@ export async function findAuthenticatedUserById(userId: string): Promise<Authent
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || user.accountStatus !== "ACTIVE") {
     return null;
   }
 

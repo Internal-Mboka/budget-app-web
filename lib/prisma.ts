@@ -20,10 +20,10 @@ const connectionString = process.env.DATABASE_URL ?? fallbackDatabaseUrl;
 const adapter = new PrismaNeon({ connectionString });
 
 // Bump when schema/adapter changes so dev HMR recreates a stale cached client.
-const PRISMA_CLIENT_VERSION = 11;
+const PRISMA_CLIENT_VERSION = 12;
 
 /** Models that must exist on the cached client (guards stale webpack/global singletons). */
-const REQUIRED_DELEGATES = ["alertSettings", "generatedExport"] as const;
+const REQUIRED_DELEGATES = ["alertSettings", "generatedExport", "invitationToken"] as const;
 
 const RETRYABLE_DB_ERROR_PATTERN =
   /fetch failed|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Connection terminated|NeonDbError|Error connecting to database/i;

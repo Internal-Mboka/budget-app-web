@@ -26,6 +26,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         lastName: true,
         email: true,
         isActive: true,
+        accountStatus: true,
         roleId: true,
         role: {
           select: { name: true },
@@ -44,6 +45,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     lastName: user.lastName,
     email: user.email,
     isActive: user.isActive,
+    accountStatus: user.accountStatus,
     roleId: user.roleId,
     roleName: user.role.name,
   }));

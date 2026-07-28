@@ -44,6 +44,7 @@ const LOGIN_MESSAGES: Record<string, string> = {
   "password-updated-first-login": "Mot de passe défini. Connectez-vous avec vos nouveaux identifiants.",
   "password-reset-success": "Mot de passe réinitialisé. Vous pouvez vous connecter.",
   "reset-email-sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
+  "invitation-accepted": "Compte activé. Connectez-vous avec votre mot de passe.",
 };
 
 export function LoginForm({ callbackUrl, initialError, initialMessage }: LoginFormProps) {

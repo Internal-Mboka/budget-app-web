@@ -180,6 +180,48 @@ export default defineConfig({
           await prisma.$disconnect();
           return result.transitioned.length;
         },
+        async getInvitationTokenForEmail(email: string) {
+          const { prisma } = await import("./lib/prisma");
+          const { createPasswordResetToken } = await import("./lib/password");
+          const { INVITE_TOKEN_TTL_MS } = await import("./lib/invitations/constants");
+
+          const user = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } },
+            select: { id: true, accountStatus: true },
+          });
+
+          if (!user || user.accountStatus !== "PENDING") {
+            await prisma.$disconnect();
+            throw new Error(`Aucun compte PENDING trouvé pour ${email}.`);
+          }
+
+          const dt = await prisma.user.findFirst({
+            where: { isActive: true, accountStatus: "ACTIVE" },
+            orderBy: { createdAt: "asc" },
+            select: { id: true },
+          });
+
+          if (!dt) {
+            await prisma.$disconnect();
+            throw new Error("Aucun administrateur actif pour émettre le token de test.");
+          }
+
+          const { token, tokenHash } = createPasswordResetToken();
+          const expiresAt = new Date(Date.now() + INVITE_TOKEN_TTL_MS);
+
+          await prisma.invitationToken.deleteMany({ where: { userId: user.id } });
+          await prisma.invitationToken.create({
+            data: {
+              userId: user.id,
+              invitedById: dt.id,
+              tokenHash,
+              expiresAt,
+            },
+          });
+
+          await prisma.$disconnect();
+          return token;
+        },
       });
 
       return config;

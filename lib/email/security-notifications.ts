@@ -3,7 +3,7 @@ import { sendMbokaEmail } from "@/lib/email/send-mboka-email";
 type PasswordChangedNotificationInput = {
   email: string;
   firstName: string;
-  context: "self_change" | "admin_reset" | "forgot_reset" | "first_login";
+  context: "self_change" | "admin_reset" | "forgot_reset" | "first_login" | "invitation_accepted";
 };
 
 const PASSWORD_CHANGED_CONTEXT_LABELS: Record<PasswordChangedNotificationInput["context"], string> =
@@ -12,6 +12,7 @@ const PASSWORD_CHANGED_CONTEXT_LABELS: Record<PasswordChangedNotificationInput["
     admin_reset: "par un administrateur",
     forgot_reset: "via la réinitialisation par email",
     first_login: "lors de votre première connexion",
+    invitation_accepted: "lors de l'activation de votre compte",
   };
 
 export async function notifyPasswordChanged(input: PasswordChangedNotificationInput) {

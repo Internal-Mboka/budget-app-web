@@ -1,10 +1,16 @@
 "use server";
 
-import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
+import { sendInvitationEmail } from "@/lib/actions/invitations";
 import { requirePermission } from "@/lib/auth/session";
+import { ROLE_LABELS } from "@/lib/design-tokens";
+import {
+  buildInvitationAcceptUrl,
+  createPendingUserPasswordHash,
+  issueInvitationToken,
+} from "@/lib/invitations/service";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
@@ -12,6 +18,7 @@ import {
   toggleUserActiveSchema,
   updateUserSchema,
 } from "@/lib/validations/user";
+import { resendInvitationSchema } from "@/lib/validations/invitation";
 
 export type UserActionResult =
   | {
@@ -22,9 +29,11 @@ export type UserActionResult =
         lastName: string;
         email: string;
         isActive: boolean;
+        accountStatus: "PENDING" | "ACTIVE";
         roleId: number;
         roleName: string;
       };
+      invitationSent?: boolean;
     }
   | { success: false; error: string };
 
@@ -35,7 +44,6 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     email: formData.get("email"),
-    password: formData.get("password"),
     roleId: formData.get("roleId"),
   });
 
@@ -43,11 +51,11 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
 
-  const { firstName, lastName, email, password, roleId } = parsed.data;
+  const { firstName, lastName, email, roleId } = parsed.data;
 
   const existing = await prisma.user.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
-    select: { id: true },
+    select: { id: true, accountStatus: true },
   });
 
   if (existing) {
@@ -60,53 +68,137 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
     return { success: false, error: "Rôle introuvable." };
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  const pendingPasswordHash = await createPendingUserPasswordHash();
   const auditMeta = await captureAuditRequestContext();
+  const inviterName = session.user.name ?? session.user.email ?? "Un administrateur";
+  const roleLabel = ROLE_LABELS[role.name] ?? role.name;
 
-  const created = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
+  const { user, token } = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
       data: {
         firstName,
         lastName,
         email: email.toLowerCase(),
-        password: passwordHash,
+        password: pendingPasswordHash,
         roleId,
-        mustChangePassword: true,
+        accountStatus: "PENDING",
+        mustChangePassword: false,
+        isActive: true,
       },
     });
+
+    const issued = await issueInvitationToken(
+      { userId: created.id, invitedById: session.user.id },
+      tx
+    );
 
     await writeAuditLog({
       tx,
       requestMeta: auditMeta,
       captureRequest: false,
-      action: "USER_CREATED",
+      action: "USER_INVITED",
       entity: "User",
-      entityId: user.id,
+      entityId: created.id,
       userId: session.user.id,
       details: {
-        targetEmail: user.email,
+        targetEmail: created.email,
         targetRole: role.name,
         performedBy: session.user.email,
       },
     });
 
-    return user;
+    return { user: created, token: issued.token };
+  });
+
+  const inviteUrl = buildInvitationAcceptUrl(token);
+  const invitationSent = await sendInvitationEmail({
+    email: user.email,
+    firstName: user.firstName,
+    inviterName,
+    roleLabel,
+    inviteUrl,
   });
 
   revalidatePath("/admin/users");
 
   return {
     success: true,
+    invitationSent,
     user: {
-      id: created.id,
-      firstName: created.firstName,
-      lastName: created.lastName,
-      email: created.email,
-      isActive: created.isActive,
-      roleId: created.roleId,
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isActive: user.isActive,
+      accountStatus: user.accountStatus,
+      roleId: user.roleId,
       roleName: role.name,
     },
   };
+}
+
+export async function resendInvitationAction(formData: FormData): Promise<UserActionResult> {
+  const session = await requirePermission(PERMISSIONS.USERS_MANAGE);
+
+  const parsed = resendInvitationSchema.safeParse({
+    userId: formData.get("userId"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: "Données invalides" };
+  }
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: parsed.data.userId },
+    include: { role: { select: { name: true } } },
+  });
+
+  if (!targetUser) {
+    return { success: false, error: "Utilisateur introuvable." };
+  }
+
+  if (targetUser.accountStatus !== "PENDING") {
+    return { success: false, error: "Ce compte a déjà été activé." };
+  }
+
+  if (!targetUser.isActive) {
+    return { success: false, error: "Ce compte est bloqué. Réactivez-le avant de renvoyer l'invitation." };
+  }
+
+  const auditMeta = await captureAuditRequestContext();
+  const inviterName = session.user.name ?? session.user.email ?? "Un administrateur";
+  const roleLabel = ROLE_LABELS[targetUser.role.name] ?? targetUser.role.name;
+
+  const { token } = await issueInvitationToken({
+    userId: targetUser.id,
+    invitedById: session.user.id,
+  });
+
+  await writeAuditLog({
+    requestMeta: auditMeta,
+    captureRequest: false,
+    action: "USER_INVITATION_RESENT",
+    entity: "User",
+    entityId: targetUser.id,
+    userId: session.user.id,
+    details: {
+      targetEmail: targetUser.email,
+      performedBy: session.user.email,
+    },
+  });
+
+  const inviteUrl = buildInvitationAcceptUrl(token);
+  const invitationSent = await sendInvitationEmail({
+    email: targetUser.email,
+    firstName: targetUser.firstName,
+    inviterName,
+    roleLabel,
+    inviteUrl,
+  });
+
+  revalidatePath("/admin/users");
+
+  return { success: true, invitationSent };
 }
 
 export async function updateUserAction(formData: FormData): Promise<UserActionResult> {
@@ -133,6 +225,13 @@ export async function updateUserAction(formData: FormData): Promise<UserActionRe
 
   if (!existingUser) {
     return { success: false, error: "Utilisateur introuvable." };
+  }
+
+  if (existingUser.accountStatus === "PENDING" && email.toLowerCase() !== existingUser.email) {
+    return {
+      success: false,
+      error: "Impossible de modifier l'email d'un compte en attente d'invitation.",
+    };
   }
 
   const emailTaken = await prisma.user.findFirst({

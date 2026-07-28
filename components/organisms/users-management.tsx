@@ -12,6 +12,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   createUserAction,
+  resendInvitationAction,
   toggleUserActiveAction,
   updateUserAction,
 } from "@/lib/actions/users";
@@ -34,6 +35,7 @@ export type UserListItem = {
   lastName: string;
   email: string;
   isActive: boolean;
+  accountStatus: "PENDING" | "ACTIVE";
   roleId: number;
   roleName: string;
 };
@@ -113,6 +115,7 @@ export function UsersManagement({
       lastName: String(formData.get("lastName") ?? ""),
       email: String(formData.get("email") ?? ""),
       isActive: true,
+      accountStatus: "PENDING",
       roleId,
       roleName: getRoleName(roleId),
     };
@@ -134,7 +137,11 @@ export function UsersManagement({
         );
       }
 
-      toast.success("Utilisateur créé avec succès.");
+      toast.success(
+        result.invitationSent === false
+          ? "Utilisateur créé, mais l'email d'invitation n'a pas pu être envoyé."
+          : "Invitation envoyée par email."
+      );
       form.reset();
       setCreateRoleId(defaultRoleId);
       router.refresh();
@@ -162,6 +169,7 @@ export function UsersManagement({
       lastName: String(formData.get("lastName") ?? ""),
       email: String(formData.get("email") ?? ""),
       isActive: users.find((user) => user.id === userId)?.isActive ?? true,
+      accountStatus: users.find((user) => user.id === userId)?.accountStatus ?? "ACTIVE",
       roleId,
       roleName: getRoleName(roleId),
     };
@@ -225,6 +233,33 @@ export function UsersManagement({
     setEditRoleId(String(user.roleId));
   }
 
+  async function handleResendInvitation(userId: string) {
+    setPendingUserId(userId);
+
+    try {
+      const formData = new FormData();
+      formData.set("userId", userId);
+
+      const result = await resendInvitationAction(formData);
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(
+        result.invitationSent === false
+          ? "Invitation régénérée, mais l'email n'a pas pu être envoyé."
+          : "Invitation renvoyée par email."
+      );
+      router.refresh();
+    } catch {
+      toast.error("Erreur serveur. Réessayez dans quelques instants.");
+    } finally {
+      setPendingUserId(null);
+    }
+  }
+
   async function handleAdminReset(event: React.FormEvent<HTMLFormElement>, userId: string) {
     event.preventDefault();
     setPendingUserId(userId);
@@ -255,7 +290,8 @@ export function UsersManagement({
       <section className={cn(mbokaPanelClassName, "p-6 sm:p-8")}>
         <h2 className="text-lg font-semibold text-[#10579F] dark:text-sky-50">Nouveau compte</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Créez un utilisateur et assignez-lui un rôle.
+          Saisissez le prénom, le nom et l&apos;email : une invitation sera envoyée pour activer le
+          compte.
         </p>
 
         <form onSubmit={handleCreate} className="mt-6 space-y-5">
@@ -296,17 +332,6 @@ export function UsersManagement({
               />
             </Field>
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="password" className={mbokaLabelClassName}>
-                Mot de passe temporaire
-              </FieldLabel>
-              <PasswordInput
-                id="password"
-                name="password"
-                required
-                placeholder="Min. 8 caractères, 1 majuscule, 1 chiffre"
-              />
-            </Field>
-            <Field className="sm:col-span-2">
               <FieldLabel htmlFor="roleId" className={mbokaLabelClassName}>
                 Rôle
               </FieldLabel>
@@ -328,7 +353,7 @@ export function UsersManagement({
                 Création...
               </>
             ) : (
-              "Créer l'utilisateur"
+              "Créer et envoyer l'invitation"
             )}
           </button>
         </form>
@@ -373,6 +398,11 @@ export function UsersManagement({
                         ) : (
                           <span className="text-rose-600 dark:text-rose-400">Bloqué</span>
                         )}
+                        {user.accountStatus === "PENDING" ? (
+                          <span className="ml-2 text-amber-600 dark:text-amber-400">
+                            · Invitation en attente
+                          </span>
+                        ) : null}
                         {isOptimistic ? (
                           <span className="ml-2 text-sky-500">Enregistrement…</span>
                         ) : null}
@@ -391,7 +421,7 @@ export function UsersManagement({
                       <button
                         type="button"
                         className={mbokaButtonOutlineClassName}
-                        disabled={isOptimistic || user.id === currentUserId}
+                        disabled={isOptimistic || user.id === currentUserId || user.accountStatus === "PENDING"}
                         onClick={() => {
                           setEditingId(null);
                           setResetPasswordId(isResettingPassword ? null : user.id);
@@ -399,6 +429,17 @@ export function UsersManagement({
                       >
                         {isResettingPassword ? "Annuler" : "Réinitialiser MDP"}
                       </button>
+                      {user.accountStatus === "PENDING" ? (
+                        <button
+                          type="button"
+                          className={mbokaButtonOutlineClassName}
+                          disabled={isLoading || isOptimistic || !user.isActive}
+                          onClick={() => handleResendInvitation(user.id)}
+                        >
+                          {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
+                          Renvoyer l&apos;invitation
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className={cn(
@@ -456,7 +497,12 @@ export function UsersManagement({
                             type="email"
                             defaultValue={user.email}
                             required
-                            className={cn(mbokaFieldClassName, "min-h-12")}
+                            readOnly={user.accountStatus === "PENDING"}
+                            className={cn(
+                              mbokaFieldClassName,
+                              "min-h-12",
+                              user.accountStatus === "PENDING" && "cursor-not-allowed opacity-80"
+                            )}
                           />
                         </div>
                         <div className="sm:col-span-2">

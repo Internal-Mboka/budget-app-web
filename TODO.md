@@ -499,49 +499,42 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 
 | Approche | Sécurité | UX admin | UX utilisateur | Verdict Mboka |
 | -------- | -------- | -------- | -------------- | ------------- |
-| **Invitation magic link** (ci-dessus) | ✅ Recommandé OWASP/ASVS | ✅ Nom + email seulement | ✅ Meilleure | ✅ **Cible immédiate** `/admin/users` |
-| **MDP temporaire** (admin saisit, `mustChangePassword`) | Acceptable si MDP hors email | Simple | Moyenne | ⚠️ MVP actuel — à remplacer |
+| **Invitation magic link** (ci-dessus) | ✅ Recommandé OWASP/ASVS | ✅ Nom + email seulement | ✅ Meilleure | ✅ **Implémenté** `/admin/users` |
+| **MDP temporaire** (admin saisit, `mustChangePassword`) | Acceptable si MDP hors email | Simple | Moyenne | ⚠️ Remplacé (reset admin conservé pour comptes actifs) |
 | **MDP temporaire par email** | ❌ Interdit | Simple | Mauvaise | ❌ Jamais |
 | **Magic link à chaque login** | Fort (B2C) | N/A | Bonne | ❌ Hors scope (credentials + 2FA) |
 | **SSO / IdP** | Idéal entreprise | IdP | Excellente | 🔮 v3+ |
 
-#### Faisabilité **maintenant** sur Mboka Budget
+#### Implémentation Mboka (juillet 2026) — **FAIT**
+
+| Étape | Fichiers |
+| ----- | -------- |
+| 1. Admin crée sans MDP | `components/organisms/users-management.tsx`, `lib/validations/user.ts`, `lib/actions/users.ts` |
+| 2. Compte `PENDING` + token 72 h | `prisma/schema.prisma` (`UserAccountStatus`, `InvitationToken`), `lib/invitations/service.ts` |
+| 3. Email branded invitation | `lib/email/account-notifications.ts` → `notifyUserInvited` |
+| 4. GET preview `/invite/accept` | `app/invite/accept/page.tsx`, `components/organisms/accept-invitation-form.tsx` |
+| 5. POST accept + audit | `lib/actions/invitations.ts` → `acceptInvitationAction`, audits `USER_INVITED` / `INVITATION_ACCEPTED` |
+| 6. Connexion auto JWT | `signIn("credentials")` après accept ; redirect `/` → dashboard par rôle |
+| Renvoyer invitation | `resendInvitationAction` + bouton admin |
+| Tests E2E | `cypress/e2e/users.cy.ts`, task `getInvitationTokenForEmail` |
+
+**Migration requise :** `npx prisma migrate deploy` (migration `20260728030000_user_invitations`).
+
+#### Faisabilité — état post-implémentation
 
 | Prérequis | État |
 | --------- | ---- |
-| Brevo + template HTML Mboka (`sendMbokaEmail`, `renderMbokaEmail`) | ✅ **Fait** |
-| Token crypto + hash SHA-256 (`lib/password/index.ts`) | ✅ Réutilisable |
-| Pattern reset MDP (`PasswordResetToken`, page `/login/reset-password`) | ✅ Modèle à dupliquer |
-| `mustChangePassword` + middleware `/account/password` | ✅ En place |
-| Email invitation (`notifyUserInvited`) | ✅ Template prêt, flow non branché |
-| Table `InvitationToken` ou `purpose` sur tokens | ❌ À créer (migration Prisma) |
-| `createUserAction` sans champ password | ❌ À refactorer |
-| Page `/invite/accept` + server action | ❌ À créer |
-| Tests Cypress invitation | ❌ À ajouter |
-
-**Verdict : oui, faisable maintenant** — effort estimé **~1 journée** : migration token invitation, refactor admin form, page accept, brancher `notifyUserInvited`. Aucune dépendance externe manquante.
-
-#### Recommandation Mboka
-
-1. **Bootstrap (seed)** — DT seul ; email informatif sans MDP ; MDP via `.env`.
-2. **`/admin/users`** — migrer vers **invitation magic link** (flow ci-dessus).
-3. **Emails** — template unique `sendMbokaEmail` ; contenu métier seulement.
-4. **Interdits** — MDP en clair par email ; token multi-usage ; acceptation au GET sans POST.
-
-#### Sources
-
-- [WorkOS — User management B2B SaaS](https://workos.com/blog/user-management-for-b2b-saas)
-- [Secure Patterns — Safe team invitation flow](https://newsletter.securepatterns.dev/p/designing-a-safe-team-invitation-flow)
-- [Bento — User invitation email best practices](https://bentonow.com/posts/user-invitation-email-best-practices)
-- [Kotauth — User invitations](https://docs.kotauth.com/authentication/user-invitations/)
-- [Tolinku — Invite link onboarding](https://tolinku.com/blog/invite-link-onboarding/)
-- [OWASP ASVS V6 — Authentication](https://asvs.dev/v5.0.0/V6-Authentication/)
+| Template email Mboka | ✅ |
+| Table `InvitationToken` + `UserAccountStatus` | ✅ |
+| `createUserAction` sans password | ✅ |
+| Page `/invite/accept` | ✅ |
+| Tests Cypress invitation | ✅ |
 
 #### Backlog associé
 
 | ID | Titre | Priorité | Statut |
 | -- | ----- | -------- | ------ |
-| V2-G05 | Flow invitation `/admin/users` (token single-use + page accept) | P1 | `[ ]` |
+| V2-G05 | Flow invitation `/admin/users` (token single-use + page accept) | P1 | `[x]` |
 | V2-G06 | Template email Mboka HTML réutilisable (`sendMbokaEmail`) | P2 | `[x]` |
 
 ---
@@ -807,7 +800,7 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 | V2-G02 | Archivage froid des journaux d'audit au-delà de la politique US-45 (S3 + rétention légale) | P3       | `[ ]`  |
 | V2-G03 | Export RGPD / suppression compte utilisateur avec anonymisation audit                      | P3       | `[ ]`  |
 | V2-G04 | Revue permissions Observateur (accès macro vs fuite de détail opérationnel)                | P3       | `[ ]`  |
-| V2-G05 | Flow invitation `/admin/users` — token single-use, email Brevo, choix MDP sans secret email | P1       | `[ ]`  |
+| V2-G05 | Flow invitation `/admin/users` — token single-use, email Brevo, choix MDP sans secret email | P1       | `[x]`  |
 | V2-G06 | Template email Mboka HTML réutilisable (`sendMbokaEmail`)                                   | P2       | `[x]`  |
 
 

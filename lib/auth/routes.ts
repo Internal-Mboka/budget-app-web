@@ -8,6 +8,7 @@ export const PUBLIC_PATHS = [
   "/login/forgot-password",
   "/login/reset-password",
   "/login/two-factor",
+  "/invite/accept",
   "/offline",
 ] as const;
 
@@ -93,6 +94,10 @@ export function isPublicPath(pathname: string): boolean {
   }
 
   if (pathname.startsWith("/login/")) {
+    return true;
+  }
+
+  if (pathname.startsWith("/invite/")) {
     return true;
   }
 

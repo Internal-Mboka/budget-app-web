@@ -117,6 +117,7 @@ async function main() {
       password: passwordHash,
       roleId: dtRole.id,
       isActive: true,
+      accountStatus: "ACTIVE",
       mustChangePassword: true,
     },
     create: {
@@ -126,6 +127,7 @@ async function main() {
       password: passwordHash,
       roleId: dtRole.id,
       isActive: true,
+      accountStatus: "ACTIVE",
       mustChangePassword: true,
     },
   });

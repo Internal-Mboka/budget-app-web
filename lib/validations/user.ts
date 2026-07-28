@@ -1,12 +1,9 @@
 import { z } from "zod";
 
-import { passwordComplexitySchema } from "@/lib/validations/password";
-
 export const createUserSchema = z.object({
   firstName: z.string().trim().min(2, "Le prénom est requis"),
   lastName: z.string().trim().min(2, "Le nom est requis"),
   email: z.string().trim().email("Adresse email invalide"),
-  password: passwordComplexitySchema,
   roleId: z.coerce.number().int().positive("Rôle invalide"),
 });
 

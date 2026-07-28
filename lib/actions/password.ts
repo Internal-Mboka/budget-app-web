@@ -10,6 +10,7 @@ import {
 } from "@/lib/audit";
 import { auth, update } from "@/lib/auth/instance";
 import { requirePermission } from "@/lib/auth/session";
+import { getAppBaseUrl } from "@/lib/app-url";
 import {
   notifyPasswordChanged,
   notifyPasswordResetRequested,
@@ -35,10 +36,6 @@ export type PasswordActionResult =
   | { success: false; error: string };
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
-
-function getAppBaseUrl() {
-  return process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-}
 
 async function writePasswordAudit(
   userId: string,
@@ -300,11 +297,18 @@ export async function adminResetPasswordAction(
 
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, firstName: true },
+    select: { id: true, email: true, firstName: true, accountStatus: true },
   });
 
   if (!targetUser) {
     return { success: false, error: "Utilisateur introuvable." };
+  }
+
+  if (targetUser.accountStatus === "PENDING") {
+    return {
+      success: false,
+      error: "Ce compte est en attente d'invitation. Renvoyez l'invitation plutôt qu'un mot de passe.",
+    };
   }
 
   const passwordHash = await hashPassword(newPassword);
