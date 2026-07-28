@@ -7,6 +7,7 @@ import { PwaInstallPrompt } from "@/components/organisms/pwa-install-prompt";
 import { OfflineSyncBridge } from "@/components/molecules/offline-sync-bridge";
 import { PwaNetworkStatus } from "@/components/molecules/pwa-network-status";
 import {
+  detectAndroid,
   detectIosSafari,
   isCypressTestRun,
   isPwaInstallContextPath,
@@ -31,6 +32,7 @@ export function PwaRegister() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [installed, setInstalled] = useState(false);
   const isIos = detectIosSafari();
+  const isAndroid = detectAndroid();
 
   useEffect(() => {
     if (!isPwaInstallContextPath(pathname)) {
@@ -60,17 +62,15 @@ export function PwaRegister() {
   }, [pathname]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || process.env.NODE_ENV !== "production") {
+    if (typeof window === "undefined") {
       return;
     }
 
-    if (!("serviceWorker" in navigator)) {
-      return;
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+      navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.error("Service worker registration failed", error);
+      });
     }
-
-    navigator.serviceWorker.register("/sw.js").catch((error) => {
-      console.error("Service worker registration failed", error);
-    });
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -127,6 +127,7 @@ export function PwaRegister() {
         <PwaInstallPrompt
           canInstallNatively={Boolean(deferredPrompt)}
           isIos={isIos}
+          isAndroid={isAndroid}
           onInstall={installApp}
           onDismiss={dismissPrompt}
         />
