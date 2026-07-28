@@ -1,4 +1,6 @@
 import { sendMbokaEmail } from "@/lib/email/send-mboka-email";
+import { INVITE_TOKEN_TTL_DAYS } from "@/lib/invitations/constants";
+import { formatInvitationExpiryLabel } from "@/lib/invitations/format-expiry";
 
 type AccountProvisionedFromSeedInput = {
   email: string;
@@ -36,23 +38,27 @@ type UserInvitedInput = {
   inviterName: string;
   roleLabel: string;
   inviteUrl: string;
-  expiresInHours: number;
+  expiresAt: Date;
 };
 
 /** Invitation admin — lien magique pour activer le compte et choisir un mot de passe. */
 export async function notifyUserInvited(input: UserInvitedInput): Promise<boolean> {
+  const expiryLabel = formatInvitationExpiryLabel(input.expiresAt);
+
   return sendMbokaEmail(input.email, {
     subject: "Mboka Budget — Activez votre compte",
-    previewText: `${input.inviterName} vous invite à rejoindre Mboka Budget.`,
+    previewText: `${input.inviterName} vous invite — lien valable ${INVITE_TOKEN_TTL_DAYS} jours.`,
     greeting: `Bonjour ${input.firstName},`,
     paragraphs: [
       `${input.inviterName} vous a invité à rejoindre Mboka Budget en tant que ${input.roleLabel}.`,
-      "Cliquez sur le bouton ci-dessous pour activer votre compte et choisir votre mot de passe personnel. Ce lien est valable une seule fois.",
+      "Cliquez sur le bouton ci-dessous pour activer votre compte et choisir votre mot de passe personnel.",
+      `Ce lien est valable une seule fois et expire le ${expiryLabel} (${INVITE_TOKEN_TTL_DAYS} jours).`,
     ],
     cta: {
       label: "Activer mon compte",
       href: input.inviteUrl,
     },
-    footerNote: `Ce lien expire dans ${input.expiresInHours} heures. Si vous n'attendiez pas cette invitation, ignorez ce message.`,
+    footerNote:
+      "Passé cette date, demandez à votre administrateur de renvoyer une invitation. Si vous n'attendiez pas ce message, ignorez-le.",
   });
 }

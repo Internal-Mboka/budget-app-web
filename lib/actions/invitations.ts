@@ -6,7 +6,6 @@ import { captureAuditRequestContext, writeAuditLog } from "@/lib/audit";
 import { signIn } from "@/lib/auth/instance";
 import { notifyUserInvited } from "@/lib/email/account-notifications";
 import { notifyPasswordChanged } from "@/lib/email/security-notifications";
-import { INVITE_TOKEN_TTL_HOURS } from "@/lib/invitations/constants";
 import { acceptInvitation } from "@/lib/invitations/service";
 import { acceptInvitationSchema } from "@/lib/validations/invitation";
 
@@ -91,6 +90,7 @@ export async function sendInvitationEmail(input: {
   inviterName: string;
   roleLabel: string;
   inviteUrl: string;
+  expiresAt: Date;
 }): Promise<boolean> {
   return notifyUserInvited({
     email: input.email,
@@ -98,6 +98,6 @@ export async function sendInvitationEmail(input: {
     inviterName: input.inviterName,
     roleLabel: input.roleLabel,
     inviteUrl: input.inviteUrl,
-    expiresInHours: INVITE_TOKEN_TTL_HOURS,
+    expiresAt: input.expiresAt,
   });
 }

@@ -459,7 +459,7 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 2. SERVEUR : compte pending + token crypto (32 bytes) hashé SHA-256 en BDD   │
-│    TTL : 48–72 h (7 j max) · purpose = INVITE · single-use                   │
+│    TTL : 7 jours (standard B2B) · single-use                   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
@@ -493,7 +493,7 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 - Lien **GET** = preview seulement ; **POST** = consommation (évite les scanners mail)
 - Email invité **verrouillé** à l'acceptation
 - Ré-invitation = invalide les tokens INVITE précédents (pas les reset MDP)
-- Expiration standard : **72 h** (Kotauth) à **7 j** (WorkOS/Bento)
+- Expiration standard : **7 jours** (WorkOS, Bento) — mentionnée dans l'email et la page d'activation
 
 #### Approches comparées
 
@@ -510,7 +510,7 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 | Étape | Fichiers |
 | ----- | -------- |
 | 1. Admin crée sans MDP | `components/organisms/users-management.tsx`, `lib/validations/user.ts`, `lib/actions/users.ts` |
-| 2. Compte `PENDING` + token 72 h | `prisma/schema.prisma` (`UserAccountStatus`, `InvitationToken`), `lib/invitations/service.ts` |
+| 2. Compte `PENDING` + token 7 j | `prisma/schema.prisma` (`UserAccountStatus`, `InvitationToken`), `lib/invitations/constants.ts` |
 | 3. Email branded invitation | `lib/email/account-notifications.ts` → `notifyUserInvited` |
 | 4. GET preview `/invite/accept` | `app/invite/accept/page.tsx`, `components/organisms/accept-invitation-form.tsx` |
 | 5. POST accept + audit | `lib/actions/invitations.ts` → `acceptInvitationAction`, audits `USER_INVITED` / `INVITATION_ACCEPTED` |

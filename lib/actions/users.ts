@@ -73,7 +73,7 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
   const inviterName = session.user.name ?? session.user.email ?? "Un administrateur";
   const roleLabel = ROLE_LABELS[role.name] ?? role.name;
 
-  const { user, token } = await prisma.$transaction(async (tx) => {
+  const { user, token, expiresAt } = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
       data: {
         firstName,
@@ -107,7 +107,7 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
       },
     });
 
-    return { user: created, token: issued.token };
+    return { user: created, token: issued.token, expiresAt: issued.expiresAt };
   });
 
   const inviteUrl = buildInvitationAcceptUrl(token);
@@ -117,6 +117,7 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
     inviterName,
     roleLabel,
     inviteUrl,
+    expiresAt,
   });
 
   revalidatePath("/admin/users");
@@ -169,7 +170,7 @@ export async function resendInvitationAction(formData: FormData): Promise<UserAc
   const inviterName = session.user.name ?? session.user.email ?? "Un administrateur";
   const roleLabel = ROLE_LABELS[targetUser.role.name] ?? targetUser.role.name;
 
-  const { token } = await issueInvitationToken({
+  const { token, expiresAt } = await issueInvitationToken({
     userId: targetUser.id,
     invitedById: session.user.id,
   });
@@ -194,6 +195,7 @@ export async function resendInvitationAction(formData: FormData): Promise<UserAc
     inviterName,
     roleLabel,
     inviteUrl,
+    expiresAt,
   });
 
   revalidatePath("/admin/users");

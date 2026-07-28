@@ -1,7 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +10,8 @@ import { Logo } from "@/components/atoms/logo";
 import { PasswordInput } from "@/components/atoms/password-input";
 import { ThemeToggle } from "@/components/atoms/theme-toggle";
 import { acceptInvitationAction } from "@/lib/actions/invitations";
+import { INVITE_TOKEN_TTL_DAYS } from "@/lib/invitations/constants";
+import { formatInvitationExpiryLabel } from "@/lib/invitations/format-expiry";
 import type { InvitationPreview } from "@/lib/invitations/service";
 import {
   mbokaEyebrowClassName,
@@ -90,8 +90,8 @@ export function AcceptInvitationForm({ token, preview }: AcceptInvitationFormPro
               <strong>{preview.roleLabel}</strong>.
             </p>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Lien valable jusqu&apos;au{" "}
-              {format(preview.expiresAt, "d MMMM yyyy 'à' HH:mm", { locale: fr })}.
+              Ce lien expire le {formatInvitationExpiryLabel(preview.expiresAt)} ({INVITE_TOKEN_TTL_DAYS}{" "}
+              jours).
             </p>
           </div>
 
