@@ -9,7 +9,6 @@ import { PwaNetworkStatus } from "@/components/molecules/pwa-network-status";
 import {
   getDefaultPwaInstallGuide,
   getPwaInstallGuide,
-  type PwaInstallGuide,
 } from "@/lib/pwa/browser-install-guide";
 import {
   isCypressTestRun,
@@ -17,9 +16,11 @@ import {
   isStandaloneMode,
 } from "@/lib/pwa/environment";
 import {
+  canShowPwaInstallPromptThisSession,
   clearPwaInstallPromptDismissed,
   isPwaInstallPromptDismissed,
   markPwaInstallPromptDismissed,
+  markPwaInstallPromptShownThisSession,
 } from "@/lib/pwa/storage";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -27,41 +28,49 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-const PROMPT_DELAY_MS = 1800;
+/** Délai après chargement de page avant d'afficher la card (hors login). */
+const PROMPT_DELAY_MS = 3500;
+
+function shouldOfferPwaInstallPrompt(): boolean {
+  return (
+    !isStandaloneMode() &&
+    !isCypressTestRun() &&
+    !isPwaInstallPromptDismissed() &&
+    canShowPwaInstallPromptThisSession()
+  );
+}
 
 export function PwaRegister() {
   const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [installed, setInstalled] = useState(false);
-  const [installGuide, setInstallGuide] = useState<PwaInstallGuide>(getDefaultPwaInstallGuide);
+  const [activePromptPath, setActivePromptPath] = useState<string | null>(null);
+  const [installed, setInstalled] = useState(() =>
+    typeof window !== "undefined" ? isStandaloneMode() : false
+  );
+  const [installGuide] = useState(() =>
+    typeof window !== "undefined"
+      ? getPwaInstallGuide(window.navigator.userAgent)
+      : getDefaultPwaInstallGuide()
+  );
+
+  const showPrompt = activePromptPath === pathname;
 
   useEffect(() => {
-    setInstallGuide(getPwaInstallGuide(window.navigator.userAgent));
-  }, []);
-
-  useEffect(() => {
-    if (!isPwaInstallContextPath(pathname)) {
-      setShowPrompt(false);
+    if (!isPwaInstallContextPath(pathname) || typeof window === "undefined") {
       return;
     }
 
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    setInstalled(isStandaloneMode());
-
-    if (
-      isStandaloneMode() ||
-      isCypressTestRun() ||
-      isPwaInstallPromptDismissed()
-    ) {
+    if (!shouldOfferPwaInstallPrompt()) {
       return;
     }
 
     const timer = window.setTimeout(() => {
-      setShowPrompt(true);
+      if (!shouldOfferPwaInstallPrompt()) {
+        return;
+      }
+
+      markPwaInstallPromptShownThisSession();
+      setActivePromptPath(pathname);
     }, PROMPT_DELAY_MS);
 
     return () => window.clearTimeout(timer);
@@ -86,13 +95,12 @@ export function PwaRegister() {
       }
 
       setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setShowPrompt(true);
     };
 
     const handleInstalled = () => {
       setInstalled(true);
       setDeferredPrompt(null);
-      setShowPrompt(false);
+      setActivePromptPath(null);
       clearPwaInstallPromptDismissed();
     };
 
@@ -114,7 +122,7 @@ export function PwaRegister() {
     const choice = await deferredPrompt.userChoice;
 
     if (choice.outcome === "accepted") {
-      setShowPrompt(false);
+      setActivePromptPath(null);
     }
 
     setDeferredPrompt(null);
@@ -122,7 +130,7 @@ export function PwaRegister() {
 
   function dismissPrompt() {
     markPwaInstallPromptDismissed();
-    setShowPrompt(false);
+    setActivePromptPath(null);
   }
 
   return (
