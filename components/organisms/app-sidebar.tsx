@@ -21,14 +21,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import { Logo } from "@/components/atoms/logo";
 import { ThemeToggle } from "@/components/atoms/theme-toggle";
 import { DashboardViewSwitcher } from "@/components/molecules/dashboard-view-switcher";
 import { logoutAction } from "@/lib/actions/auth";
 import type { DashboardView } from "@/lib/auth/dashboard-views";
+import { shouldShowDashboardViewSwitcher } from "@/lib/auth/dashboard-views";
 import { mbokaButtonOutlineClassName, ROLE_LABELS } from "@/lib/design-tokens";
+import type { PermissionSlug } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -46,6 +48,7 @@ type NavSection = {
 type AppSidebarProps = {
   userName: string;
   roleName: string;
+  permissions: PermissionSlug[];
   dashboardPath: string;
   dashboardViews: DashboardView[];
   canManageUsers: boolean;
@@ -131,6 +134,7 @@ function isNavItemActive(pathname: string, href: string, dashboardPath: string):
 export function AppSidebar({
   userName,
   roleName,
+  permissions,
   dashboardPath,
   dashboardViews,
   canManageUsers,
@@ -147,6 +151,7 @@ export function AppSidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const roleLabel = ROLE_LABELS[roleName] ?? roleName;
+  const showDashboardViewSwitcher = shouldShowDashboardViewSwitcher(roleName, pathname, permissions);
 
   const navSections: NavSection[] = [
     {
@@ -299,10 +304,6 @@ export function AppSidebar({
         </div>
 
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
-          {dashboardViews.length > 1 ? (
-            <DashboardViewSwitcher views={dashboardViews} className="px-1 pb-2" />
-          ) : null}
-
           {navSections.map((section, sectionIndex) => (
             <div key={section.title ?? `section-${sectionIndex}`} className="space-y-1">
               {section.title ? (
@@ -314,23 +315,33 @@ export function AppSidebar({
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const active = isNavItemActive(pathname, item.href, dashboardPath);
+                const isDashboardLink = item.href === dashboardPath;
 
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    data-testid={item.testId}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                      active
-                        ? "bg-sky-50 text-[#10579F] ring-1 ring-sky-100 dark:bg-slate-800 dark:text-sky-50 dark:ring-sky-900"
-                        : "text-slate-600 hover:bg-sky-50/70 hover:text-[#10579F] dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-sky-50"
-                    )}
-                  >
-                    <Icon className={cn("size-4 shrink-0", active ? "text-[#10579F] dark:text-sky-400" : "")} />
-                    {item.label}
-                  </Link>
+                  <Fragment key={item.href}>
+                    <Link
+                      href={item.href}
+                      data-testid={item.testId}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                        active
+                          ? "bg-sky-50 text-[#10579F] ring-1 ring-sky-100 dark:bg-slate-800 dark:text-sky-50 dark:ring-sky-900"
+                          : "text-slate-600 hover:bg-sky-50/70 hover:text-[#10579F] dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-sky-50"
+                      )}
+                    >
+                      <Icon className={cn("size-4 shrink-0", active ? "text-[#10579F] dark:text-sky-400" : "")} />
+                      {item.label}
+                    </Link>
+
+                    {isDashboardLink && showDashboardViewSwitcher ? (
+                      <DashboardViewSwitcher
+                        views={dashboardViews}
+                        className="pb-1"
+                        onNavigate={() => setMobileOpen(false)}
+                      />
+                    ) : null}
+                  </Fragment>
                 );
               })}
             </div>

@@ -1,4 +1,4 @@
-import { PERMISSIONS, type PermissionSlug } from "@/lib/permissions";
+import { PERMISSIONS, ROLES, type PermissionSlug } from "@/lib/permissions";
 
 export type DashboardView = {
   href: string;
@@ -38,6 +38,18 @@ export function getAccessibleDashboardViews(permissions: PermissionSlug[]): Dash
   return DASHBOARD_VIEWS.filter((view) => permissions.includes(view.permission));
 }
 
-export function shouldShowDashboardViewSwitcher(permissions: PermissionSlug[]): boolean {
+export function shouldShowDashboardViewSwitcher(
+  roleName: string,
+  pathname: string,
+  permissions: PermissionSlug[]
+): boolean {
+  if (roleName !== ROLES.DIRECTEUR_TECHNIQUE) {
+    return false;
+  }
+
+  if (!pathname.startsWith("/dashboard")) {
+    return false;
+  }
+
   return getAccessibleDashboardViews(permissions).length > 1;
 }

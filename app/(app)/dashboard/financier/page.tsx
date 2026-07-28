@@ -4,10 +4,8 @@ import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pen
 import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { DashboardUpdatedAt } from "@/components/molecules/dashboard-updated-at";
-import { DashboardViewSwitcher } from "@/components/molecules/dashboard-view-switcher";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import Link from "next/link";
-import { getAccessibleDashboardViews } from "@/lib/auth/dashboard-views";
 import { requirePermission } from "@/lib/auth/session";
 import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
 import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
@@ -58,7 +56,6 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
   const projectionScenario = parseProjectionScenario(query.projectionScenario);
   const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
   const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
-  const dashboardViews = getAccessibleDashboardViews(session.user.permissions);
 
   await ensureRecurringExpenseDuesSynced();
 
@@ -96,8 +93,6 @@ export default async function FinancialDashboardPage({ searchParams }: Financial
         description={`Espace comptable de ${session.user.name} — indicateurs, caisse et charges.`}
         descriptionAside={<DashboardUpdatedAt />}
       />
-
-      <DashboardViewSwitcher views={dashboardViews} />
 
       <DashboardFinancialSection
         basePath="/dashboard/financier"

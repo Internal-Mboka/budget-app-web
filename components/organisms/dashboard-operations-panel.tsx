@@ -97,18 +97,31 @@ export function DashboardOperationsPanel({ snapshot }: DashboardOperationsPanelP
       </MbokaKpiGrid>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className={cn(mbokaPanelClassName, "p-4 sm:p-5")} data-testid="operations-today-bookings">
-          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
-            Créneaux du jour
-          </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Sessions studio et locations véhicules prévues aujourd&apos;hui.
-          </p>
+        <article
+          className={cn(mbokaPanelClassName, "flex min-h-[18rem] flex-col p-4 sm:p-5")}
+          data-testid="operations-today-bookings"
+        >
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">
+              Créneaux du jour
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Sessions studio et locations véhicules prévues aujourd&apos;hui.
+            </p>
+          </div>
 
           {snapshot.todayBookings.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              Aucune réservation prévue aujourd&apos;hui.
-            </p>
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-300 dark:bg-slate-800 dark:text-sky-700">
+                <CalendarDays className="size-6" />
+              </div>
+              <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+                Aucune réservation prévue aujourd&apos;hui.
+              </p>
+              <p className="mt-1 max-w-xs text-xs leading-5 text-slate-500 dark:text-slate-400">
+                Les sessions studio et locations véhicules du jour s&apos;afficheront ici.
+              </p>
+            </div>
           ) : (
             <ul className="mt-4 space-y-3">
               {snapshot.todayBookings.map((booking) => (

@@ -21,10 +21,11 @@ describe("Mboka Budget — REF-D01 Dashboard opérationnel", () => {
     cy.get('[data-testid="operations-kpi-pending"]').should("be.visible");
     cy.get('[data-testid="operations-recent-revenues"]').should("be.visible");
     cy.get('[data-testid="operations-today-bookings"]').should("be.visible");
+    cy.get('[data-testid="operations-today-bookings"]').should("contain.text", "Aucune réservation prévue");
   });
 });
 
-describe("Mboka Budget — REF-D02 Switcher vues dashboard", () => {
+describe("Mboka Budget — REF-D02 Switcher vues dashboard (DT)", () => {
   beforeEach(function () {
     const email = Cypress.env("DT_EMAIL");
     const password = Cypress.env("DT_PASSWORD");
@@ -36,32 +37,31 @@ describe("Mboka Budget — REF-D02 Switcher vues dashboard", () => {
     cy.loginAsDt();
   });
 
-  it("affiche le switcher dans la sidebar pour le DT", () => {
+  it("affiche le switcher sous Dashboard dans la sidebar sur une route dashboard", () => {
     cy.visit("/dashboard");
     cy.dismissPwaPrompt();
 
-    cy.get('[data-testid="dashboard-view-switcher"]').should("have.length.at.least", 1);
+    cy.get('[data-testid="dashboard-view-switcher"]').should("be.visible");
     cy.get('[data-testid="dashboard-view-dashboard"]').should("be.visible");
     cy.get('[data-testid="dashboard-view-dashboard-financier"]').should("be.visible");
     cy.get('[data-testid="dashboard-view-dashboard-operations"]').should("be.visible");
     cy.get('[data-testid="dashboard-view-dashboard-macro"]').should("be.visible");
   });
 
-  it("navigue vers la vue financière via le switcher", () => {
-    cy.visit("/dashboard");
+  it("masque le switcher hors des routes dashboard", () => {
+    cy.visit("/revenues");
     cy.dismissPwaPrompt();
 
-    cy.get('[data-testid="dashboard-view-dashboard-financier"]').first().click();
-    cy.location("pathname").should("eq", "/dashboard/financier");
-    cy.contains("Vue financière").should("be.visible");
+    cy.get('[data-testid="dashboard-view-switcher"]').should("not.exist");
   });
 
-  it("navigue vers la vue opérationnelle via le switcher", () => {
-    cy.visit("/dashboard");
+  it("navigue vers la vue financière via le switcher sidebar", () => {
+    cy.visit("/dashboard/operations");
     cy.dismissPwaPrompt();
 
-    cy.get('[data-testid="dashboard-view-dashboard-operations"]').first().click();
-    cy.location("pathname").should("eq", "/dashboard/operations");
-    cy.contains("Vue opérationnelle").should("be.visible");
+    cy.get('[data-testid="dashboard-view-dashboard-financier"]').click();
+    cy.location("pathname").should("eq", "/dashboard/financier");
+    cy.contains("Vue financière").should("be.visible");
+    cy.get('[data-testid="dashboard-view-switcher"]').should("be.visible");
   });
 });

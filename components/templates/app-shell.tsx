@@ -46,6 +46,7 @@ export function AppShell({
       <AppSidebar
         userName={user.name ?? "Utilisateur"}
         roleName={user.roleName}
+        permissions={user.permissions}
         dashboardPath={dashboardPath}
         dashboardViews={dashboardViews}
         canManageUsers={canManageUsers}
