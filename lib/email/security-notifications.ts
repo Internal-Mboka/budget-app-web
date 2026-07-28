@@ -33,11 +33,15 @@ export async function notifyPasswordResetRequested(email: string, resetUrl: stri
   await sendMbokaEmail(email, {
     subject: "Mboka Budget — Réinitialisation de mot de passe",
     previewText: "Demande de réinitialisation de votre mot de passe Mboka Budget.",
+    headline: "Réinitialisation de mot de passe",
     greeting: "Bonjour,",
     paragraphs: [
-      "Une demande de réinitialisation de mot de passe a été enregistrée pour votre compte Mboka Budget.",
-      "Ce lien est valable 1 heure et ne peut être utilisé qu'une seule fois.",
+      "Une demande de réinitialisation a été enregistrée pour votre compte Mboka Budget.",
     ],
+    callout: {
+      title: "Validité du lien",
+      lines: ["Ce lien est valable 1 heure et ne peut être utilisé qu'une seule fois."],
+    },
     cta: {
       label: "Réinitialiser mon mot de passe",
       href: resetUrl,

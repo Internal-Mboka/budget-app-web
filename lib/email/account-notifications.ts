@@ -17,6 +17,7 @@ export async function notifyAccountProvisionedFromSeed(
   return sendMbokaEmail(input.email, {
     subject: "Mboka Budget — Votre compte est prêt",
     previewText: `Votre compte Directeur Technique est prêt sur Mboka Budget.`,
+    headline: "Votre compte est prêt",
     greeting: `Bonjour ${input.firstName},`,
     paragraphs: [
       "Bonne nouvelle : votre compte Mboka Budget est prêt.",
@@ -47,18 +48,25 @@ export async function notifyUserInvited(input: UserInvitedInput): Promise<boolea
 
   return sendMbokaEmail(input.email, {
     subject: "Mboka Budget — Activez votre compte",
-    previewText: `${input.inviterName} vous invite — lien valable ${INVITE_TOKEN_TTL_DAYS} jours.`,
+    previewText: `${input.inviterName} vous invite à rejoindre Mboka Budget en tant que ${input.roleLabel}.`,
+    headline: "Activez votre compte",
     greeting: `Bonjour ${input.firstName},`,
     paragraphs: [
-      `${input.inviterName} vous a invité à rejoindre Mboka Budget en tant que ${input.roleLabel}.`,
-      "Cliquez sur le bouton ci-dessous pour activer votre compte et choisir votre mot de passe personnel.",
-      `Ce lien est valable une seule fois et expire le ${expiryLabel} (${INVITE_TOKEN_TTL_DAYS} jours).`,
+      `${input.inviterName} vous a invité à rejoindre Mboka Budget.`,
+      "Pour accéder à la plateforme, activez votre compte et choisissez un mot de passe personnel sécurisé. Ce lien ne peut être utilisé qu'une seule fois.",
     ],
+    callout: {
+      title: "Détails de votre invitation",
+      lines: [
+        `Rôle attribué : ${input.roleLabel}`,
+        `Expiration : ${expiryLabel} (${INVITE_TOKEN_TTL_DAYS} jours)`,
+      ],
+    },
     cta: {
       label: "Activer mon compte",
       href: input.inviteUrl,
     },
     footerNote:
-      "Passé cette date, demandez à votre administrateur de renvoyer une invitation. Si vous n'attendiez pas ce message, ignorez-le.",
+      "Passé cette date, demandez à votre administrateur de renvoyer une invitation. Si vous n'attendiez pas ce message, ignorez-le en toute sécurité.",
   });
 }

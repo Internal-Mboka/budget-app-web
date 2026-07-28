@@ -1,6 +1,7 @@
 import { sendTransactionalEmail } from "@/lib/email/send-transactional";
 import {
   renderMbokaEmail,
+  type MbokaEmailCallout,
   type MbokaEmailCta,
   type MbokaEmailRenderInput,
 } from "@/lib/email/templates/mboka-email-template";
@@ -24,4 +25,4 @@ export async function sendMbokaEmail(
   });
 }
 
-export type { MbokaEmailCta };
+export type { MbokaEmailCallout, MbokaEmailCta };
