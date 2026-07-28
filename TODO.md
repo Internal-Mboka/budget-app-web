@@ -439,7 +439,45 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 2. **URL searchParams** : ajouter `kpiScope`, `accountingMode` à `buildFinancialDashboardHref` (comme `projectionPeriod`) — tous les panneaux dashboard préservent les params existants.
 3. **Période comptable** : vérification centralisée dans les Server Actions revenus/dépenses/paiements (`lib/actions/`) + message UI explicite si CLOSING.
 4. **Tests Cypress** : specs dédiées `dashboard-kpi-scope.cy.ts`, `fiscal-period.cy.ts` — ne pas modifier les specs US-46–52 existantes sauf assertions additive.
-5. **Seed dev** : comptes `SEED_PDG_`* + `SEED_DT_*` ; option `SEED_FISCAL_PERIOD=open` pour bypass onboarding en local/E2E.
+5. **Seed dev** : compte `SEED_DT_*` uniquement (PDG créé via `/admin/users`) ; email Brevo au DT ; option `SEED_FISCAL_PERIOD=open` pour bypass onboarding en local/E2E.
+
+---
+
+### Benchmark — Flow « création compte → première connexion » (juillet 2026)
+
+> **Périmètre :** compte provisionné par un admin (seed bootstrap ou `/admin/users`), jusqu'à la session active post-changement de mot de passe.
+
+#### Approches comparées
+
+| Approche | Sécurité (OWASP / industrie) | UX admin | UX utilisateur | Complexité impl. | Verdict Mboka |
+| -------- | ---------------------------- | -------- | -------------- | ---------------- | ------------- |
+| **A — Mot de passe temporaire** (admin saisit / seed `.env`, `mustChangePassword`) | Acceptable si MDP **jamais** envoyé par email ; changement forcé au 1er login (ASVS 6.4.5) | Simple | Moyenne (MDP hors bande) | Faible — **déjà en place** | ✅ **MVP actuel** (`createUserAction`, seed DT) |
+| **B — Lien d'invitation single-use** (token 24–72 h → page « choisir mot de passe ») | **Recommandé** (ASVS 6.4.5, Secure Patterns) — pas de secret en clair par email | Bonne | **Meilleure** | Moyenne (table `Invitation`, email Brevo) | ✅ **Cible v2.1** pour `/admin/users` |
+| **C — Mot de passe temporaire par email** | ❌ Déconseillé (WSTG 04-09, ASVS « ne pas envoyer de MDP en clair ») | Simple | Mauvaise (boîte mail = secret) | Faible | ❌ **Interdit** |
+| **D — Magic link à chaque connexion** | Fort pour auth sans MDP ; peu adapté au provisionnement admin B2B interne | N/A | Bonne | Élevée | ❌ Hors scope Mboka (credentials + 2FA) |
+| **E — SSO / IdP entreprise** | Idéal à terme | Dépend IdP | Excellente | Très élevée | 🔮 v3+ |
+
+#### Recommandation Mboka (défense en profondeur)
+
+1. **Bootstrap (seed)** — DT seul ; `mustChangePassword: true` ; email Brevo **informatif** (rôle, URL login, consigne 1er login) **sans mot de passe** ; MDP initial via canal sécurisé séparé (`.env` / équipe).
+2. **Création admin (`/admin/users`)** — conserver MVP A court terme ; **planifier B** (invitation token) en v2.1 : email « Activez votre compte » → `/invite/[token]` → choix MDP → login.
+3. **Première connexion (commun A et B)** — middleware → `/account/password` si `mustChangePassword` → dashboard par rôle (`getDefaultDashboardPath`).
+4. **Notifications** — email à la création (invitation ou info) + email après changement MDP (`notifyPasswordChanged`, déjà en place).
+5. **Interdits** — mot de passe en clair dans un email ; auto-création de compte au seul clic d'un lien sans session vérifiée.
+
+#### Sources
+
+- [OWASP WSTG — Weak password change/reset](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/09-Testing_for_Weak_Password_Change_or_Reset_Functionalities)
+- [OWASP ASVS V6 — Authentication](https://asvs.dev/v5.0.0/V6-Authentication/)
+- [Secure Patterns — Safe team invitation flow](https://newsletter.securepatterns.dev/p/designing-a-safe-team-invitation-flow)
+- [Security SE — Temp password on registration](https://security.stackexchange.com/questions/7045/sending-temp-password-when-users-first-registered-is-that-good-for-anything)
+
+#### Backlog associé
+
+| ID | Titre | Priorité |
+| -- | ----- | -------- |
+| V2-G05 | Flow invitation `/admin/users` (token single-use + email Brevo) | P1 |
+| V2-G06 | Email notification à la création utilisateur admin (hors MDP) | P2 |
 
 ---
 
@@ -704,6 +742,8 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 | V2-G02 | Archivage froid des journaux d'audit au-delà de la politique US-45 (S3 + rétention légale) | P3       | `[ ]`  |
 | V2-G03 | Export RGPD / suppression compte utilisateur avec anonymisation audit                      | P3       | `[ ]`  |
 | V2-G04 | Revue permissions Observateur (accès macro vs fuite de détail opérationnel)                | P3       | `[ ]`  |
+| V2-G05 | Flow invitation `/admin/users` — token single-use, email Brevo, choix MDP sans secret email | P1       | `[ ]`  |
+| V2-G06 | Email notification création compte admin (langage naturel, sans mot de passe)               | P2       | `[ ]`  |
 
 
 ---

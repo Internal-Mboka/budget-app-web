@@ -2,8 +2,9 @@ import "dotenv/config";
 
 import bcrypt from "bcryptjs";
 
-import { prisma } from "../lib/prisma";
+import { notifyAccountProvisionedFromSeed } from "../lib/email/account-notifications";
 import { createDevOpenFiscalPeriod } from "../lib/fiscal-period/load-fiscal-periods";
+import { prisma } from "../lib/prisma";
 
 const PERMISSIONS = [
   { slug: "finance:create-revenue", description: "Saisie des entrées d'argent" },
@@ -99,23 +100,14 @@ async function main() {
     where: { name: "DIRECTEUR_TECHNIQUE" },
   });
 
-  const pdgRole = await prisma.role.findUniqueOrThrow({
-    where: { name: "PDG" },
-  });
-
   const dtEmail = process.env.SEED_DT_EMAIL ?? "prince.vangu@mboka.studio";
-  const pdgEmail = process.env.SEED_PDG_EMAIL ?? "pdg@mboka.studio";
   const plainPassword = process.env.SEED_DT_PASSWORD;
 
   if (!plainPassword) {
-    throw new Error(
-      "SEED_DT_PASSWORD est requis pour créer les comptes PDG et Directeur Technique."
-    );
+    throw new Error("SEED_DT_PASSWORD est requis pour créer le compte Directeur Technique.");
   }
 
-  const pdgPlainPassword = process.env.SEED_PDG_PASSWORD ?? plainPassword;
   const passwordHash = await bcrypt.hash(plainPassword, 12);
-  const pdgPasswordHash = await bcrypt.hash(pdgPlainPassword, 12);
 
   const dtUser = await prisma.user.upsert({
     where: { email: dtEmail },
@@ -125,6 +117,7 @@ async function main() {
       password: passwordHash,
       roleId: dtRole.id,
       isActive: true,
+      mustChangePassword: true,
     },
     create: {
       firstName: "Prince",
@@ -133,25 +126,7 @@ async function main() {
       password: passwordHash,
       roleId: dtRole.id,
       isActive: true,
-    },
-  });
-
-  const pdgUser = await prisma.user.upsert({
-    where: { email: pdgEmail },
-    update: {
-      firstName: "PDG",
-      lastName: "Mboka",
-      password: pdgPasswordHash,
-      roleId: pdgRole.id,
-      isActive: true,
-    },
-    create: {
-      firstName: "PDG",
-      lastName: "Mboka",
-      email: pdgEmail,
-      password: pdgPasswordHash,
-      roleId: pdgRole.id,
-      isActive: true,
+      mustChangePassword: true,
     },
   });
 
@@ -168,18 +143,22 @@ async function main() {
     },
   });
 
-  await prisma.auditLog.create({
-    data: {
-      action: "USER_SEEDED",
-      entity: "User",
-      entityId: pdgUser.id,
-      userId: pdgUser.id,
-      details: {
-        message: "Compte initial PDG créé via seed",
-        role: "PDG",
-      },
-    },
+  const authUrl = process.env.AUTH_URL?.trim() || "http://localhost:3000";
+  const loginUrl = `${authUrl.replace(/\/$/, "")}/login`;
+
+  const emailSent = await notifyAccountProvisionedFromSeed({
+    email: dtUser.email,
+    firstName: dtUser.firstName,
+    lastName: dtUser.lastName,
+    roleLabel: "Directeur Technique",
+    loginUrl,
   });
+
+  if (emailSent) {
+    console.log(`   → Email de bienvenue envoyé à ${dtUser.email}`);
+  } else {
+    console.warn(`   → Email de bienvenue non envoyé pour ${dtUser.email} (voir logs)`);
+  }
 
   if (process.env.SEED_FISCAL_PERIOD === "open") {
     const existingOpen = await prisma.fiscalPeriod.findFirst({
@@ -196,8 +175,6 @@ async function main() {
   }
 
   console.log("✅ Seed terminé.");
-  console.log(`   → PDG                  : ${pdgUser.firstName} ${pdgUser.lastName}`);
-  console.log(`   → Email PDG            : ${pdgUser.email}`);
   console.log(`   → Directeur Technique  : ${dtUser.firstName} ${dtUser.lastName}`);
   console.log(`   → Email DT             : ${dtUser.email}`);
   console.log(`   → ${ROLE_DEFINITIONS.length} rôles, ${PERMISSIONS.length} permissions`);
