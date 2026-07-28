@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { AppSidebar } from "@/components/organisms/app-sidebar";
 import { AppKeyboardShortcuts } from "@/components/molecules/app-keyboard-shortcuts";
 import { canManageAlertSettings } from "@/lib/alerts/access";
+import { getAccessibleDashboardViews } from "@/lib/auth/dashboard-views";
 import { canAccessFinancialExports } from "@/lib/exports/access";
 import { getDefaultDashboardPath } from "@/lib/auth/routes";
 import { hasPermission } from "@/lib/auth/session";
@@ -24,6 +25,7 @@ export function AppShell({
   showFiscalPeriodClosingNav = false,
 }: AppShellProps) {
   const dashboardPath = getDefaultDashboardPath(user);
+  const dashboardViews = getAccessibleDashboardViews(user.permissions);
   const canManageUsers = hasPermission(user.permissions, PERMISSIONS.USERS_MANAGE);
   const canManageAlerts = canManageAlertSettings(user.roleName);
   const canManageClients = hasPermission(user.permissions, PERMISSIONS.FINANCE_CREATE_REVENUE);
@@ -45,6 +47,7 @@ export function AppShell({
         userName={user.name ?? "Utilisateur"}
         roleName={user.roleName}
         dashboardPath={dashboardPath}
+        dashboardViews={dashboardViews}
         canManageUsers={canManageUsers}
         canManageAlerts={canManageAlerts}
         canManageClients={canManageClients}

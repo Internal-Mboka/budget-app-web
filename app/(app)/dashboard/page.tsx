@@ -6,8 +6,10 @@ import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pen
 import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
 import { DashboardOfflineSnapshotBridge } from "@/components/molecules/dashboard-offline-snapshot-bridge";
 import { DashboardUpdatedAt } from "@/components/molecules/dashboard-updated-at";
+import { DashboardViewSwitcher } from "@/components/molecules/dashboard-view-switcher";
 import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
 import { FiscalPeriodInitializedBanner } from "@/components/molecules/fiscal-period-init-notice";
+import { getAccessibleDashboardViews } from "@/lib/auth/dashboard-views";
 import { hasPermission, requirePermission } from "@/lib/auth/session";
 import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
 import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
@@ -65,6 +67,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
   const projectionScenario = parseProjectionScenario(query.projectionScenario);
   const canApproveExpenses = hasPermission(session.user.permissions, PERMISSIONS.FINANCE_APPROVE_EXPENSE);
+  const dashboardViews = getAccessibleDashboardViews(session.user.permissions);
 
   const [kpis, kpiComparison, rawSeries, revenueBreakdown, studioOccupancy, treasuryProjection, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, activeFiscalPeriod] =
     await Promise.all([
@@ -100,6 +103,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         description={`Bienvenue ${session.user.name}. Pilotage financier du studio — PDG et DT.`}
         descriptionAside={<DashboardUpdatedAt />}
       />
+
+      <DashboardViewSwitcher views={dashboardViews} />
 
       <DashboardOfflineSnapshotBridge
         path="/dashboard"

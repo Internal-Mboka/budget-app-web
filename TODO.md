@@ -422,6 +422,20 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 
 ---
 
+## Refactor — Dashboards multi-rôles (post-livraison v2.0)
+
+> **Contexte :** la Secrétaire avait une route `/dashboard/operations` vide ; le DT/PDG ne pouvait basculer entre les vues dashboard qu'en tapant l'URL manuellement.
+> **Objectif :** dashboard opérationnel utile (saisie revenus) + switcher visible pour les profils multi-permissions (assistance / recette).
+
+| ID | Titre | Statut |
+|----|-------|--------|
+| REF-D01 | Dashboard opérationnel Secrétaire — KPIs du jour, créneaux, dernières saisies, actions rapides | `[x]` |
+| REF-D02 | Switcher « Vues dashboard » sidebar + en-tête pages (DT/PDG accès aux 4 vues) | `[x]` |
+
+<!-- REF-D01–D02 : lib/dashboard/load-operations-dashboard.ts, dashboard-operations-panel, lib/auth/dashboard-views.ts, dashboard-view-switcher, app-sidebar. -->
+
+---
+
 ## Phase 5 — Backlog post-livraison (v2.1+)
 
 > **Contexte :** la feuille de route v2.0 (SPEC 1 → 10) est implémentée. Cette section recense les évolutions **hors scope livraison actuelle**, identifiées dans le code, les specs ou la dette technique restante.

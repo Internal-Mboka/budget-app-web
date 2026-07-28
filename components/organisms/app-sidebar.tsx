@@ -25,7 +25,9 @@ import { useState } from "react";
 
 import { Logo } from "@/components/atoms/logo";
 import { ThemeToggle } from "@/components/atoms/theme-toggle";
+import { DashboardViewSwitcher } from "@/components/molecules/dashboard-view-switcher";
 import { logoutAction } from "@/lib/actions/auth";
+import type { DashboardView } from "@/lib/auth/dashboard-views";
 import { mbokaButtonOutlineClassName, ROLE_LABELS } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +47,7 @@ type AppSidebarProps = {
   userName: string;
   roleName: string;
   dashboardPath: string;
+  dashboardViews: DashboardView[];
   canManageUsers: boolean;
   canManageAlerts: boolean;
   canManageClients: boolean;
@@ -129,6 +132,7 @@ export function AppSidebar({
   userName,
   roleName,
   dashboardPath,
+  dashboardViews,
   canManageUsers,
   canManageAlerts,
   canManageClients,
@@ -295,6 +299,10 @@ export function AppSidebar({
         </div>
 
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+          {dashboardViews.length > 1 ? (
+            <DashboardViewSwitcher views={dashboardViews} className="px-1 pb-2" />
+          ) : null}
+
           {navSections.map((section, sectionIndex) => (
             <div key={section.title ?? `section-${sectionIndex}`} className="space-y-1">
               {section.title ? (
