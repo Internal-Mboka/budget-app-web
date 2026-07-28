@@ -59,7 +59,7 @@ export function MbokaKpiBoard({
         </div>
       </header>
 
-      <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">{children}</div>
+      <div className="grid items-stretch gap-4 sm:grid-cols-1 lg:grid-cols-2 lg:gap-6">{children}</div>
     </section>
   );
 }

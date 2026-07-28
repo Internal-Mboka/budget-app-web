@@ -2,7 +2,7 @@ import { DashboardAnalyticsPanel } from "@/components/organisms/dashboard-analyt
 import { DashboardKpiScopeSwitch } from "@/components/molecules/dashboard-kpi-scope-switch";
 import { FiscalPeriodCurrentBanner } from "@/components/molecules/fiscal-period-current-banner";
 import { MbokaKpiCard } from "@/components/molecules/mboka-kpi-card";
-import { MbokaKpiBoard, MbokaKpiBoardGroupLabel } from "@/components/molecules/mboka-kpi-section";
+import { MbokaKpiBoard, MbokaKpiBoardGroup } from "@/components/molecules/mboka-kpi-section";
 import type { DashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
 import type { RevenueExpenseComparisonPoint } from "@/lib/dashboard/enrich-series-comparison";
 import type { DashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
@@ -66,88 +66,90 @@ export function DashboardFinancialSection({
           />
         }
       >
-        <MbokaKpiBoardGroupLabel
+        <MbokaKpiBoardGroup
           label={activityGroupLabel}
           scope={activityScope}
           testId="dashboard-kpi-section-activity"
-        />
-        <MbokaKpiBoardGroupLabel
+        >
+          <MbokaKpiCard
+            label="Chiffre d'affaires"
+            value={kpis.revenueTotal}
+            scope={activityScope}
+            size="stat"
+            testId="dashboard-kpi-revenue"
+            delta={
+              showActivityDelta
+                ? {
+                    percentChange: comparison.revenue.percentChange,
+                    comparisonLabel: comparison.revenue.comparisonLabel,
+                    polarity: "higher-is-better",
+                  }
+                : undefined
+            }
+          />
+          <MbokaKpiCard
+            label="Dépenses totales"
+            value={kpis.expenseTotal}
+            scope={activityScope}
+            size="stat"
+            testId="dashboard-kpi-expenses"
+            delta={
+              showActivityDelta
+                ? {
+                    percentChange: comparison.expenses.percentChange,
+                    comparisonLabel: comparison.expenses.comparisonLabel,
+                    polarity: "lower-is-better",
+                  }
+                : undefined
+            }
+          />
+          <MbokaKpiCard
+            label="Encaissements réels"
+            value={kpis.cashCollections}
+            hint={kpis.cashCollectionsHint}
+            scope={activityScope}
+            size="stat"
+            testId="dashboard-kpi-cash-collections"
+            className="sm:col-span-2"
+          />
+        </MbokaKpiBoardGroup>
+
+        <MbokaKpiBoardGroup
           label="Trésorerie"
           scope="global"
           testId="dashboard-kpi-section-position"
-        />
-
-        <MbokaKpiCard
-          label="Chiffre d'affaires"
-          value={kpis.revenueTotal}
-          scope={activityScope}
-          size="stat"
-          testId="dashboard-kpi-revenue"
-          delta={
-            showActivityDelta
-              ? {
-                  percentChange: comparison.revenue.percentChange,
-                  comparisonLabel: comparison.revenue.comparisonLabel,
-                  polarity: "higher-is-better",
-                }
-              : undefined
-          }
-        />
-        <MbokaKpiCard
-          label="Dépenses totales"
-          value={kpis.expenseTotal}
-          scope={activityScope}
-          size="stat"
-          testId="dashboard-kpi-expenses"
-          delta={
-            showActivityDelta
-              ? {
-                  percentChange: comparison.expenses.percentChange,
-                  comparisonLabel: comparison.expenses.comparisonLabel,
-                  polarity: "lower-is-better",
-                }
-              : undefined
-          }
-        />
-        <MbokaKpiCard
-          label="Trésorerie nette"
-          value={kpis.netTreasury}
-          hint="Encaissements payés − décaissements payés"
-          scope="global"
-          size="stat"
-          testId="dashboard-kpi-treasury"
-          breakdown={kpis.treasuryByChannel.map((line) => ({
-            label: line.label,
-            value: line.net,
-            testId: `dashboard-kpi-treasury-channel-${line.channel.toLowerCase()}`,
-          }))}
-        />
-        <MbokaKpiCard
-          label="Créances clients ouvertes"
-          value={kpis.receivables}
-          hint="Soldes impayés restant dus"
-          scope="global"
-          size="stat"
-          testId="dashboard-kpi-receivables"
-        />
-        <MbokaKpiCard
-          label="Encaissements réels"
-          value={kpis.cashCollections}
-          hint={kpis.cashCollectionsHint}
-          scope={activityScope}
-          size="stat"
-          testId="dashboard-kpi-cash-collections"
-          className="col-span-2"
-        />
-        <MbokaKpiCard
-          label="Solde caisse ouvert"
-          value={kpis.openCashBalance}
-          hint={kpis.openCashBalanceHint}
-          scope="global"
-          size="stat"
-          testId="dashboard-kpi-open-cash-balance"
-          className="col-span-2"
-        />
+        >
+          <MbokaKpiCard
+            label="Trésorerie nette"
+            value={kpis.netTreasury}
+            hint="Encaissements payés − décaissements payés"
+            scope="global"
+            size="stat"
+            testId="dashboard-kpi-treasury"
+            className="sm:col-span-2"
+            breakdown={kpis.treasuryByChannel.map((line) => ({
+              label: line.label,
+              value: line.net,
+              testId: `dashboard-kpi-treasury-channel-${line.channel.toLowerCase()}`,
+            }))}
+          />
+          <MbokaKpiCard
+            label="Créances clients ouvertes"
+            value={kpis.receivables}
+            hint="Soldes impayés restant dus"
+            scope="global"
+            size="stat"
+            testId="dashboard-kpi-receivables"
+          />
+          <MbokaKpiCard
+            label="Solde caisse ouvert"
+            value={kpis.openCashBalance}
+            hint={kpis.openCashBalanceHint}
+            scope="global"
+            size="stat"
+            testId="dashboard-kpi-open-cash-balance"
+          />
+        </MbokaKpiBoardGroup>
       </MbokaKpiBoard>
 
       <DashboardAnalyticsPanel
