@@ -12,6 +12,8 @@ import {
 import { syncExpiredFiscalPeriodsToClosing } from "@/lib/fiscal-period/sync-expired-periods";
 import { syncApprovedFiscalPeriodClosings } from "@/lib/fiscal-period/finalize-closing";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
 
