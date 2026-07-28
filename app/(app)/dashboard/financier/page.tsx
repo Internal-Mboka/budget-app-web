@@ -1,0 +1,165 @@
+import { DashboardFinancialSection } from "@/components/organisms/dashboard-financial-section";
+import { DashboardTreasuryProjectionPanel } from "@/components/organisms/dashboard-treasury-projection-panel";
+import { ExpensePendingApprovalsPanel } from "@/components/organisms/expense-pending-approvals-panel";
+import { CashClosingPendingReviewsPanel } from "@/components/organisms/cash-closing-pending-reviews-panel";
+import { OverdueReceivablesPanel } from "@/components/organisms/overdue-receivables-panel";
+import { DashboardUpdatedAt } from "@/components/molecules/dashboard-updated-at";
+import { MbokaPageHeader } from "@/components/molecules/mboka-page-header";
+import Link from "next/link";
+import { requirePermission } from "@/lib/auth/session";
+import { ensureRecurringExpenseDuesSynced } from "@/lib/actions/recurring-expenses";
+import { enrichRevenueExpenseSeriesWithComparison } from "@/lib/dashboard/enrich-series-comparison";
+import { loadDashboardKpis, loadRevenueExpenseSeries } from "@/lib/dashboard/load-analytics";
+import { loadDashboardKpiComparison } from "@/lib/dashboard/kpi-comparison";
+import { loadTreasuryProjection } from "@/lib/dashboard/load-treasury-projection";
+import {
+  countOverdueReceivables,
+  DASHBOARD_OVERDUE_PREVIEW_LIMIT,
+  getOverdueReceivablesTotal,
+  loadOverdueReceivables,
+} from "@/lib/dashboard/load-overdue-receivables";
+import { parseDashboardAccountingMode } from "@/lib/dashboard/accounting-mode";
+import { parseDashboardKpiScope } from "@/lib/dashboard/kpi-scope";
+import {
+  parseDashboardChartGranularity,
+  parseDashboardKpiPeriod,
+  parseProjectionPeriod,
+} from "@/lib/dashboard/periods";
+import { parseProjectionScenario } from "@/lib/dashboard/treasury-projection-scenarios";
+import { getExpenseApprovalThreshold } from "@/lib/expenses/approval";
+import {
+  countPendingExpenseApprovals,
+  loadPendingExpenseApprovals,
+} from "@/lib/expenses/load-pending-approvals";
+import {
+  countPendingCashClosingReviews,
+  loadPendingCashClosingReviews,
+} from "@/lib/cash-closing/load-pending-reviews";
+import { countPendingRecurringDues, loadPendingRecurringDues } from "@/lib/expenses/load-recurring-dues";
+import { PERMISSIONS } from "@/lib/permissions";
+import { loadActiveFiscalPeriod } from "@/lib/fiscal-period/load-fiscal-periods";
+import { mbokaPanelClassName } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+
+type FinancialDashboardPageProps = {
+  searchParams: Promise<{ granularity?: string; kpiPeriod?: string; kpiScope?: string; accountingMode?: string; projectionPeriod?: string; projectionScenario?: string }>;
+};
+
+export default async function FinancialDashboardPage({ searchParams }: FinancialDashboardPageProps) {
+  const session = await requirePermission(PERMISSIONS.DASHBOARD_FINANCIAL);
+  const query = await searchParams;
+  const kpiPeriod = parseDashboardKpiPeriod(query.kpiPeriod);
+  const kpiScope = parseDashboardKpiScope(query.kpiScope);
+  const accountingMode = parseDashboardAccountingMode(query.accountingMode);
+  const granularity = parseDashboardChartGranularity(query.granularity);
+  const projectionPeriod = parseProjectionPeriod(query.projectionPeriod, kpiPeriod);
+  const projectionScenario = parseProjectionScenario(query.projectionScenario);
+  const canApproveExpenses = session.user.permissions.includes(PERMISSIONS.FINANCE_APPROVE_EXPENSE);
+  const canApproveClosings = session.user.permissions.includes(PERMISSIONS.CASH_APPROVE_CLOSING);
+
+  await ensureRecurringExpenseDuesSynced();
+
+  const [kpis, kpiComparison, rawSeries, treasuryProjection, recurringDues, recurringDueCount, overdueReceivables, overdueCount, overdueTotal, pendingApprovals, pendingClosingReviews, activeFiscalPeriod] =
+    await Promise.all([
+      loadDashboardKpis(kpiPeriod, undefined, kpiScope, accountingMode),
+      loadDashboardKpiComparison(kpiPeriod, undefined, accountingMode),
+      loadRevenueExpenseSeries(granularity, undefined, accountingMode),
+      loadTreasuryProjection(projectionPeriod, projectionScenario),
+      loadPendingRecurringDues(3),
+      countPendingRecurringDues(),
+      loadOverdueReceivables(DASHBOARD_OVERDUE_PREVIEW_LIMIT),
+      countOverdueReceivables(),
+      getOverdueReceivablesTotal(),
+      canApproveExpenses
+        ? Promise.all([loadPendingExpenseApprovals(5), countPendingExpenseApprovals()]).then(
+            ([items, totalPending]) => ({ items, totalPending })
+          )
+        : Promise.resolve(null),
+      canApproveClosings
+        ? Promise.all([loadPendingCashClosingReviews(5), countPendingCashClosingReviews()]).then(
+            ([items, totalPending]) => ({ items, totalPending })
+          )
+        : Promise.resolve(null),
+      loadActiveFiscalPeriod(),
+    ]);
+
+  const series = enrichRevenueExpenseSeriesWithComparison(rawSeries);
+
+  return (
+    <section className="space-y-8">
+      <MbokaPageHeader
+        eyebrow="Dashboard"
+        title="Vue financière"
+        description={`Espace comptable de ${session.user.name} — indicateurs, caisse et charges.`}
+        descriptionAside={<DashboardUpdatedAt />}
+      />
+
+      <DashboardFinancialSection
+        basePath="/dashboard/financier"
+        kpis={kpis}
+        comparison={kpiComparison}
+        series={series}
+        kpiPeriod={kpiPeriod}
+        kpiScope={kpiScope}
+        accountingMode={accountingMode}
+        granularity={granularity}
+        projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
+        activeFiscalPeriod={activeFiscalPeriod}
+      />
+
+      <DashboardTreasuryProjectionPanel
+        basePath="/dashboard/financier"
+        projectionPeriod={projectionPeriod}
+        projectionScenario={projectionScenario}
+        kpiPeriod={kpiPeriod}
+        kpiScope={kpiScope}
+        accountingMode={accountingMode}
+        granularity={granularity}
+        snapshot={treasuryProjection}
+        audienceLabel="Comptable"
+      />
+
+      <OverdueReceivablesPanel
+        items={overdueReceivables}
+        totalOverdue={overdueCount}
+        totalAmount={overdueTotal}
+        showViewAllLink
+      />
+
+      {recurringDueCount > 0 ? (
+        <section
+          className={cn(mbokaPanelClassName, "space-y-3 p-5 sm:p-6")}
+          data-testid="dashboard-recurring-dues-reminder"
+        >
+          <h2 className="text-base font-semibold text-[#10579F] dark:text-sky-50">Rappel échéances récurrentes</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {recurringDueCount} échéance{recurringDueCount > 1 ? "s" : ""} à régler
+            {recurringDues[0] ? ` — prochaine : ${recurringDues[0].periodLabel}` : ""}.
+          </p>
+          <Link
+            href="/expenses/recurring"
+            className="inline-flex text-sm font-medium text-[#10579F] hover:underline dark:text-sky-300"
+          >
+            Voir les échéances récurrentes →
+          </Link>
+        </section>
+      ) : null}
+
+      {pendingApprovals ? (
+        <ExpensePendingApprovalsPanel
+          items={pendingApprovals.items}
+          totalPending={pendingApprovals.totalPending}
+          approvalThreshold={getExpenseApprovalThreshold()}
+        />
+      ) : null}
+
+      {pendingClosingReviews ? (
+        <CashClosingPendingReviewsPanel
+          items={pendingClosingReviews.items}
+          totalPending={pendingClosingReviews.totalPending}
+        />
+      ) : null}
+    </section>
+  );
+}

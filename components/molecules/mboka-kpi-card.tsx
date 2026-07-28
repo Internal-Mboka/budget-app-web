@@ -1,0 +1,184 @@
+import type { ReactNode } from "react";
+
+import { MbokaKpiTrend, type KpiTrendDelta } from "@/components/molecules/mboka-kpi-trend";
+import { formatMoney } from "@/lib/currency";
+import { mbokaPanelClassName } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+
+type KpiBreakdownLine = {
+  label: string;
+  value: number;
+  testId?: string;
+};
+
+type MbokaKpiCardProps = {
+  label: string;
+  value: number;
+  hint?: string;
+  scope?: "period" | "global";
+  delta?: KpiTrendDelta;
+  breakdown?: KpiBreakdownLine[];
+  testId?: string;
+  className?: string;
+  format?: "money" | "percent" | "hours" | "number";
+  size?: "default" | "compact" | "stat";
+};
+
+const scopeSurfaceClassName = {
+  period: "border border-sky-100/80 bg-sky-50/50 dark:border-sky-900/80 dark:bg-sky-950/30",
+  global: "border border-sky-100/80 bg-sky-50/40 dark:border-sky-900/80 dark:bg-slate-800/25",
+} as const;
+
+const scopeBadgeClassName = {
+  period:
+    "rounded-xl border border-sky-100 bg-sky-100/70 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#10579F] dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-100",
+  global:
+    "rounded-xl border border-sky-100 bg-slate-100/80 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:border-sky-900 dark:bg-slate-800/60 dark:text-slate-300",
+} as const;
+
+export function MbokaKpiCard({
+  label,
+  value,
+  hint,
+  scope,
+  delta,
+  breakdown,
+  testId,
+  className,
+  format = "money",
+  size = "default",
+}: MbokaKpiCardProps) {
+  const isCompact = size === "compact";
+  const isStat = size === "stat";
+
+  const displayValue =
+    format === "percent"
+      ? `${value.toLocaleString("fr-FR")} %`
+      : format === "hours"
+        ? `${value.toLocaleString("fr-FR")} h`
+        : format === "number"
+          ? value.toLocaleString("fr-FR")
+          : formatMoney(value);
+
+  if (isStat) {
+    return (
+      <article
+        className={cn(
+          "flex h-full flex-col rounded-xl p-3",
+          scope ? scopeSurfaceClassName[scope] : "bg-sky-50/40",
+          className
+        )}
+        data-testid={testId}
+        data-scope={scope}
+      >
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+          {scope ? (
+            <span
+              className={scopeBadgeClassName[scope]}
+              data-testid={testId ? `${testId}-scope` : undefined}
+            >
+              {scope === "period" ? "Période" : "Global"}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-[#10579F] dark:text-sky-50 sm:text-2xl">
+          {displayValue}
+        </p>
+        {delta ? (
+          <MbokaKpiTrend
+            delta={delta}
+            testId={testId ? `${testId}-delta` : undefined}
+            className="mt-1.5 text-[11px]"
+          />
+        ) : null}
+        {hint ? (
+          <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
+        ) : null}
+        {breakdown && breakdown.length > 0 ? (
+          <ul
+            className="mt-auto space-y-0.5 border-t border-sky-100/80 pt-2 dark:border-sky-900/80"
+            data-testid={testId ? `${testId}-breakdown` : undefined}
+          >
+            {breakdown.map((line) => (
+              <li
+                key={line.label}
+                className="flex items-baseline justify-between gap-2 text-[11px] leading-snug"
+                data-testid={line.testId}
+              >
+                <span className="text-slate-500 dark:text-slate-400">{line.label}</span>
+                <span className="shrink-0 tabular-nums font-medium text-slate-600 dark:text-slate-300">
+                  {formatMoney(line.value)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </article>
+    );
+  }
+
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border border-sky-100/80 bg-sky-50/40 shadow-none dark:border-sky-900/80 dark:bg-slate-900/50",
+        isCompact ? "p-3.5 sm:p-4" : "rounded-3xl bg-white/80 p-5 shadow-sm dark:bg-slate-900/70",
+        className
+      )}
+      data-testid={testId}
+      data-scope={scope}
+    >
+      <div className="flex flex-wrap items-center gap-1.5">
+        <p
+          className={cn(
+            "font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400",
+            isCompact ? "text-[10px]" : "text-xs"
+          )}
+        >
+          {label}
+        </p>
+        {scope ? (
+          <span
+            className={cn(
+              "inline-flex rounded-full font-semibold uppercase tracking-wide",
+              isCompact ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-0.5 text-[10px]",
+              scope === "period"
+                ? "bg-sky-100 text-[#10579F] dark:bg-sky-950/60 dark:text-sky-200"
+                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            )}
+            data-testid={testId ? `${testId}-scope` : undefined}
+          >
+            {scope === "period" ? "Période" : "Global"}
+          </span>
+        ) : null}
+      </div>
+      <p
+        className={cn(
+          "font-semibold text-[#10579F] dark:text-sky-50",
+          isCompact ? "mt-2 text-lg sm:text-xl" : "mt-3 text-2xl"
+        )}
+      >
+        {displayValue}
+      </p>
+      {delta ? <MbokaKpiTrend delta={delta} testId={testId ? `${testId}-delta` : undefined} /> : null}
+      {hint ? (
+        <p className={cn("text-slate-500 dark:text-slate-400", isCompact ? "mt-1.5 text-[11px]" : "mt-2 text-xs")}>
+          {hint}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+export function MbokaKpiGrid({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <section
+      className={cn(mbokaPanelClassName, "grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-4 sm:p-8", className)}
+      data-testid="dashboard-kpi-grid"
+    >
+      {children}
+    </section>
+  );
+}

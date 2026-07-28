@@ -1,0 +1,1 @@
+pour la creation de revenue de la categorie de session studio, il ya un input requis, qui demande la salle concerner. mais et ce que le système permet de faire la gestion de salle, au cas où le studio à des salles personalisées

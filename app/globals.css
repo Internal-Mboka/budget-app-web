@@ -1,26 +1,189 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #10579f;
+  --card: #ffffff;
+  --card-foreground: #10579f;
+  --popover: #ffffff;
+  --popover-foreground: #10579f;
+  --primary: #10579f;
+  --primary-foreground: #ffffff;
+  --secondary: #eff8ff;
+  --secondary-foreground: #10579f;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #dbeafe;
+  --accent-foreground: #10579f;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e0f2fe;
+  --input: #e0f2fe;
+  --ring: #10579f;
+  --radius: 0.75rem;
+  --chart-1: #10579f;
+  --chart-2: #38bdf8;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
+  --sidebar: #f8fbff;
+  --sidebar-foreground: #10579f;
+  --sidebar-primary: #10579f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eff8ff;
+  --sidebar-accent-foreground: #10579f;
+  --sidebar-border: #e0f2fe;
+  --sidebar-ring: #10579f;
+  --mboka-brand: #10579f;
+  --mboka-brand-hover: #0d4a87;
+  --mboka-gradient: linear-gradient(180deg, #eff8ff 0%, #f8fbff 48%, #ffffff 100%);
+  --mboka-card-shadow: 0 20px 60px rgba(16, 87, 159, 0.1);
+  --mboka-logo-filter: brightness(0) saturate(100%) invert(25%) sepia(94%) saturate(1320%) hue-rotate(179deg) brightness(92%) contrast(92%);
+  --scrollbar-size: 6px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: color-mix(in srgb, var(--primary) 28%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.dark {
+  --background: #0a1628;
+  --foreground: #e0f2fe;
+  --card: #0f1d32;
+  --card-foreground: #e0f2fe;
+  --popover: #0f1d32;
+  --popover-foreground: #e0f2fe;
+  --primary: #38bdf8;
+  --primary-foreground: #0a1628;
+  --secondary: #1e293b;
+  --secondary-foreground: #e0f2fe;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e3a5f;
+  --accent-foreground: #e0f2fe;
+  --destructive: #f87171;
+  --destructive-foreground: #0a1628;
+  --border: #1e3a5f;
+  --input: #1e3a5f;
+  --ring: #38bdf8;
+  --chart-1: #38bdf8;
+  --chart-2: #10579f;
+  --chart-3: #34d399;
+  --chart-4: #fbbf24;
+  --chart-5: #f87171;
+  --sidebar: #0f1d32;
+  --sidebar-foreground: #e0f2fe;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #0a1628;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #e0f2fe;
+  --sidebar-border: #1e3a5f;
+  --sidebar-ring: #38bdf8;
+  --mboka-brand: #38bdf8;
+  --mboka-brand-hover: #0ea5e9;
+  --mboka-gradient: linear-gradient(180deg, #0a1628 0%, #0f1d32 48%, #0a1628 100%);
+  --mboka-card-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --mboka-logo-filter: brightness(0) invert(1);
+  --scrollbar-thumb: color-mix(in srgb, var(--primary) 35%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Scrollbar — design system Mboka */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }

@@ -1,1 +1,2 @@
-export { contentType, default, runtime, size } from "./icon";
+export const runtime = "nodejs";
+export { contentType, default, size } from "./icon";

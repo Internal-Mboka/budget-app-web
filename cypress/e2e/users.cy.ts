@@ -1,0 +1,80 @@
+describe("Mboka Budget — US-02 Gestion utilisateurs", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("affiche la page admin utilisateurs pour le DT", () => {
+    cy.visit("/admin/users", { retryOnStatusCodeFailure: true, timeout: 30000 });
+    cy.contains("Gestion des utilisateurs").scrollIntoView().should("be.visible");
+    cy.contains("Nouveau compte").scrollIntoView().should("be.visible");
+    cy.contains("Comptes existants").scrollIntoView().should("be.visible");
+  });
+
+  it("affiche la navigation utilisateurs pour le DT", () => {
+    cy.get('[data-testid="nav-utilisateurs"]')
+      .should("exist")
+      .and("have.attr", "href", "/admin/users");
+  });
+
+  it("crée un utilisateur observateur via invitation", () => {
+    const uniqueEmail = `test.observateur.${Date.now()}@mboka.test`;
+
+    cy.visit("/admin/users");
+    cy.get("#firstName").type("Test");
+    cy.get("#lastName").type("Observateur");
+    cy.get("#email").type(uniqueEmail);
+    cy.pickMbokaSelect("roleId", "Observateur");
+    cy.contains("button", "Créer et envoyer l'invitation").click();
+
+    cy.contains(uniqueEmail, { timeout: 10000 }).scrollIntoView().should("be.visible");
+    cy.contains("Invitation en attente").should("be.visible");
+    cy.dismissToasts();
+  });
+});
+
+describe("Mboka Budget — Invitation magic link", () => {
+  beforeEach(function () {
+    const email = Cypress.env("DT_EMAIL");
+    const password = Cypress.env("DT_PASSWORD");
+
+    if (!email || !password) {
+      this.skip();
+    }
+
+    cy.loginAsDt();
+  });
+
+  it("active un compte invité et connecte l'utilisateur", () => {
+    const uniqueEmail = `test.invite.${Date.now()}@mboka.test`;
+    const invitePassword = "Invite1234!";
+
+    cy.visit("/admin/users");
+    cy.get("#firstName").type("Invite");
+    cy.get("#lastName").type("Test");
+    cy.get("#email").type(uniqueEmail);
+    cy.pickMbokaSelect("roleId", "Observateur");
+    cy.contains("button", "Créer et envoyer l'invitation").click();
+    cy.contains(uniqueEmail, { timeout: 10000 }).should("be.visible");
+    cy.dismissToasts();
+
+    cy.task("getInvitationTokenForEmail", uniqueEmail).then((token) => {
+      expect(token, "token invitation").to.be.a("string");
+
+      cy.visit(`/invite/accept?token=${token}`);
+      cy.contains("Activez votre compte").should("be.visible");
+      cy.get("#email").should("have.value", uniqueEmail);
+      cy.get("#newPassword").type(invitePassword, { force: true });
+      cy.get("#confirmPassword").type(invitePassword, { force: true });
+      cy.contains("button", "Activer mon compte").click();
+
+      cy.location("pathname", { timeout: 20000 }).should("eq", "/dashboard/macro");
+    });
+  });
+});
