@@ -13,6 +13,7 @@ import {
 } from "@/lib/invitations/service";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
+import { isStealthRole } from "@/lib/stealth";
 import {
   createUserSchema,
   toggleUserActiveSchema,
@@ -66,6 +67,10 @@ export async function createUserAction(formData: FormData): Promise<UserActionRe
 
   if (!role) {
     return { success: false, error: "Rôle introuvable." };
+  }
+
+  if (isStealthRole(role.name)) {
+    return { success: false, error: "Ce rôle ne peut pas être attribué." };
   }
 
   const pendingPasswordHash = await createPendingUserPasswordHash();
@@ -158,6 +163,10 @@ export async function resendInvitationAction(formData: FormData): Promise<UserAc
     return { success: false, error: "Utilisateur introuvable." };
   }
 
+  if (isStealthRole(targetUser.role.name)) {
+    return { success: false, error: "Utilisateur introuvable." };
+  }
+
   if (targetUser.accountStatus !== "PENDING") {
     return { success: false, error: "Ce compte a déjà été activé." };
   }
@@ -229,6 +238,10 @@ export async function updateUserAction(formData: FormData): Promise<UserActionRe
     return { success: false, error: "Utilisateur introuvable." };
   }
 
+  if (isStealthRole(existingUser.role.name)) {
+    return { success: false, error: "Utilisateur introuvable." };
+  }
+
   if (existingUser.accountStatus === "PENDING" && email.toLowerCase() !== existingUser.email) {
     return {
       success: false,
@@ -252,6 +265,10 @@ export async function updateUserAction(formData: FormData): Promise<UserActionRe
 
   if (!role) {
     return { success: false, error: "Rôle introuvable." };
+  }
+
+  if (isStealthRole(role.name)) {
+    return { success: false, error: "Ce rôle ne peut pas être attribué." };
   }
 
   const auditMeta = await captureAuditRequestContext();
@@ -324,6 +341,10 @@ export async function toggleUserActiveAction(formData: FormData): Promise<UserAc
   });
 
   if (!existingUser) {
+    return { success: false, error: "Utilisateur introuvable." };
+  }
+
+  if (isStealthRole(existingUser.role.name)) {
     return { success: false, error: "Utilisateur introuvable." };
   }
 

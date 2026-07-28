@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS } from "@/lib/permissions";
+import { stealthRoleWhere, stealthUserWhere } from "@/lib/stealth";
 
 type AdminUsersPageProps = {
   searchParams: Promise<{ page?: string; pageSize?: string }>;
@@ -15,8 +16,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const pagination = parsePagination(params);
 
   const [total, users, roles] = await Promise.all([
-    prisma.user.count(),
+    prisma.user.count({ where: stealthUserWhere }),
     prisma.user.findMany({
+      where: stealthUserWhere,
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       skip: pagination.skip,
       take: pagination.take,
@@ -34,6 +36,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       },
     }),
     prisma.role.findMany({
+      where: stealthRoleWhere,
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),

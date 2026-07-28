@@ -25,6 +25,7 @@ export const ROLES = {
   COMPTABLE: "COMPTABLE",
   SECRETAIRE: "SECRETAIRE",
   OBSERVATEUR: "OBSERVATEUR",
+  ANONYMOUS: "ANONYMOUS",
 } as const;
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];

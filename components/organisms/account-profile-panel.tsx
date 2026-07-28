@@ -13,6 +13,7 @@ import {
   mbokaPanelClassName,
   ROLE_LABELS,
 } from "@/lib/design-tokens";
+import { getPublicRoleName } from "@/lib/stealth";
 import { cn } from "@/lib/utils";
 
 type AccountProfilePanelProps = {
@@ -46,7 +47,7 @@ const accountLinks = [
 export function AccountProfilePanel({ profile }: AccountProfilePanelProps) {
   const displayName = getAccountProfileDisplayName(profile);
   const initials = getAccountProfileInitials(profile);
-  const roleLabel = ROLE_LABELS[profile.roleName] ?? profile.roleName;
+  const roleLabel = ROLE_LABELS[getPublicRoleName(profile.roleName)] ?? getPublicRoleName(profile.roleName);
   const memberSince = format(profile.createdAt, "d MMMM yyyy", { locale: fr });
 
   return (

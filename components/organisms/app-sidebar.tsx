@@ -30,6 +30,7 @@ import { logoutAction } from "@/lib/actions/auth";
 import type { DashboardView } from "@/lib/auth/dashboard-views";
 import { shouldShowDashboardViewSwitcher } from "@/lib/auth/dashboard-views";
 import { mbokaButtonOutlineClassName, ROLE_LABELS } from "@/lib/design-tokens";
+import { getPublicRoleName } from "@/lib/stealth";
 import type { PermissionSlug } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
@@ -150,7 +151,7 @@ export function AppSidebar({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const roleLabel = ROLE_LABELS[roleName] ?? roleName;
+  const roleLabel = ROLE_LABELS[getPublicRoleName(roleName)] ?? getPublicRoleName(roleName);
   const showDashboardViewSwitcher = shouldShowDashboardViewSwitcher(roleName, pathname, permissions);
 
   const navSections: NavSection[] = [

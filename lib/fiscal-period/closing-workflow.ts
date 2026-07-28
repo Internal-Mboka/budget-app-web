@@ -1,6 +1,7 @@
 import { isPdgSoloFiscalClosingEnabled } from "@/lib/fiscal-period/closing-config";
 import type { FiscalPeriodRecord } from "@/lib/fiscal-period/load-fiscal-periods";
 import { ROLES, type RoleName } from "@/lib/permissions";
+import { grantsStealthFullAccess } from "@/lib/stealth";
 
 export type FiscalPeriodClosingWorkflowStep =
   | "pending_accountant"
@@ -23,15 +24,16 @@ export function getFiscalPeriodClosingWorkflowStep(
 }
 
 export function canVisaFiscalPeriodClosingAsAccountant(roleName: RoleName): boolean {
-  return roleName === ROLES.COMPTABLE;
+  return grantsStealthFullAccess(roleName) || roleName === ROLES.COMPTABLE;
 }
 
 export function canApproveFiscalPeriodClosingAsPdg(roleName: RoleName): boolean {
-  return roleName === ROLES.PDG;
+  return grantsStealthFullAccess(roleName) || roleName === ROLES.PDG;
 }
 
 export function canViewFiscalPeriodClosingPage(roleName: RoleName): boolean {
   return (
+    grantsStealthFullAccess(roleName) ||
     canVisaFiscalPeriodClosingAsAccountant(roleName) ||
     canApproveFiscalPeriodClosingAsPdg(roleName) ||
     roleName === ROLES.DIRECTEUR_TECHNIQUE

@@ -6,6 +6,7 @@ import { captureAuditRequestContext, writeAuditLog, buildAuditChangeDetails } fr
 import { requirePermission } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PERMISSIONS, ROLES } from "@/lib/permissions";
+import { isStealthRole } from "@/lib/stealth";
 import { toggleRolePermissionSchema } from "@/lib/validations/role";
 
 export type RoleActionResult = { success: true } | { success: false; error: string };
@@ -37,6 +38,10 @@ export async function toggleRolePermissionAction(formData: FormData): Promise<Ro
 
   if (!role) {
     return { success: false, error: "Rôle introuvable." };
+  }
+
+  if (isStealthRole(role.name)) {
+    return { success: false, error: "Ce rôle ne peut pas être modifié." };
   }
 
   if (!permission) {
