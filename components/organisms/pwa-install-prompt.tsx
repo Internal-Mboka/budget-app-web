@@ -9,57 +9,39 @@ import {
   mbokaButtonPrimaryClassName,
   mbokaPanelClassName,
 } from "@/lib/design-tokens";
+import type { PwaInstallGuide } from "@/lib/pwa/browser-install-guide";
 import { cn } from "@/lib/utils";
 
 type PwaInstallPromptProps = {
   canInstallNatively: boolean;
-  isIos: boolean;
-  isAndroid: boolean;
+  installGuide: PwaInstallGuide;
   onInstall: () => void | Promise<void>;
   onDismiss: () => void;
 };
 
-function ManualInstallSteps({ isIos, isAndroid }: { isIos: boolean; isAndroid: boolean }) {
-  if (isIos) {
-    return (
-      <ol className="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-600 dark:text-slate-300">
-        <li>Ouvrez cette page dans Safari si ce n&apos;est pas déjà le cas.</li>
-        <li>Appuyez sur le bouton Partager en bas de l&apos;écran.</li>
-        <li>Choisissez « Ajouter à l&apos;écran d&apos;accueil », puis validez.</li>
-      </ol>
-    );
-  }
-
-  if (isAndroid) {
-    return (
-      <ol className="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-600 dark:text-slate-300">
-        <li>Appuyez sur les trois points en haut à droite de Chrome.</li>
-        <li>Sélectionnez « Installer l&apos;application » ou « Ajouter à l&apos;écran d&apos;accueil ».</li>
-        <li>Confirmez pour terminer l&apos;installation.</li>
-      </ol>
-    );
-  }
-
+function ManualInstallSteps({ guide }: { guide: PwaInstallGuide }) {
   return (
     <ol className="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      <li>Ouvrez le menu de votre navigateur (souvent ⋮ ou ⋯ en haut à droite).</li>
-      <li>Choisissez « Installer l&apos;application » ou « Ajouter à l&apos;écran d&apos;accueil ».</li>
-      <li>Validez pour ajouter Mboka Budget sur votre appareil.</li>
+      {guide.steps.map((step) => (
+        <li key={step}>{step}</li>
+      ))}
     </ol>
   );
 }
 
 export function PwaInstallPrompt({
   canInstallNatively,
-  isIos,
-  isAndroid,
+  installGuide,
   onInstall,
   onDismiss,
 }: PwaInstallPromptProps) {
   const [showManualSteps, setShowManualSteps] = useState(false);
 
+  const canOneClick = canInstallNatively && installGuide.supportsOneClickInstall;
+  const showInstallButton = canOneClick || installGuide.supportsManualInstall;
+
   async function handleInstallClick() {
-    if (canInstallNatively) {
+    if (canOneClick) {
       await onInstall();
       return;
     }
@@ -78,6 +60,7 @@ export function PwaInstallPrompt({
           "pointer-events-auto w-full max-w-md overflow-hidden border-sky-100 shadow-[0_24px_80px_rgba(16,87,159,0.22)]"
         )}
         data-testid="pwa-install-prompt"
+        data-browser={installGuide.browserId}
         aria-labelledby="pwa-install-title"
         aria-describedby="pwa-install-description"
       >
@@ -86,7 +69,7 @@ export function PwaInstallPrompt({
             <Logo variant="badge" size="lg" className="shrink-0 bg-white/16 ring-white/25" />
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-[11px] font-semibold tracking-[0.28em] text-sky-100 uppercase">
-                Application Mboka
+                Application Mboka · {installGuide.browserLabel}
               </p>
               <h2 id="pwa-install-title" className="text-lg font-semibold leading-snug sm:text-xl">
                 Installez Mboka Budget sur votre appareil
@@ -107,42 +90,64 @@ export function PwaInstallPrompt({
         </div>
 
         <div className="space-y-4 px-5 py-5">
-          <button
-            type="button"
-            onClick={handleInstallClick}
-            className={cn(mbokaButtonPrimaryClassName, "w-full")}
-            data-testid="pwa-install-button"
-          >
-            <Download className="size-4" />
-            Installer Mboka Budget
-          </button>
+          {showInstallButton ? (
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className={cn(mbokaButtonPrimaryClassName, "w-full")}
+              data-testid="pwa-install-button"
+            >
+              <Download className="size-4" />
+              {canOneClick ? "Installer Mboka Budget" : "Comment installer ?"}
+            </button>
+          ) : null}
 
-          {canInstallNatively ? (
+          {canOneClick ? (
             <p className="text-center text-sm leading-6 text-slate-600 dark:text-slate-300">
-              Un clic suffit pour ajouter l&apos;application à votre écran d&apos;accueil.
+              Un clic suffit pour ajouter l&apos;application à votre appareil.
             </p>
           ) : null}
 
-          {showManualSteps && !canInstallNatively ? (
+          {showManualSteps && !canOneClick ? (
             <div
               className="space-y-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-900 dark:bg-slate-900/50"
               data-testid="pwa-manual-steps"
             >
               <div className="flex items-center gap-2 text-sm font-medium text-[#10579F] dark:text-sky-100">
-                {isIos ? <Share className="size-4" /> : <Download className="size-4" />}
-                {isIos ? "Sur iPhone ou iPad" : "Quelques secondes pour terminer"}
+                {installGuide.browserId === "safari-ios" ? (
+                  <Share className="size-4" />
+                ) : (
+                  <Download className="size-4" />
+                )}
+                {installGuide.title}
               </div>
-              <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Votre navigateur ne propose pas encore l&apos;installation en un clic. Suivez ces étapes :
-              </p>
-              <ManualInstallSteps isIos={isIos} isAndroid={isAndroid} />
+              <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{installGuide.intro}</p>
+              <ManualInstallSteps guide={installGuide} />
+              {installGuide.footnote ? (
+                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">{installGuide.footnote}</p>
+              ) : null}
             </div>
           ) : null}
 
-          {!canInstallNatively && !showManualSteps ? (
+          {!canOneClick && !showManualSteps && installGuide.supportsManualInstall ? (
             <p className="text-center text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Appuyez sur « Installer Mboka Budget » pour lancer l&apos;installation ou voir la marche à suivre.
+              Appuyez sur « Comment installer ? » pour voir la marche à suivre adaptée à{" "}
+              {installGuide.browserLabel}.
             </p>
+          ) : null}
+
+          {!installGuide.supportsManualInstall && installGuide.browserId === "firefox-desktop" ? (
+            <div
+              className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/60 dark:bg-amber-950/30"
+              data-testid="pwa-manual-steps"
+            >
+              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">{installGuide.title}</p>
+              <p className="text-sm leading-6 text-amber-950/90 dark:text-amber-50/90">{installGuide.intro}</p>
+              <ManualInstallSteps guide={installGuide} />
+              {installGuide.footnote ? (
+                <p className="text-xs leading-5 text-amber-800/80 dark:text-amber-100/80">{installGuide.footnote}</p>
+              ) : null}
+            </div>
           ) : null}
 
           <ul className="grid gap-1.5 text-xs text-slate-500 dark:text-slate-400">

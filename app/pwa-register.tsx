@@ -7,8 +7,11 @@ import { PwaInstallPrompt } from "@/components/organisms/pwa-install-prompt";
 import { OfflineSyncBridge } from "@/components/molecules/offline-sync-bridge";
 import { PwaNetworkStatus } from "@/components/molecules/pwa-network-status";
 import {
-  detectAndroid,
-  detectIosSafari,
+  getDefaultPwaInstallGuide,
+  getPwaInstallGuide,
+  type PwaInstallGuide,
+} from "@/lib/pwa/browser-install-guide";
+import {
   isCypressTestRun,
   isPwaInstallContextPath,
   isStandaloneMode,
@@ -31,8 +34,11 @@ export function PwaRegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [installed, setInstalled] = useState(false);
-  const isIos = detectIosSafari();
-  const isAndroid = detectAndroid();
+  const [installGuide, setInstallGuide] = useState<PwaInstallGuide>(getDefaultPwaInstallGuide);
+
+  useEffect(() => {
+    setInstallGuide(getPwaInstallGuide(window.navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     if (!isPwaInstallContextPath(pathname)) {
@@ -126,8 +132,7 @@ export function PwaRegister() {
       {installed || !showPrompt ? null : (
         <PwaInstallPrompt
           canInstallNatively={Boolean(deferredPrompt)}
-          isIos={isIos}
-          isAndroid={isAndroid}
+          installGuide={installGuide}
           onInstall={installApp}
           onDismiss={dismissPrompt}
         />
