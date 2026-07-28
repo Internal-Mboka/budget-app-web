@@ -234,8 +234,30 @@
 | US-54 | Webhooks & alertes événements critiques | `[x]`  |
 | US-55 | Installation PWA & prompt contextuel    | `[x]`  |
 
-
-
+> **US-55 — Compatibilité navigateurs & prompt d'installation**
+>
+> Tous les navigateurs **ne proposent pas** l'installation PWA. Le prompt (`components/organisms/pwa-install-prompt.tsx`) détecte le navigateur via **user-agent** (`lib/pwa/browser-install-guide.ts`) et adapte titre, intro et étapes.
+>
+> | Navigateur | Installation PWA | Comportement Mboka |
+> | ---------- | ---------------- | ------------------ |
+> | **Chrome** (desktop / Android) | Oui | Bouton « Installer Mboka Budget » en 1 clic si `beforeinstallprompt` (prod HTTPS) ; sinon étapes Chrome (icône barre d'adresse ou menu ⋮). |
+> | **Edge** | Oui | Idem Chrome — menu « … » → Applications → « Installer ce site en tant qu'application ». |
+> | **Opera** | Oui | Idem Chromium. |
+> | **Safari iOS** | Partiel | Partager → « Sur l'écran d'accueil » (Safari obligatoire). |
+> | **Safari macOS** | Partiel | Fichier → « Ajouter au Dock » (Sonoma+) ; sinon Chrome/Edge recommandé. |
+> | **Firefox Android** | Parfois | Menu ⋮ → « Installer » ou « Ajouter à l'écran d'accueil » ; sinon Chrome. |
+> | **Firefox desktop** | **Non** | Message explicite : pas d'option « Installer l'application » dans le menu Firefox — recommander **Chrome ou Edge** ; la version web reste utilisable. |
+> | **Samsung Internet** | Oui (Android) | Menu ≡ → « Ajouter page à » → « Écran d'accueil ». |
+> | **Autre / inconnu** | Variable | Étapes génériques + recommandation Chrome/Edge. |
+>
+> **Implémentation :**
+> - Détection : `detectPwaBrowserId()` / `getPwaInstallGuide()` dans `lib/pwa/browser-install-guide.ts`
+> - Enregistrement : `beforeinstallprompt` écouté dans `app/pwa-register.tsx` (installation native Chrome/Edge)
+> - Bouton principal toujours visible quand l'installation est possible ; libellé « Comment installer ? » si pas de 1 clic
+> - **Dev local (`localhost`)** : PWA désactivée (`next.config.ts` → `disable: development`) — pas de service worker ni `beforeinstallprompt` ; le prompt affiche les étapes manuelles au clic
+> - **Production (HTTPS)** : installation en 1 clic disponible sur Chrome/Edge si critères PWA remplis (manifest, SW, engagement utilisateur)
+>
+> **Limitation technique (navigateurs) :** l'installation programmatique sans interaction utilisateur est **interdite** par les navigateurs — seul l'événement `beforeinstallprompt` (Chromium) ou les menus natifs (Safari, etc.) permettent d'installer.
 
 | US-56 | Mode hors-ligne partiel & sync | `[x]` |
 
@@ -752,6 +774,8 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 
 ### D — PWA, offline & terrain
 
+> Voir aussi la matrice **compatibilité navigateurs PWA** (US-55) en SPEC 8 — notamment **Firefox desktop** (pas d'installation PWA).
+
 
 | ID     | Titre                                                                            | Priorité | Statut |
 | ------ | -------------------------------------------------------------------------------- | -------- | ------ |
@@ -759,6 +783,7 @@ Consensus B2B SaaS ([WorkOS](https://workos.com/blog/user-management-for-b2b-saa
 | V2-D02 | Sync conflict resolution (doublon, conflit réservation après reconnexion)        | P2       | `[ ]`  |
 | V2-D03 | Indicateur UI persistent « N saisies en attente » accessible hors bandeau réseau | P3       | `[ ]`  |
 | V2-D04 | Cache offline élargi (fiche client, planning réservations du jour)               | P3       | `[ ]`  |
+| V2-D05 | Tests E2E prompt PWA par user-agent simulé (Chrome vs Firefox desktop)           | P3       | `[ ]`  |
 
 
 ---
