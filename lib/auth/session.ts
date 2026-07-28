@@ -3,27 +3,20 @@ import { redirect } from "next/navigation";
 import type { PermissionSlug } from "@/lib/permissions";
 
 import { getSession } from "./get-session";
-import { signOut } from "./instance";
-
-async function resolveSession() {
-  try {
-    return await getSession();
-  } catch (error) {
-    console.error("Auth session error", error);
-    await signOut({ redirectTo: "/login" });
-    redirect("/login");
-  }
-}
 
 export async function requireSession() {
-  const session = await resolveSession();
+  try {
+    const session = await getSession();
 
-  if (!session?.user) {
-    await signOut({ redirectTo: "/login" });
-    redirect("/login");
+    if (!session?.user) {
+      redirect("/login");
+    }
+
+    return session;
+  } catch (error) {
+    console.error("Auth session error", error);
+    redirect("/login?error=session");
   }
-
-  return session;
 }
 
 export function hasPermission(
