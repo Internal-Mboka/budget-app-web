@@ -30,7 +30,20 @@ export function MbokaKpiBoard({
 
         <div className="flex shrink-0 flex-wrap items-end justify-end gap-3">
           {headerAction}
-          <MbokaInfoPopover title="Activité vs position trésorerie" testId="dashboard-kpi-info-popover">
+          <MbokaInfoPopover title="Lecture des indicateurs" testId="dashboard-kpi-info-popover">
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Mode comptable</strong> — définit
+              comment sont calculés le chiffre d&apos;affaires et les dépenses (cartes « Activité » et graphique).
+            </p>
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Engagement</strong> — montants pris en
+              compte à la <em>date d&apos;enregistrement</em> (saisie ou facturation), même si le paiement arrive plus
+              tard.
+            </p>
+            <p>
+              <strong className="font-medium text-slate-700 dark:text-slate-200">Encaissement</strong> — montants pris
+              en compte à la <em>date de paiement effectif</em> (argent réellement reçu ou décaissé).
+            </p>
             <p>
               <strong className="font-medium text-slate-700 dark:text-slate-200">Activité sur la période</strong> —
               chiffre d&apos;affaires et dépenses <em>enregistrés</em> sur la période filtrée (date de saisie). Comparatif
