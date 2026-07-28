@@ -482,9 +482,111 @@ Phase C (Bilan PDF)         → US-57 (SPEC 8, existante) — branché sur Fisca
 | ------- | ---------------------------------------------------------------------------------------------- | ------ |
 | REF-D01 | Dashboard opérationnel Secrétaire — KPIs du jour, créneaux, dernières saisies, actions rapides | `[x]`  |
 | REF-D02 | Switcher « Vues dashboard » sidebar sous le lien Dashboard — **DT uniquement**, visible sur `/dashboard/*` | `[x]`  |
+| REF-D03 | Tooltips custom (`MbokaTooltip`) sur les tabs du switcher dashboard — remplace `title` natif | `[x]`  |
 
+<!-- REF-D01–D03 : load-operations-dashboard, dashboard-operations-panel, dashboard-views, dashboard-view-switcher, mboka-tooltip, app-sidebar. -->
 
+### Décision d'architecture — Routes séparées vs page unique conditionnée
 
+> **Question :** faut-il un dashboard par rôle (routes/composants distincts) ou une seule page `/dashboard` avec `if (role)` ?
+> **Verdict (benchmark juillet 2026) :** **routes + layouts séparés** pour Mboka ; conditionnel in-page **uniquement** pour l'affinage UX. Ce n'est pas « l'un ou l'autre » — c'est une **défense en profondeur**.
+
+#### Consensus industrie (sources)
+
+| Source | Enseignement clé |
+|--------|------------------|
+| [OWASP ASVS V1.4 — Access Control Architecture](https://github.com/OWASP/cornucopia/blob/master/cornucopia.owasp.org/data/taxonomy/en/ASVS-4.0.3/01-architecture-design-and-threat-modeling/04-access-control-architecture/index.md) | Ne jamais appliquer l'accès **uniquement** côté client ; point d'application unique et centralisé côté serveur |
+| [OWASP Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) | Permissions par **action** (`dashboard:financial`), pas par rôle en dur dans l'UI ; RBAC vs ABAC |
+| [OWASP DevGuide — Access Control](https://owasp.gitbooks.io/owasp-devguide-v3/content/03-Build/0x05-AccessControl.html) | Mécanisme centralisé ; cohérence présentation ↔ serveur |
+| [Next.js Launchpad — RBAC Auth.js v5](https://nextjslaunchpad.com/article/nextjs-role-based-access-control-authjs-v5-middleware-server-component-authorization) | **Middleware** = routes · **Server Components** = contenu · **Server Actions** = mutations |
+| [WorkOS — React Router v7 authorization](https://workos.com/blog/react-router-v7-authorization-guide) | Layout routes pour sections gated ; checks UI = **UX**, pas sécurité |
+| [Easton — Next.js RBAC admin guide](https://eastondev.com/blog/en/posts/dev/20260107-nextjs-rbac-admin-guide/) | Middleware route-level ~60–80 % plus performant que checks uniquement en composant |
+| [techpotions — RBAC in Next.js](https://techpotions.com/lab/rbac-implementation-nextjs) | Middleware + checks serveur ; conditionnel layout = cosmétique seulement |
+| [Codevetta — Frontend auth ≠ authorization](https://codevetta.com/articles/your-frontend-auth-check-is-not-authorization) | Chaque endpoint mutating doit décider côté serveur ; UI = expérience |
+| [OpenReplay — Client vs server authorization](https://blog.openreplay.com/client-side-vs-server-side-authorization/) | Identifiants permission (`tasks:delete`) plutôt que `role === 'admin'` |
+| [Sadam Hussain — Multi-portal platform](https://sadamkhan.spiralsync.com/blog/case-studies/building-role-based-multi-portal-platform) | Une app, plusieurs expériences par rôle, route groups + guards |
+| [Sadam Hussain — RBAC Next.js + NestJS](https://sadamkhan.spiralsync.com/blog/tutorials/implement-rbac-nextjs-nestjs) | Middleware frontend = UX ; API = boundary de sécurité |
+| [Nazar Boyko — SaaS dashboard Next.js](https://www.nazarboyko.com/articles/building-a-saas-dashboard-with-next-js) | Route groups `(app)` / layouts persistants ; éviter un seul layout avec branches URL |
+| [Medium — Scalable dashboard RBAC Next.js](https://medium.com/@shankhwarshipra2001/building-a-scalable-dashboard-in-next-js-with-role-based-access-and-language-support-755f5bccb9dd) | Middleware centralisé ; pas de `if/else` éparpillés dans les composants |
+| [CloudThat — Parallel routes App Router](https://www.cloudthat.com/resources/blog/advanced-routing-patterns-in-next-js-app-router) | Parallel / conditional routes pour admin vs user — alternative si même URL |
+| [DEV — Next.js 15 parallel routes dashboards](https://dev.to/whoffagents/nextjs-15-parallel-routes-real-patterns-for-dashboard-layouts-183l) | Slots `@analytics` ; parallel routes ≠ tabs exclusifs |
+| [Next.js docs — Route Groups](https://nextjs.org/docs/app/building-your-application/routing/route-groups) | Layouts sans préfixe URL — pattern `(dashboard)` |
+| [Next.js docs — Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) | Interception edge avant rendu (réf. implémentation `middleware.ts`) |
+
+#### Ressources complémentaires (URLs)
+
+**Sécurité & autorisation**
+
+- OWASP ASVS V1.4 — Access Control : https://github.com/OWASP/cornucopia/blob/master/cornucopia.owasp.org/data/taxonomy/en/ASVS-4.0.3/01-architecture-design-and-threat-modeling/04-access-control-architecture/index.md
+- OWASP Authorization Cheat Sheet : https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
+- OWASP DevGuide — Access Control : https://owasp.gitbooks.io/owasp-devguide-v3/content/03-Build/0x05-AccessControl.html
+- Codevetta — Your frontend auth check is not authorization : https://codevetta.com/articles/your-frontend-auth-check-is-not-authorization
+- OpenReplay — Client-side vs server-side authorization : https://blog.openreplay.com/client-side-vs-server-side-authorization/
+
+**Next.js, RBAC & dashboards multi-rôles**
+
+- Next.js Launchpad — RBAC with Auth.js v5 : https://nextjslaunchpad.com/article/nextjs-role-based-access-control-authjs-v5-middleware-server-component-authorization
+- Easton — Next.js RBAC admin guide : https://eastondev.com/blog/en/posts/dev/20260107-nextjs-rbac-admin-guide/
+- techpotions — RBAC in Next.js : https://techpotions.com/lab/rbac-implementation-nextjs
+- Sadam Hussain — Role-based multi-portal platform : https://sadamkhan.spiralsync.com/blog/case-studies/building-role-based-multi-portal-platform
+- Sadam Hussain — Implement RBAC Next.js + NestJS : https://sadamkhan.spiralsync.com/blog/tutorials/implement-rbac-nextjs-nestjs
+- WorkOS — React Router v7 authorization guide : https://workos.com/blog/react-router-v7-authorization-guide
+- Nazar Boyko — Building a SaaS dashboard with Next.js : https://www.nazarboyko.com/articles/building-a-saas-dashboard-with-next-js
+- Medium — Scalable dashboard with RBAC (Shipra Shankhwar) : https://medium.com/@shankhwarshipra2001/building-a-scalable-dashboard-in-next-js-with-role-based-access-and-language-support-755f5bccb9dd
+
+**Routing avancé (alternatives documentées, non retenues pour Mboka v2.0)**
+
+- CloudThat — Advanced routing patterns (parallel routes) : https://www.cloudthat.com/resources/blog/advanced-routing-patterns-in-next-js-app-router
+- DEV — Next.js 15 parallel routes for dashboard layouts : https://dev.to/whoffagents/nextjs-15-parallel-routes-real-patterns-for-dashboard-layouts-183l
+- Next.js — Route Groups : https://nextjs.org/docs/app/building-your-application/routing/route-groups
+- Next.js — Middleware : https://nextjs.org/docs/app/building-your-application/routing/middleware
+
+**Références internes Mboka**
+
+- Matrice rôles & dashboards : `thisproject/conception.md` (§ Accessibilité Dashboard)
+- Permissions & routes : `lib/auth/routes.ts`, `lib/permissions/index.ts`
+- Implémentation dashboards : `app/(app)/dashboard/*/page.tsx`, `lib/auth/dashboard-views.ts`
+
+#### Les deux approches comparées
+
+| Critère | **A — Routes séparées** *(choix Mboka)* | **B — Page unique conditionnée** |
+|---------|------------------------------------------|----------------------------------|
+| Expériences métier très différentes | ✅ | ❌ |
+| > 3 personas avec widgets distincts | ✅ | ❌ |
+| Même layout, ± quelques boutons/colonnes | ⚠️ | ✅ |
+| Perf / bundle par rôle | ✅ | ❌ |
+| Testabilité Cypress par persona | ✅ | ⚠️ |
+| Maintenance long terme | ✅ (si composants partagés) | ❌ (risque « god page ») |
+
+#### Architecture retenue pour Mboka Budget
+
+| Route | Permission | Persona | Contenu |
+|-------|------------|---------|---------|
+| `/dashboard` | `dashboard:full` | PDG, DT | Vue complète — KPIs, catégories, occupation, trésorerie |
+| `/dashboard/financier` | `dashboard:financial` | Comptable | Caisse, échéances, clôtures en attente |
+| `/dashboard/operations` | `dashboard:operational` | Secrétaire | Saisie, créneaux du jour, actions rapides |
+| `/dashboard/macro` | `dashboard:macro` | Observateur | Agrégats sans détail nominatif |
+
+**Couches d'autorisation (obligatoires, quel que soit le pattern UI) :**
+
+1. **Middleware** (`lib/auth/routes.ts`) — bloque l'accès route avant rendu
+2. **Page** (`requirePermission`) — garde-fou serveur par vue
+3. **Loaders / Server Actions** — ré-autorisation à chaque lecture/écriture
+4. **Conditionnel in-page** — masquer boutons/panneaux (approbations, exports…) ; **UX seulement**
+
+**Factorisation (éviter la duplication sans fusionner les routes) :**
+
+- Composants partagés : `DashboardFinancialSection`, loaders communs
+- Dette ouverte : **V2-C04** — factory `getDashboardMetrics()` (cf. note technique SPEC 10 #1)
+- **Ne pas** fusionner les 4 vues en une mega-page `/dashboard` avec `switch(role)`
+
+**Switcher DT (REF-D02) :** outil d'**assistance / recette** — le DT prévisualise les vues des autres rôles sans impersonation. Exception volontaire, pas le modèle produit pour les utilisateurs finaux.
+
+#### Grille de décision (réutilisable v2.1+)
+
+- **Routes séparées** → personas avec jobs différents (notre cas)
+- **Page unique + conditionnel** → même écran, permissions qui cachent 1–2 widgets
+- **Parallel routes Next.js** (`@admin` / `@user`) → même URL, contenu parallèle — utile si structure identique, contenu différent (pas le cas Mboka aujourd'hui)
 
 ---
 
