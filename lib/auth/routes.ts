@@ -1,5 +1,5 @@
-import { canManageAlertSettings } from "@/lib/alerts/access";
-import { canAccessFinancialExports } from "@/lib/exports/access";
+import { canManageAlertSettings } from "@/lib/alerts/access-policy";
+import { canAccessFinancialExports } from "@/lib/exports/access-policy";
 import type { PermissionSlug, RoleName } from "@/lib/permissions";
 import { PERMISSIONS, ROLES } from "@/lib/permissions";
 

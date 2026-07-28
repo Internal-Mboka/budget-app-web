@@ -2,30 +2,13 @@ import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/get-session";
-import { hasAnyPermission, requireSession } from "@/lib/auth/session";
-import { PERMISSIONS, ROLES, type PermissionSlug, type RoleName } from "@/lib/permissions";
+import { requireSession } from "@/lib/auth/session";
+
+export { canAccessFinancialExports } from "./access-policy";
+import { canAccessFinancialExports } from "./access-policy";
 
 export const FINANCIAL_EXPORT_ACCESS_MESSAGE =
   "Accès réservé au PDG, au Directeur Technique et au Comptable.";
-
-/** US-53 / US-59 : exports comptables et historique — PDG, DT, Comptable. */
-export function canAccessFinancialExports(input: {
-  roleName: RoleName;
-  permissions: PermissionSlug[];
-}): boolean {
-  if (
-    input.roleName === ROLES.PDG ||
-    input.roleName === ROLES.DIRECTEUR_TECHNIQUE ||
-    input.roleName === ROLES.COMPTABLE
-  ) {
-    return true;
-  }
-
-  return hasAnyPermission(input.permissions, [
-    PERMISSIONS.DASHBOARD_FULL,
-    PERMISSIONS.DASHBOARD_FINANCIAL,
-  ]);
-}
 
 export async function requireFinancialExportAccess() {
   const session = await requireSession();
