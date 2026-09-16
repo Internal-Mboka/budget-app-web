@@ -51,7 +51,7 @@ export function PwaInstallPrompt({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 sm:bottom-6"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex justify-center md:inset-x-auto md:right-6 md:bottom-6 md:justify-end"
       role="presentation"
     >
       <section

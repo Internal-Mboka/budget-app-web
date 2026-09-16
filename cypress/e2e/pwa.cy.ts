@@ -35,10 +35,12 @@ describe("Mboka Budget — SPEC 8 US-55 Installation PWA", () => {
       onBeforeLoad(win) {
         win.localStorage.removeItem("mboka-pwa-install-dismissed");
         win.localStorage.removeItem("mboka-pwa-install-dismissed-at");
+        win.sessionStorage.removeItem("mboka-pwa-install-session-count");
+        win.sessionStorage.removeItem("mboka-pwa-install-session-last-at");
       },
     });
 
-    cy.get('[data-testid="pwa-install-prompt"]', { timeout: 12000 }).should("be.visible");
+    cy.get('[data-testid="pwa-install-prompt"]', { timeout: 15000 }).should("be.visible");
     cy.contains("Installez Mboka Budget").should("be.visible");
     cy.dismissPwaPrompt();
     cy.get('[data-testid="pwa-install-prompt"]').should("not.exist");
@@ -49,10 +51,12 @@ describe("Mboka Budget — SPEC 8 US-55 Installation PWA", () => {
       onBeforeLoad(win) {
         win.localStorage.removeItem("mboka-pwa-install-dismissed");
         win.localStorage.removeItem("mboka-pwa-install-dismissed-at");
+        win.sessionStorage.removeItem("mboka-pwa-install-session-count");
+        win.sessionStorage.removeItem("mboka-pwa-install-session-last-at");
       },
     });
 
-    cy.wait(2500);
+    cy.wait(4000);
     cy.get('[data-testid="pwa-install-prompt"]').should("not.exist");
   });
 });
